@@ -1,35 +1,27 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import date, datetime
-from .pagination_filter import PaginatedResponse
+from typing import List, Optional
+from pydantic import BaseModel
+from .filter import PaginatedResponse
 class InventoryBase(BaseModel):
     inventory_id: int
-    card_id: str
-    condition_type: Optional[str] = "Near Mint"
-    language: Optional[str] = "EN"
-    is_first_edition: bool = False
-    is_shadowless: bool = False
-    is_reverse_holo: bool = False
-    is_holo: bool = False
-    quantity: int
-    purchase_price: Optional[float] = None
-    current_market_price: Optional[float] = None
-    purchase_date: Optional[date] = None
-    storage_location: Optional[str] = None
-    notes: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-class InventoryCreate(InventoryBase):
-    pass
-class InventoryUpdate(InventoryBase):   
-    pass
-class InventoryOut(InventoryBase):
-    pass
-
+    master_card_id: str
+    quantity_in_stock: int
+    quantity_sold: Optional[int]
+    purchase_price: float
+    selling_price: Optional[float]
+    storage_location: Optional[str]
+    physical_condition_us: str
+    physical_condition_jp: str
+    card_photos: Optional[List[str]]
+    photo_count: Optional[int]
+    date_added: date
+    last_updated: datetime
+    is_active: bool
+    notes: Optional[str]
+    language: Optional[str]
+    is_graded: bool = False
+    grade_company: Optional[str]
+    grade_score: Optional[float]
 
 class PaginatedInventory(PaginatedResponse):
-    items: List[InventoryOut]
+    items: List[InventoryBase]

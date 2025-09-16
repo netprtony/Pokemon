@@ -1,129 +1,327 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Table, Pagination, Form } from "react-bootstrap";
+import ModalIOS from "./Modal"; // Import your modal component here
 
-type Column = {
+type Column<T> = {
   key: string;
   label: string;
+  render?: (row: T, idx: number) => React.ReactNode;
+  align?: "left" | "center" | "right";
+  width?: string | number;
+  onSort?: () => void;
+  sortActive?: boolean;
+  sortDirection?: "asc" | "desc";
 };
 
-type DataRow = {
-  [key: string]: string;
-};
-
-interface DataTableProps {
-  columns: Column[];
-  data: DataRow[];
+interface DataTableProps<T> {
+  columns: Column<T>[];
+  data: T[];
   pageSizeOptions?: number[];
+  totalRows?: number;
+  page?: number;
+  setPage?: (page: number) => void;
+  pageSize?: number;
+  setPageSize?: (size: number) => void;
+  loading?: boolean;
+  renderCollapse?: (row: T) => React.ReactNode;
 }
 
-const DataTable: React.FC<DataTableProps> = ({ columns, data, pageSizeOptions = [5, 10, 20] }) => {
-  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: "asc" | "desc" }>({ key: null, direction: "asc" });
-  const [pageSize, setPageSize] = useState<number>(pageSizeOptions[0]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+export default function DataTable<T>({
+  columns,
+  data,
+  pageSizeOptions = [5, 10, 20, 50],
+  totalRows,
+  page,
+  setPage,
+  pageSize,
+  setPageSize,
+  loading,
+  renderCollapse,
+}: DataTableProps<T>) {
+  // State nội bộ
+  const [internalPage, setInternalPage] = useState(1);
+  const [internalPageSize, setInternalPageSize] = useState(pageSizeOptions[0]);
+  const [openRow, setOpenRow] = useState<number | null>(null);
+  const [colWidths, setColWidths] = useState<Record<string, number>>({});
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
 
-  // --- SORT ---
-  const sortedData = React.useMemo(() => {
-    if (!sortConfig.key) return data;
-    return [...data].sort((a, b) => {
-      const valA = a[sortConfig.key!];
-      const valB = b[sortConfig.key!];
-      if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
-      if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [data, sortConfig]);
+  const tableRef = useRef<HTMLTableElement | null>(null);
+  const collapseRef = useRef<HTMLDivElement | null>(null);
+  const [maxHeight, setMaxHeight] = useState("0px");
 
-  // --- PAGINATION ---
-  const totalPages = Math.ceil(sortedData.length / pageSize);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const currentPage = page ?? internalPage;
+  const currentPageSize = pageSize ?? internalPageSize;
 
-  const handleSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
+  const total = totalRows ?? data.length;
+  const totalPages = Math.max(1, Math.ceil(total / currentPageSize));
+
+  const paginatedData =
+    page && setPage
+      ? data
+      : data.slice((currentPage - 1) * currentPageSize, currentPage * currentPageSize);
+
+  // Cập nhật maxHeight khi mở row
+  useEffect(() => {
+    if (openRow !== null && collapseRef.current) {
+      setMaxHeight(collapseRef.current.scrollHeight + "px");
+    } else {
+      setMaxHeight("0px");
     }
-    setSortConfig({ key, direction });
+  }, [openRow]);
+
+  const startResize = (e: React.MouseEvent, key: string) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth =
+      tableRef.current?.querySelector<HTMLTableCellElement>(
+        `th[data-key="${key}"]`
+      )?.offsetWidth || 100;
+
+    const doDrag = (moveEvent: MouseEvent) => {
+      const newWidth = Math.max(50, startWidth + (moveEvent.clientX - startX));
+      setColWidths((prev) => ({
+        ...prev,
+        [key]: newWidth,
+      }));
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", stopDrag);
   };
 
   return (
-    <div className="p-3">
-      {/* Page Size Selector */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <Form.Select
-          value={pageSize}
-          style={{ width: "100px" }}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value));
-            setCurrentPage(1);
-          }}
-        >
-          {pageSizeOptions.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </Form.Select>
-        <span className="fw-bold">
-          Page {currentPage} of {totalPages}
-        </span>
+    <div className="bg-white rounded-4 p-4 shadow-sm" style={{ fontFamily: "inherit" }}>
+      {/* Top controls */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div className="d-flex align-items-center gap-2">
+          <span className="fw-semibold">Show</span>
+          <Form.Select
+            size="sm"
+            style={{ width: 70, fontWeight: 500 }}
+            value={currentPageSize}
+            onChange={(e) => {
+              setPageSize
+                ? (setPageSize(Number(e.target.value)), setPage?.(1))
+                : (setInternalPageSize(Number(e.target.value)), setInternalPage(1));
+            }}
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </Form.Select>
+          <span className="fw-semibold">entries</span>
+        </div>
+        
       </div>
 
       {/* Table */}
-      <Table striped bordered hover responsive>
-        <thead>
+      <Table hover responsive className="align-middle mb-0" ref={tableRef} style={{ fontSize: "1rem" }}>
+        <thead style={{ background: "#F7F7FA" }}>
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                style={{ cursor: "pointer" }}
-                onClick={() => handleSort(col.key)}
+                data-key={col.key}
+                style={{
+                  cursor: col.onSort ? "pointer" : "default",
+                  textAlign: col.align || "left",
+                  width: colWidths[col.key] || col.width,
+                  whiteSpace: "nowrap",
+                  position: "relative",
+                  fontWeight: 700,
+                  color: "#22223B",
+                  background: "#F7F7FA",
+                  border: "none",
+                  fontSize: "1rem",
+                }}
+                onClick={col.onSort}
               >
-                {col.label}{" "}
-                {sortConfig.key === col.key
-                  ? sortConfig.direction === "asc"
-                    ? "▲"
-                    : "▼"
-                  : ""}
+                {col.label}
+                {col.onSort && (
+                  <span className="ms-1" style={{ fontSize: 12 }}>
+                    {col.sortActive
+                      ? col.sortDirection === "asc"
+                        ? "▲"
+                        : "▼"
+                      : ""}
+                  </span>
+                )}
+                {/* Handle resize */}
+                <div
+                  onMouseDown={(e) => startResize(e, col.key)}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: 5,
+                    height: "100%",
+                    cursor: "col-resize",
+                  }}
+                />
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((row, idx) => (
-            <tr key={idx}>
-              {columns.map((col) => (
-                <td key={col.key}>{row[col.key]}</td>
-              ))}
+          {loading ? (
+            <tr>
+              <td colSpan={columns.length} className="text-center text-muted py-5">
+                Đang tải dữ liệu...
+              </td>
             </tr>
-          ))}
+          ) : paginatedData.length === 0 ? (
+            <tr>
+              <td colSpan={columns.length} className="text-center text-muted py-5">
+                Không có dữ liệu
+              </td>
+            </tr>
+          ) : (
+            paginatedData.map((row, idx) => {
+              const globalIdx = (currentPage - 1) * currentPageSize + idx;
+              return (
+                <React.Fragment key={globalIdx}>
+                  <tr
+                    style={{
+                      cursor: renderCollapse ? "pointer" : "default",
+                      background: globalIdx % 2 === 0 ? "#fff" : "#F7F7FA",
+                    }}
+                    onClick={() => renderCollapse && setOpenRow(openRow === globalIdx ? null : globalIdx)}
+                  >
+                    {columns.map((col) => (
+                      <td
+                        key={col.key}
+                        style={{
+                          textAlign: col.align || "left",
+                          verticalAlign: "middle",
+                          border: "none",
+                          fontWeight: col.key === "status" ? 600 : 400,
+                          fontSize: "1rem",
+                        }}
+                      >
+                        {/* Nếu là hình ảnh, cho phép click để xem lớn */}
+                        {col.key.toLowerCase().includes("img") || col.key.toLowerCase().includes("image") || col.key.toLowerCase().includes("symbol") ? (
+                          (row as Record<string, any>)[col.key]? (
+                            <img
+                              src={(row as Record<string, any>)[col.key]}
+                              alt="preview"
+                              style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer", borderRadius: 6 }}
+                              onClick={e => {
+                                e.stopPropagation();
+                                setPreviewImg((row as Record<string, any>)[col.key]);
+                              }}
+                            />
+                          ) : (
+                            <i className="bi bi-image text-secondary fs-3" title="No image" />
+                          )
+                        ) : col.render ? col.render(row, globalIdx) : (row as any)[col.key]}
+                      </td>
+                    ))}
+                  </tr>
+                  {renderCollapse && openRow === globalIdx && (
+                    <tr style={{ background: "#F7F7FA" }}>
+                      <td colSpan={columns.length}>
+                        <div
+                          ref={collapseRef}
+                          className="overflow-hidden border-start border-primary ps-3"
+                          style={{
+                            maxHeight,
+                            transition: "max-height 0.3s ease",
+                          }}
+                        >
+                          {renderCollapse(row)}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })
+          )}
         </tbody>
       </Table>
+      {/* Modal xem hình lớn */}
+      <ModalIOS
+        isOpen={!!previewImg}
+        onClose={() => setPreviewImg(null)}
+        title="Xem hình"
+        message=""
+        confirmText=""
+        cancelText="Đóng"
+        onConfirm={() => setPreviewImg(null)}
+      >
+        {previewImg && (
+          <div className="d-flex justify-content-center align-items-center py-3">
+            <img
+              src={previewImg}
+              alt="Preview"
+              style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 12, boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}
+            />
+          </div>
+        )}
+      </ModalIOS>
 
       {/* Pagination */}
-      <Pagination className="justify-content-center">
-        <Pagination.Prev
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-        />
-        {[...Array(totalPages)].map((_, index) => (
-          <Pagination.Item
-            key={index}
-            active={index + 1 === currentPage}
-            onClick={() => setCurrentPage(index + 1)}
-          >
-            {index + 1}
-          </Pagination.Item>
-        ))}
-        <Pagination.Next
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-        />
-      </Pagination>
+      <div className="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+        <div>
+          <span className="fw-bold text-primary">
+            {total === 0
+              ? "0"
+              : `${(currentPage - 1) * currentPageSize + 1} - ${Math.min(
+                  currentPage * currentPageSize,
+                  total
+                )}`}
+          </span>
+          <span className="text-muted ms-1">of {total} entries</span>
+        </div>
+        <div>
+          <Pagination className="mb-0">
+            <Pagination.Prev
+              disabled={currentPage === 1}
+              onClick={() =>
+                setPage
+                  ? setPage(Math.max(1, currentPage - 1))
+                  : setInternalPage(Math.max(1, currentPage - 1))
+              }
+            />
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Pagination.Item
+                key={i + 1}
+                active={currentPage === i + 1}
+                onClick={() =>
+                  setPage
+                    ? setPage(i + 1)
+                    : setInternalPage(i + 1)
+                }
+                style={{
+                  borderRadius: "8px",
+                  fontWeight: 600,
+                  background: currentPage === i + 1 ? "#6C63FF" : "#F7F7FA",
+                  color: currentPage === i + 1 ? "#fff" : "#22223B",
+                  border: "none",
+                  margin: "0 2px",
+                }}
+              >
+                {i + 1}
+              </Pagination.Item>
+            ))}
+            <Pagination.Next
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() =>
+                setPage
+                  ? setPage(Math.min(totalPages, currentPage + 1))
+                  : setInternalPage(Math.min(totalPages, currentPage + 1))
+              }
+            />
+          </Pagination>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default DataTable;
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, type ChangeEvent } from "react";
 import { toast } from "react-toastify";
 
+
 // Định nghĩa kiểu cho field option và filter
 export interface FieldOption {
   value: string;
@@ -63,6 +64,16 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
     onSearch && onSearch(value);
   };
 
+  const operatorLabel: Record<string, string> = {
+    eq: "=",
+    ne: "!=",
+    gt: ">",
+    lt: "<",
+    ge: ">=",
+    le: "<=",
+    like: "~",
+  };
+
   return (
     <div className="mb-4">
       <h5 className="mb-3 badge bg-success ">🔍 Bộ lọc nâng cao</h5>
@@ -118,17 +129,19 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             className="form-select placeholder-glow"
             value={newFilter.operator}
             onChange={(e) =>
-              setNewFilter((prev) => ({ ...prev, operator: e.target.value }))
+              setNewFilter((prev) => ({
+                ...prev,
+                operator: e.target.value,
+              }))
             }
           >
-            <option value="">-- Chọn toán tử --</option>
-            <option value="=">=</option>
-            <option value="!=">!=</option>
-            <option value=">">{">"}</option>
-            <option value="<">{"<"}</option>
-            <option value=">=">{">="}</option>
-            <option value="<=">{"<="}</option>
-            <option value="~">Gần bằng</option>
+            <option value="eq">=</option>
+            <option value="ne">!=</option>
+            <option value="gt">{">"}</option>
+            <option value="lt">{"<"}</option>
+            <option value="ge">{">="}</option>
+            <option value="le">{"<="}</option>
+            <option value="like">Gần bằng</option>
           </select>
         </div>
 
@@ -219,7 +232,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               >
                 <span>
                   {fieldOptions.find((opt) => opt.value === f.field)?.label}{" "}
-                  {f.operator} {String(f.value)}
+                  {operatorLabel[f.operator] || f.operator} {String(f.value)}
                 </span>
                 <button
                   className="btn-close btn-close-dark ms-2"
@@ -235,12 +248,15 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
       {/* Xuất dữ liệu */}
       <div className="mt-4 d-flex gap-2">
-        <button className="btn btn-success" type="button" onClick={onExportCSV}>
-          📑 Export CSV
+        <button className="btn btn-success d-flex align-items-center gap-2" type="button" onClick={onExportCSV}>
+          <i className="bi bi-file-earmark-spreadsheet fs-5"></i>
+          Export CSV
         </button>
-        <button className="btn btn-warning" type="button" onClick={onExportJSON}>
-          📑 Export JSON
+        <button className="btn btn-warning d-flex align-items-center gap-2" type="button" onClick={onExportJSON}>
+          <i className="bi bi-file-earmark-code fs-5"></i>
+          Export JSON
         </button>
+       
       </div>
     </div>
   );
