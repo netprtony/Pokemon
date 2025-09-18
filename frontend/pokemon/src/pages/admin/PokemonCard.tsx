@@ -8,49 +8,72 @@ import { toast } from "react-toastify";
 import type { Filter } from "../../components/AdvancedFilters";
 import type { FieldOption } from "../../components/AdvancedFilters";
 
-// Kiểu dữ liệu cho 1 dòng PokemonSet
-export type PokemonSetRow = {
+// Kiểu dữ liệu cho 1 dòng PokemonCard
+export type PokemonCardRow = {
+  master_card_id: string;
   set_id: string;
-  set_name_en: string;
-  set_name_original?: string;
-  series?: string;
-  release_year: number;
-  total_cards?: number;
-  set_symbol_url?: string;
-  region?: string;
-  series_order?: number;
-  created_at?: string;
+  card_number: string;
+  name_en: string;
+  name_original?: string;
+  version_en?: string;
+  version_original?: string;
+  supertype: string;
+  subtypes?: string;
+  hp?: number;
+  rarity: string;
+  illustrator?: string;
+  spec?: string;
+  reference_image_url?: string;
+  release_year?: number;
+  is_promo?: boolean;
+  is_special_variant?: boolean;
 };
 
 const fieldOptions: FieldOption[] = [
+  { value: "master_card_id", label: "Master Card ID", type: "text" },
   { value: "set_id", label: "Set ID", type: "text" },
-  { value: "set_name_en", label: "Tên bộ (EN)", type: "text" },
-  { value: "set_name_original", label: "Tên gốc", type: "text" },
-  { value: "series", label: "Series", type: "text" },
+  { value: "card_number", label: "Số thẻ", type: "text" },
+  { value: "name_en", label: "Tên (EN)", type: "text" },
+  { value: "name_original", label: "Tên gốc", type: "text" },
+  { value: "version_en", label: "Phiên bản (EN)", type: "text" },
+  { value: "version_original", label: "Phiên bản gốc", type: "text" },
+  { value: "supertype", label: "Supertype", type: "text" },
+  { value: "subtypes", label: "Subtypes", type: "text" },
+  { value: "hp", label: "HP", type: "number" },
+  { value: "rarity", label: "Độ hiếm", type: "text" },
+  { value: "illustrator", label: "Họa sĩ", type: "text" },
+  { value: "spec", label: "Spec", type: "text" },
   { value: "release_year", label: "Năm phát hành", type: "number" },
-  { value: "total_cards", label: "Tổng số thẻ", type: "number" },
-  { value: "region", label: "Region", type: "text" },
-  { value: "series_order", label: "Thứ tự series", type: "number" },
+  { value: "is_promo", label: "Promo", type: "boolean" },
+  { value: "is_special_variant", label: "Special Variant", type: "boolean" },
 ];
 
-const API_URL = "http://localhost:8000/pokemon-sets";
+const API_URL = "http://localhost:8000/pokemon-cards";
 
 type ModalMode = "add" | "edit" | null;
 
-const defaultForm: PokemonSetRow = {
+const defaultForm: PokemonCardRow = {
+  master_card_id: "",
   set_id: "",
-  set_name_en: "",
-  set_name_original: "",
-  series: "",
-  release_year: new Date().getFullYear(),
-  total_cards: undefined,
-  set_symbol_url: "",
-  region: "",
-  series_order: undefined,
+  card_number: "",
+  name_en: "",
+  name_original: "",
+  version_en: "",
+  version_original: "",
+  supertype: "",
+  subtypes: "",
+  hp: undefined,
+  rarity: "",
+  illustrator: "",
+  spec: "",
+  reference_image_url: "",
+  release_year: undefined,
+  is_promo: false,
+  is_special_variant: false,
 };
 
-const PokemonSetPage: React.FC = () => {
-  const [data, setData] = useState<PokemonSetRow[]>([]);
+const PokemonCardPage: React.FC = () => {
+  const [data, setData] = useState<PokemonCardRow[]>([]);
   const [filters, setFilters] = useState<Filter[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -61,7 +84,7 @@ const PokemonSetPage: React.FC = () => {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [form, setForm] = useState<PokemonSetRow>(defaultForm);
+  const [form, setForm] = useState<PokemonCardRow>(defaultForm);
   const [formTouched, setFormTouched] = useState(false);
 
   // Confirm modal state
@@ -72,7 +95,7 @@ const PokemonSetPage: React.FC = () => {
   // Xử lý upload ảnh
   const [uploadFile, setUploadFile] = useState<File | null>(null);
 
-  const [sortField, setSortField] = useState("set_id");
+  const [sortField, setSortField] = useState("master_card_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   // Fetch data
@@ -82,14 +105,14 @@ const PokemonSetPage: React.FC = () => {
       if (filters.length > 0) {
         const resp = await axios.post(
           `${API_URL}/filter`,
-          { filters }, // filters là mảng filter đúng format
+          { filters },
           { params: { page, page_size: pageSize, sort_field: field, sort_order: order } }
         );
-        const data = resp.data as { items: PokemonSetRow[]; total: number };
+        const data = resp.data as { items: PokemonCardRow[]; total: number };
         setData(data.items);
         setTotal(data.total);
       } else {
-        const resp = await axios.get<{ items: PokemonSetRow[]; total: number }>(API_URL, {
+        const resp = await axios.get<{ items: PokemonCardRow[]; total: number }>(API_URL, {
           params: {
             page,
             page_size: pageSize,
@@ -124,7 +147,7 @@ const PokemonSetPage: React.FC = () => {
   };
 
   // Sửa
-  const handleEdit = (row: PokemonSetRow) => {
+  const handleEdit = (row: PokemonCardRow) => {
     setForm({ ...row });
     setModalMode("edit");
     setModalOpen(true);
@@ -133,11 +156,11 @@ const PokemonSetPage: React.FC = () => {
   };
 
   // Xóa
-  const handleDelete = (row: PokemonSetRow) => {
-    setConfirmMessage(`Bạn có chắc muốn xóa bộ bài "${row.set_name_en}"?`);
+  const handleDelete = (row: PokemonCardRow) => {
+    setConfirmMessage(`Bạn có chắc muốn xóa thẻ "${row.name_en}"?`);
     setConfirmAction(() => async () => {
       try {
-        await axios.delete(`${API_URL}/${row.set_id}`);
+        await axios.delete(`${API_URL}/${row.master_card_id}`);
         toast.success("Xóa thành công!");
         fetchData();
       } catch {
@@ -169,14 +192,14 @@ const PokemonSetPage: React.FC = () => {
         await axios.post(API_URL, form);
         toast.success("Thêm mới thành công!");
       } else if (modalMode === "edit") {
-        await axios.put(`${API_URL}/${form.set_id}`, form);
+        await axios.put(`${API_URL}/${form.master_card_id}`, form);
         toast.success("Cập nhật thành công!");
       }
       // Nếu có upload ảnh
-      if (uploadFile && form.set_id) {
+      if (uploadFile && form.master_card_id) {
         const fd = new FormData();
         fd.append("file", uploadFile);
-        await axios.post(`${API_URL}/${form.set_id}/upload-symbol`, fd);
+        await axios.post(`${API_URL}/${form.master_card_id}/upload-image`, fd);
         toast.success("Upload hình thành công!");
       }
       setModalOpen(false);
@@ -188,10 +211,15 @@ const PokemonSetPage: React.FC = () => {
 
   // Xử lý thay đổi form
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+    const target = e.target as HTMLInputElement;
+    const { name, value, type } = target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "number" ? Number(value) : value,
+      [name]: type === "number"
+        ? Number(value)
+        : type === "checkbox"
+        ? target.checked
+        : value,
     }));
     setFormTouched(true);
   };
@@ -207,13 +235,13 @@ const PokemonSetPage: React.FC = () => {
   // Table columns
   const columns = [
     {
-      key: "set_symbol_url",
+      key: "reference_image_url",
       label: "",
-      render: (row: PokemonSetRow) =>
-        row.set_symbol_url ? (
+      render: (row: PokemonCardRow) =>
+        row.reference_image_url ? (
           <img
-            src={row.set_symbol_url}
-            alt={row.set_name_en}
+            src={row.reference_image_url}
+            alt={row.name_en}
             style={{ width: 36, height: 36, objectFit: "contain" }}
           />
         ) : (
@@ -222,43 +250,31 @@ const PokemonSetPage: React.FC = () => {
       width: 50,
       align: "center" as const,
       onSort: () => {},
-      sortActive: sortField === "set_symbol_url",
+      sortActive: sortField === "reference_image_url",
       sortDirection: sortOrder,
     },
-    {
-      key: "set_id",
-      label: "Set ID",
-      render: (row: PokemonSetRow) => (
-        <span className="fw-bold text-primary">{row.set_id}</span>
-      ),
-      onSort: () => {},
-      sortActive: sortField === "set_id",
-      sortDirection: sortOrder,
-    },
-    { key: "set_name_en", label: "Tên bộ (EN)", onSort: () => {}, sortActive: sortField === "set_name_en", sortDirection: sortOrder },
-    { key: "set_name_original", label: "Tên gốc", onSort: () => {}, sortActive: sortField === "set_name_original", sortDirection: sortOrder },
-    { key: "series", label: "Series", onSort: () => {}, sortActive: sortField === "series", sortDirection: sortOrder },
-    { key: "release_year", label: "Năm", onSort: () => {}, sortActive: sortField === "release_year", sortDirection: sortOrder },
-    { key: "total_cards", label: "Số thẻ", onSort: () => {}, sortActive: sortField === "total_cards", sortDirection: sortOrder },
-    { key: "region", label: "Region", onSort: () => {}, sortActive: sortField === "region", sortDirection: sortOrder },
-    { key: "series_order", label: "Thứ tự series", onSort: () => {}, sortActive: sortField === "series_order", sortDirection: sortOrder },
-    {
-      key: "created_at",
-      label: "Ngày tạo",
-      render: (row: PokemonSetRow) =>
-        row.created_at
-          ? new Date(row.created_at).toLocaleString("vi-VN")
-          : "-",
-      onSort: () => {},
-      sortActive: sortField === "created_at",
-      sortDirection: sortOrder,
-    },
+    { key: "master_card_id", label: "Master Card ID", onSort: () => {}, sortActive: sortField === "master_card_id", sortDirection: sortOrder },
+    { key: "set_id", label: "Set ID", onSort: () => {}, sortActive: sortField === "set_id", sortDirection: sortOrder },
+    { key: "card_number", label: "Số thẻ", onSort: () => {}, sortActive: sortField === "card_number", sortDirection: sortOrder },
+    { key: "name_en", label: "Tên (EN)", onSort: () => {}, sortActive: sortField === "name_en", sortDirection: sortOrder },
+    { key: "name_original", label: "Tên gốc", onSort: () => {}, sortActive: sortField === "name_original", sortDirection: sortOrder },
+    { key: "version_en", label: "Phiên bản (EN)", onSort: () => {}, sortActive: sortField === "version_en", sortDirection: sortOrder },
+    { key: "version_original", label: "Phiên bản gốc", onSort: () => {}, sortActive: sortField === "version_original", sortDirection: sortOrder },
+    { key: "supertype", label: "Supertype", onSort: () => {}, sortActive: sortField === "supertype", sortDirection: sortOrder },
+    { key: "subtypes", label: "Subtypes", onSort: () => {}, sortActive: sortField === "subtypes", sortDirection: sortOrder },
+    { key: "hp", label: "HP", onSort: () => {}, sortActive: sortField === "hp", sortDirection: sortOrder },
+    { key: "rarity", label: "Độ hiếm", onSort: () => {}, sortActive: sortField === "rarity", sortDirection: sortOrder },
+    { key: "illustrator", label: "Họa sĩ", onSort: () => {}, sortActive: sortField === "illustrator", sortDirection: sortOrder },
+    { key: "spec", label: "Spec", onSort: () => {}, sortActive: sortField === "spec", sortDirection: sortOrder },
+    { key: "release_year", label: "Năm phát hành", onSort: () => {}, sortActive: sortField === "release_year", sortDirection: sortOrder },
+    { key: "is_promo", label: "Promo", onSort: () => {}, sortActive: sortField === "is_promo", sortDirection: sortOrder },
+    { key: "is_special_variant", label: "Special Variant", onSort: () => {}, sortActive: sortField === "is_special_variant", sortDirection: sortOrder },
     {
       key: "action",
       label: "Thao tác",
       align: "center" as const,
       width: 110,
-      render: (row: PokemonSetRow, _idx: number) => (
+      render: (row: PokemonCardRow, _idx: number) => (
         <div className="d-flex justify-content-center gap-3">
           <button
             className="btn btn-link p-0"
@@ -295,7 +311,6 @@ const PokemonSetPage: React.FC = () => {
     setSearchTerm(term);
     setPage(1);
   };
-  
 
   const handleExportCSV = () => toast.info("Export CSV (dummy)");
   const handleExportJSON = () => toast.info("Export JSON (dummy)");
@@ -304,22 +319,42 @@ const PokemonSetPage: React.FC = () => {
   const renderFormModal = () => (
     <form className="px-3 pb-3" autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Set ID</label>
+        <label className="form-label fw-semibold">Master Card ID</label>
         <input
           className="form-control"
-          name="set_id"
-          value={form.set_id}
+          name="master_card_id"
+          value={form.master_card_id}
           onChange={handleFormChange}
           disabled={modalMode === "edit"}
           required
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Tên bộ (EN)</label>
+        <label className="form-label fw-semibold">Set ID</label>
         <input
           className="form-control"
-          name="set_name_en"
-          value={form.set_name_en}
+          name="set_id"
+          value={form.set_id}
+          onChange={handleFormChange}
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Số thẻ</label>
+        <input
+          className="form-control"
+          name="card_number"
+          value={form.card_number}
+          onChange={handleFormChange}
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Tên (EN)</label>
+        <input
+          className="form-control"
+          name="name_en"
+          value={form.name_en}
           onChange={handleFormChange}
           required
         />
@@ -328,17 +363,83 @@ const PokemonSetPage: React.FC = () => {
         <label className="form-label fw-semibold">Tên gốc</label>
         <input
           className="form-control"
-          name="set_name_original"
-          value={form.set_name_original || ""}
+          name="name_original"
+          value={form.name_original || ""}
           onChange={handleFormChange}
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Series</label>
+        <label className="form-label fw-semibold">Phiên bản (EN)</label>
         <input
           className="form-control"
-          name="series"
-          value={form.series || ""}
+          name="version_en"
+          value={form.version_en || ""}
+          onChange={handleFormChange}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Phiên bản gốc</label>
+        <input
+          className="form-control"
+          name="version_original"
+          value={form.version_original || ""}
+          onChange={handleFormChange}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Supertype</label>
+        <input
+          className="form-control"
+          name="supertype"
+          value={form.supertype}
+          onChange={handleFormChange}
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Subtypes</label>
+        <input
+          className="form-control"
+          name="subtypes"
+          value={form.subtypes || ""}
+          onChange={handleFormChange}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">HP</label>
+        <input
+          className="form-control"
+          type="number"
+          name="hp"
+          value={form.hp ?? ""}
+          onChange={handleFormChange}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Độ hiếm</label>
+        <input
+          className="form-control"
+          name="rarity"
+          value={form.rarity}
+          onChange={handleFormChange}
+          required
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Họa sĩ</label>
+        <input
+          className="form-control"
+          name="illustrator"
+          value={form.illustrator || ""}
+          onChange={handleFormChange}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Spec</label>
+        <input
+          className="form-control"
+          name="spec"
+          value={form.spec || ""}
           onChange={handleFormChange}
         />
       </div>
@@ -348,53 +449,43 @@ const PokemonSetPage: React.FC = () => {
           className="form-control"
           type="number"
           name="release_year"
-          value={form.release_year}
+          value={form.release_year ?? ""}
           onChange={handleFormChange}
-          required
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Tổng số thẻ</label>
+        <label className="form-label fw-semibold">Promo</label>
         <input
-          className="form-control"
-          type="number"
-          name="total_cards"
-          value={form.total_cards ?? ""}
+          className="form-check-input ms-2"
+          type="checkbox"
+          name="is_promo"
+          checked={!!form.is_promo}
           onChange={handleFormChange}
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Region</label>
+        <label className="form-label fw-semibold">Special Variant</label>
         <input
-          className="form-control"
-          name="region"
-          value={form.region || ""}
+          className="form-check-input ms-2"
+          type="checkbox"
+          name="is_special_variant"
+          checked={!!form.is_special_variant}
           onChange={handleFormChange}
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Thứ tự series</label>
-        <input
-          className="form-control"
-          type="number"
-          name="series_order"
-          value={form.series_order ?? ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Biểu tượng bộ bài</label>
+        <label className="form-label fw-semibold">Hình tham khảo</label>
         <input
           className="form-control"
           type="file"
           accept="image/*"
           onChange={handleFileChange}
         />
-        {form.set_symbol_url && (
+        {form.reference_image_url && (
           <div className="mt-2">
             <img
-              src={form.set_symbol_url}
-              alt="Set Symbol"
+              src={form.reference_image_url}
+              alt="Card Image"
               style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }}
             />
           </div>
@@ -419,7 +510,7 @@ const PokemonSetPage: React.FC = () => {
 
   return (
     <div className="container-fluid py-4">
-      <h3 className="mb-3 fw-bold">Danh sách bộ bài Pokemon</h3>
+      <h3 className="mb-3 fw-bold">Danh sách thẻ Pokemon</h3>
       <AdvancedFilters
         fieldOptions={fieldOptions}
         filters={filters}
@@ -431,7 +522,7 @@ const PokemonSetPage: React.FC = () => {
       />
       <div className="d-flex justify-content-end mb-3">
         <button className="btn btn-success" onClick={handleAdd}>
-          <i className="bi bi-plus-lg me-2"></i> Thêm bộ bài mới
+          <i className="bi bi-plus-lg me-2"></i> Thêm thẻ mới
         </button>
       </div>
       <DataTable
@@ -452,7 +543,7 @@ const PokemonSetPage: React.FC = () => {
       <Modal
         isOpen={modalOpen}
         onClose={handleCloseModal}
-        title={modalMode === "add" ? "Thêm bộ bài mới" : "Chỉnh sửa bộ bài"}
+        title={modalMode === "add" ? "Thêm thẻ mới" : "Chỉnh sửa thẻ"}
         message=""
         confirmText=""
         cancelText=""
@@ -474,4 +565,4 @@ const PokemonSetPage: React.FC = () => {
   );
 };
 
-export default PokemonSetPage;
+export default PokemonCardPage;

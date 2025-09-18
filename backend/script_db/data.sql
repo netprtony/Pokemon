@@ -181,7 +181,7 @@ CREATE TABLE orders (
     customer_name VARCHAR(100),
     customer_contact TEXT,
     
-    order_status ENUM('PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED') DEFAULT 'PENDING',
+    order_status ENUM('PENDING', 'COMPLETED', 'SHIPPED', 'DELIVERED', 'CANCELLED') DEFAULT 'PENDING',
     total_amount DECIMAL(12,2) DEFAULT 0,
     
     shipping_address TEXT,
@@ -345,15 +345,47 @@ INSERT INTO pokemon_sets (set_id, set_name_en, set_name_original, series, releas
 ('base2', 'Jungle', NULL, 'Original', 1999, 64, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/base/base2.png', 'EN', 2),
 ('base3', 'Fossil', NULL, 'Original', 1999, 62, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/base/base3.png', 'EN', 3),
 ('xy1', 'XY', NULL, 'XY', 2014, 146, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/xy/xy1.png', 'EN', 10),
-('sm1', 'Sun & Moon', NULL, 'Sun & Moon', 2017, 163, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/sm/sm1.png', 'EN', 20);
+('sm1', 'Sun & Moon', NULL, 'Sun & Moon', 2017, 163, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/sm/sm1.png', 'EN', 20),
+('sv1', 'Scarlet & Violet', NULL, 'Scarlet & Violet', 2022, 203, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/sv/sv1.png', 'EN', 30),
+('jpn1', 'スタートデッキ100', 'Start Deck 100', 'Special', 2020, 100, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/special/jpn1.png', 'JP', 1),
+('kor1', '코리아팩', 'Korea Pack', 'Special', 2021, 50, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/special/kor1.png', 'KR', 1);
 
 
 -- Insert sample master cards
 INSERT INTO pokemon_cards_master VALUES
 ('base1-004', 'base1', '4/102', 'Charizard', NULL, 'Base Set', NULL, 'Pokemon', 'Stage 2', 120, 'Rare Holo', 'Mitsuhiro Arita', 'Fire type attacks', NULL, 1999, FALSE, FALSE),
 ('base1-025', 'base1', '25/102', 'Pikachu', NULL, 'Base Set', NULL, 'Pokemon', 'Basic', 60, 'Common', 'Atsuko Nishida', 'Electric attacks', NULL, 1999, FALSE, FALSE),
-('base1-002', 'base1', '2/102', 'Blastoise', NULL, 'Base Set', NULL, 'Pokemon', 'Stage 2', 100, 'Rare Holo', 'Ken Sugimori', 'Water type attacks', NULL, 1999, FALSE, FALSE);
+('base1-002', 'base1', '2/102', 'Blastoise', NULL, 'Base Set', NULL, 'Pokemon', 'Stage 2', 100, 'Rare Holo', 'Ken Sugimori', 'Water type attacks', NULL, 1999, FALSE, FALSE),
+('xy1-143', 'xy1', '143/146', 'Mewtwo EX', NULL, 'XY', NULL, 'Pokemon', 'Basic', 170, 'Ultra Rare', '5ban Graphics', 'Psychic attacks', NULL, 2014, FALSE, TRUE),
+('sm1-001', 'sm1', '1/163', 'Incineroar GX', NULL, 'Sun & Moon', NULL, 'Pokemon', 'Stage 2', 250, 'Ultra Rare', '5ban Graphics', 'Fire type attacks and GX move', NULL, 2017, FALSE, TRUE),
+('sv1-100', 'sv1', '100/203', 'Flutter Mane VSTAR', NULL, 'Scarlet & Violet', NULL, 'Pokemon', 'Basic', 130, 'Rare Holo VSTAR', '5ban Graphics', 'Psychic attacks and VSTAR move', NULL, 2022, FALSE, TRUE),
+('jpn1-050', 'jpn1', '50/100', 'Pikachu VMAX', NULL, 'スタートデッキ100', NULL, 'Pokemon', 'VMAX', 320, 'Rare Holo VMAX', '5ban Graphics', 'Electric type attacks and VMAX move', NULL, 2020, FALSE, TRUE),
+('kor1-010', 'kor1', '10/50', 'Eevee VSTAR', NULL, '코리아팩', NULL, 'Pokemon', 'Basic', 200, 'Rare Holo VSTAR', '5ban Graphics', 'Normal type attacks and VSTAR move', NULL, 2021, FALSE, TRUE);
 
+INSERT INTO inventory (master_card_id, quantity_in_stock, purchase_price, selling_price, physical_condition_us, physical_condition_jp, storage_location, card_photos, photo_count, date_added) VALUES
+('base1-004', 2, 1500000, 3000000, 'Lightly Played', 'A', 'Box-001-A1', JSON_ARRAY('https://example.com/photos/charizard_front.jpg', 'https://example.com/photos/charizard_back.jpg'), 2, '2024-01-15'),
+('base1-025', 5, 200000, 500000, 'Near Mint', 'A', 'Box-001-A2', JSON_ARRAY('https://example.com/photos/pikachu_front.jpg', 'https://example.com/photos/pikachu_back.jpg'), 2, '2024-02-10'),
+('xy1-143', 3, 800000, 1500000, 'Moderately Played', 'B', 'Box-002-B1', JSON_ARRAY('https://example.com/photos/mewtwo_front.jpg', 'https://example.com/photos/mewtwo_back.jpg'), 2, '2024-03-05'),
+('sm1-001', 4, 1200000, 2500000, 'Lightly Played', 'A', 'Box-002-B2', JSON_ARRAY('https://example.com/photos/incineroar_front.jpg', 'https://example.com/photos/incineroar_back.jpg'), 2, '2024-04-12'),
+('sv1-100', 6, 1000000, 2200000, 'Near Mint', 'A', 'Box-003-C1', JSON_ARRAY('https://example.com/photos/fluttermane_front.jpg', 'https://example.com/photos/fluttermane_back.jpg'), 2, '2024-05-20');
+INSERT INTO market_prices (master_card_id, tcgplayer_nm_price, tcgplayer_lp_price, ebay_avg_price, pricecharting_price, cardrush_a_price, cardrush_b_price, snkrdunk_price, yahoo_auction_avg, usd_to_vnd_rate, jpy_to_vnd_rate, price_date, data_source) VALUES
+('base1-004', 120.00, 100.00, 130.00, 125.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+('base1-025', 15.00, 12.00, 16.00, 15.50, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+('xy1-143', 60.00, 50.00, 65.00, 62.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+('sm1-001', 90.00, 80.00, 95.00, 92.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+('sv1-100', 85.00, 75.00, 88.00, 86.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual');
+INSERT INTO price_alerts (inventory_id, alert_type, purchase_price, current_market_price, price_difference, percentage_change, alert_message, alert_date, is_acknowledged) VALUES
+(1, 'PROFIT_OPPORTUNITY', 1500000, 2880000, 1380000, 92.00, 'High profit potential on Charizard. Consider listing for sale.', '2024-06-02', FALSE),
+(2, 'PRICE_DROP', 200000, 360000, 160000, 80.00, 'Pikachu market price has increased significantly. Review selling price.', '2024-06-02', FALSE);
+INSERT INTO orders (order_date, customer_name, customer_contact, order_status, total_amount, shipping_address, payment_method, platform) VALUES
+('2024-06-10', 'Nguyễn Văn A', '0912345678', 'COMPLETED', 3000000, 'Hà Nội', 'Credit Card', 'Website'),
+('2024-06-11', 'Trần Thị B', '0987654321', 'PENDING', 500000, 'Hồ Chí Minh', 'Cash on Delivery', 'Facebook'),
+('2024-06-12', 'Lê Văn C', '0901234567', 'SHIPPED', 1500000, 'Đà Nẵng', 'Bank Transfer', 'Shopee'),
+('2024-06-13', 'Phạm Thị D', '0932123456', 'CANCELLED', 0, 'Cần Thơ', 'N/A', 'Instagram');
+INSERT INTO order_details (order_id, inventory_id, quantity_ordered, unit_price, subtotal) VALUES
+(1, 1, 1, 3000000, 3000000),
+(2, 2, 1, 500000, 500000),
+(3, 3, 1, 1500000, 1500000);    
 -- ================================================
 -- INDEXES FOR PERFORMANCE OPTIMIZATION
 -- ================================================

@@ -68,8 +68,19 @@ export default function SidebarItem({
       <div
         className={`d-flex align-items-center justify-content-between py-3 px-3 rounded-lg cursor-pointer 
           transition-colors duration-150 
-          ${isActive || isChildActive ? "bg-light" : "hover-bg-light"}`}
+          ${isActive || isChildActive ? "bg-light" : ""}
+          sidebar-item-parent`}
         onClick={handleClick}
+        style={{
+          transition: "background 0.2s",
+          background: isActive || isChildActive ? "#f3f4f6" : undefined,
+        }}
+        onMouseEnter={e => {
+          if (!isActive && !isChildActive) e.currentTarget.style.background = "#f7fafc";
+        }}
+        onMouseLeave={e => {
+          if (!isActive && !isChildActive) e.currentTarget.style.background = "";
+        }}
       >
         <div className="d-flex align-items-center gap-3">
           <i className={`${icon} fs-5 text-primary`} />
@@ -89,9 +100,11 @@ export default function SidebarItem({
       {/* DROPDOWN CHILDREN */}
       {dropdown && (
         <div
-          className="overflow-hidden transition-all duration-300"
+          className="sidebar-dropdown-children"
           style={{
             maxHeight: open ? `${children.length * 44}px` : "0",
+            opacity: open ? 1 : 0,
+            transition: "max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s",
           }}
         >
           {children.map((item, index) => {
@@ -101,8 +114,21 @@ export default function SidebarItem({
                 key={index}
                 className={`ps-5 py-2 text-sm cursor-pointer 
                   transition-colors rounded-lg d-flex align-items-center
-                  ${childActive ? "bg-light text-primary fw-semibold" : "hover-bg-light text-secondary"}`}
+                  sidebar-item-child
+                  ${childActive ? "bg-light text-primary fw-semibold" : ""}
+                `}
+                style={{
+                  color: childActive ? "#2563eb" : "#6b7280",
+                  background: childActive ? "#f3f4f6" : undefined,
+                  transition: "background 0.2s, color 0.2s",
+                }}
                 onClick={() => navigate(item.path)}
+                onMouseEnter={e => {
+                  if (!childActive) e.currentTarget.style.background = "#f7fafc";
+                }}
+                onMouseLeave={e => {
+                  if (!childActive) e.currentTarget.style.background = "";
+                }}
               >
                 {item.icon && <i className={item.icon + " me-2"} />}
                 {item.label}

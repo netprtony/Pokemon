@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import (
-   pokemon_set_router 
+   pokemon_set_router,
+   pokemon_card_router
 )  
 app = FastAPI()
 
@@ -19,6 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(pokemon_set_router)
+app.include_router(pokemon_card_router)
 @app.get("/")
 def read_root():
     return {"message": "CORS đã bật thành công"}

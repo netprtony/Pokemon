@@ -24,6 +24,9 @@ interface DataTableProps<T> {
   setPageSize?: (size: number) => void;
   loading?: boolean;
   renderCollapse?: (row: T) => React.ReactNode;
+  onSort?: (field: string, order: "asc" | "desc") => void;
+  sortField?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export default function DataTable<T>({
@@ -36,6 +39,9 @@ export default function DataTable<T>({
   pageSize,
   setPageSize,
   loading,
+  onSort,
+  sortField,
+  sortOrder,
   renderCollapse,
 }: DataTableProps<T>) {
   // State nội bộ
@@ -54,7 +60,8 @@ export default function DataTable<T>({
 
   const total = totalRows ?? data.length;
   const totalPages = Math.max(1, Math.ceil(total / currentPageSize));
-
+  
+  
   const paginatedData =
     page && setPage
       ? data
@@ -68,7 +75,14 @@ export default function DataTable<T>({
       setMaxHeight("0px");
     }
   }, [openRow]);
-
+  
+  const handleSort = (field: string) => {
+    if (onSort) {
+      let order: "asc" | "desc" = "asc";
+      if (sortField === field && sortOrder === "asc") order = "desc";
+      onSort(field, order);
+    }
+  };
   const startResize = (e: React.MouseEvent, key: string) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -141,7 +155,7 @@ export default function DataTable<T>({
                   border: "none",
                   fontSize: "1rem",
                 }}
-                onClick={col.onSort}
+                onClick={() => col.onSort && handleSort(col.key)}
               >
                 {col.label}
                 {col.onSort && (

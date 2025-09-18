@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 export interface FieldOption {
   value: string;
   label: string;
-  type?: "number" | "date" | "month" | "text";
+  type?: "number" | "date" | "month" | "text" | "boolean";
 }
 
 export interface Filter {

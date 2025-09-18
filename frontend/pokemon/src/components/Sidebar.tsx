@@ -19,10 +19,17 @@ type SidebarItemData = {
 const sidebarItems: SidebarItemData[] = [
   {
     icon: "bi bi-speedometer2",
-    label: "Dashboard",
+    label: "REPORTING & ANALYTICS VIEWS",
     dropdown: true,
     children: [
-      { label: "Tổng quan", path: "/admin/dashboard", icon: "bi bi-bar-chart" },
+      { label: "Inventory Summary", path: "/inventory-summary", icon: "bi bi-bar-chart" },
+      { label: "Sales Reports", path: "/sales-reports", icon: "bi bi-graph-up" },
+      { label: "Customer Insights", path: "/customer-insights", icon: "bi bi-people" },
+      { label: "Performance Metrics", path: "/performance-metrics", icon: "bi bi-speedometer2" },
+      { label: "Market Comparison", path: "/market-comparison", icon: "bi bi-graph-up" },
+      { label: "Sales Trends", path: "/sales-trends", icon: "bi bi-trending-up" },
+      { label: "Top Selling Cards", path: "/top-selling-cards", icon: "bi bi-award" },
+      { label: "Price History", path: "/price-history", icon: "bi bi-clock-history" },
     ],
   },
   {
@@ -30,53 +37,34 @@ const sidebarItems: SidebarItemData[] = [
     label: "MASTER DATA",
     dropdown: true,
     children: [
-      { label: "MASTER DATA", path: "/pokemon-sets", icon: "bi bi-collection" },
+      { label: "Set", path: "/pokemon-sets", icon: "bi bi-collection" },
+      { label: "Card", path: "/pokemon-cards-master", icon: "bi bi-people" }
     ],
   },
   {
     icon: "bi bi-person",
-    label: "Tài khoản",
+    label: "INVENTORY MANAGEMENT",
     dropdown: true,
-    children: [{ label: "Tài khoản", path: "/admin/accounts", icon: "bi bi-people" }],
+    children: [{ label: "Inventory", path: "/inventory", icon: "bi bi-box" }],
   },
   {
     icon: "bi bi-people",
-    label: "Khách Thuê",
+    label: "MARKET ANALYSIS & PRICING",
     dropdown: true,
     children: [
-      { label: "Khách Thuê", path: "/admin/tenants", icon: "bi bi-person-badge" },
-      { label: "Quản lý đặt phòng online", path: "/admin/reservations", icon: "bi bi-calendar-check" },
+      { label: "Market Prices", path: "/market-prices", icon: "bi bi-person-badge" },
+      { label: "Price Alerts", path: "/price-alerts", icon: "bi bi-clock-history" },
     ],
   },
   {
     icon: "bi bi-file-earmark-text",
-    label: "Hợp Đồng",
-    dropdown: true,
-    children: [{ label: "Hợp Đồng", path: "/admin/contracts", icon: "bi bi-file-earmark-medical" }],
-  },
-  {
-    icon: "bi bi-lightning",
-    label: "Dịch vụ",
+    label: "ORDER MANAGEMENT",
     dropdown: true,
     children: [
-      { label: "Công tơ điện", path: "/admin/electricity", icon: "bi bi-lightning-charge" },
-      { label: "Công tơ nước", path: "/admin/water", icon: "bi bi-droplet" },
+      { label: "Orders", path: "/orders", icon: "bi bi-file-earmark-medical" },
+      { label: "Order Details", path: "/order-details", icon: "bi bi-truck" },
+
     ],
-  },
-  {
-    icon: "bi bi-receipt",
-    label: "Hóa Đơn",
-    dropdown: true,
-    children: [
-      { label: "Hóa đơn", path: "/admin/invoices", icon: "bi bi-receipt-cutoff" },
-      { label: "Thanh toán", path: "/admin/payments", icon: "bi bi-credit-card" },
-    ],
-  },
-  {
-    icon: "bi bi-pc-display",
-    label: "Thiết bị",
-    dropdown: true,
-    children: [{ label: "Quản lý thiết bị", path: "/admin/devices", icon: "bi bi-pc" }],
   },
   {
     icon: "bi bi-gear",
