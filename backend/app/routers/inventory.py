@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, Query, status, Depends, UploadFile
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.schemas.inventory import (
-    InventoryBase,
     InventoryCreate,
     InventoryUpdate,
     InventoryOut,

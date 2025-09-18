@@ -17,7 +17,7 @@ class SupertypeEnum(enum.Enum):
     Trainer = "Trainer"
     Energy = "Energy"
 
-class ConditionUSEnum(enum.Enum):
+class ConditionUSEnum(str, enum.Enum):
     NearMint = "Near Mint"
     LightlyPlayed = "Lightly Played"
     ModeratelyPlayed = "Moderately Played"
@@ -26,7 +26,7 @@ class ConditionUSEnum(enum.Enum):
 
 class OrderStatusEnum(enum.Enum):
     PENDING = "PENDING"
-    CONFIRMED = "CONFIRMED"
+    COMPLETED = "COMPLETED"
     SHIPPED = "SHIPPED"
     DELIVERED = "DELIVERED"
     CANCELLED = "CANCELLED"

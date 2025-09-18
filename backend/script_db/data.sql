@@ -83,7 +83,7 @@ CREATE TABLE inventory (
     
     -- Physical Storage
     storage_location VARCHAR(100), -- "Box-001-A1", "Safe-Premium-Slot-05"
-    physical_condition_us ENUM('Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played', 'Damaged') NOT NULL,
+    physical_condition_us ENUM('NearMint', 'LightlyPlayed', 'ModeratelyPlayed', 'HeavilyPlayed', 'Damaged') NOT NULL,
     physical_condition_jp ENUM('A', 'B', 'C', 'D') NOT NULL,
     
     -- Card Photos (10+ ảnh chi tiết)
@@ -363,11 +363,11 @@ INSERT INTO pokemon_cards_master VALUES
 ('kor1-010', 'kor1', '10/50', 'Eevee VSTAR', NULL, '코리아팩', NULL, 'Pokemon', 'Basic', 200, 'Rare Holo VSTAR', '5ban Graphics', 'Normal type attacks and VSTAR move', NULL, 2021, FALSE, TRUE);
 
 INSERT INTO inventory (master_card_id, quantity_in_stock, purchase_price, selling_price, physical_condition_us, physical_condition_jp, storage_location, card_photos, photo_count, date_added) VALUES
-('base1-004', 2, 1500000, 3000000, 'Lightly Played', 'A', 'Box-001-A1', JSON_ARRAY('https://example.com/photos/charizard_front.jpg', 'https://example.com/photos/charizard_back.jpg'), 2, '2024-01-15'),
-('base1-025', 5, 200000, 500000, 'Near Mint', 'A', 'Box-001-A2', JSON_ARRAY('https://example.com/photos/pikachu_front.jpg', 'https://example.com/photos/pikachu_back.jpg'), 2, '2024-02-10'),
-('xy1-143', 3, 800000, 1500000, 'Moderately Played', 'B', 'Box-002-B1', JSON_ARRAY('https://example.com/photos/mewtwo_front.jpg', 'https://example.com/photos/mewtwo_back.jpg'), 2, '2024-03-05'),
-('sm1-001', 4, 1200000, 2500000, 'Lightly Played', 'A', 'Box-002-B2', JSON_ARRAY('https://example.com/photos/incineroar_front.jpg', 'https://example.com/photos/incineroar_back.jpg'), 2, '2024-04-12'),
-('sv1-100', 6, 1000000, 2200000, 'Near Mint', 'A', 'Box-003-C1', JSON_ARRAY('https://example.com/photos/fluttermane_front.jpg', 'https://example.com/photos/fluttermane_back.jpg'), 2, '2024-05-20');
+('base1-004', 2, 1500000, 3000000, 'LightlyPlayed', 'A', 'Box-001-A1', JSON_ARRAY('https://example.com/photos/charizard_front.jpg', 'https://example.com/photos/charizard_back.jpg'), 2, '2024-01-15'),
+('base1-025', 5, 200000, 500000, 'NearMint', 'A', 'Box-001-A2', JSON_ARRAY('https://example.com/photos/pikachu_front.jpg', 'https://example.com/photos/pikachu_back.jpg'), 2, '2024-02-10'),
+('xy1-143', 3, 800000, 1500000, 'ModeratelyPlayed', 'B', 'Box-002-B1', JSON_ARRAY('https://example.com/photos/mewtwo_front.jpg', 'https://example.com/photos/mewtwo_back.jpg'), 2, '2024-03-05'),
+('sm1-001', 4, 1200000, 2500000, 'LightlyPlayed', 'A', 'Box-002-B2', JSON_ARRAY('https://example.com/photos/incineroar_front.jpg', 'https://example.com/photos/incineroar_back.jpg'), 2, '2024-04-12'),
+('sv1-100', 6, 1000000, 2200000, 'NearMint', 'A', 'Box-003-C1', JSON_ARRAY('https://example.com/photos/fluttermane_front.jpg', 'https://example.com/photos/fluttermane_back.jpg'), 2, '2024-05-20');
 INSERT INTO market_prices (master_card_id, tcgplayer_nm_price, tcgplayer_lp_price, ebay_avg_price, pricecharting_price, cardrush_a_price, cardrush_b_price, snkrdunk_price, yahoo_auction_avg, usd_to_vnd_rate, jpy_to_vnd_rate, price_date, data_source) VALUES
 ('base1-004', 120.00, 100.00, 130.00, 125.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
 ('base1-025', 15.00, 12.00, 16.00, 15.50, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),

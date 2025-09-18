@@ -22,14 +22,14 @@ const sidebarItems: SidebarItemData[] = [
     label: "REPORTING & ANALYTICS VIEWS",
     dropdown: true,
     children: [
-      { label: "Inventory Summary", path: "/inventory-summary", icon: "bi bi-bar-chart" },
-      { label: "Sales Reports", path: "/sales-reports", icon: "bi bi-graph-up" },
-      { label: "Customer Insights", path: "/customer-insights", icon: "bi bi-people" },
-      { label: "Performance Metrics", path: "/performance-metrics", icon: "bi bi-speedometer2" },
-      { label: "Market Comparison", path: "/market-comparison", icon: "bi bi-graph-up" },
-      { label: "Sales Trends", path: "/sales-trends", icon: "bi bi-trending-up" },
-      { label: "Top Selling Cards", path: "/top-selling-cards", icon: "bi bi-award" },
-      { label: "Price History", path: "/price-history", icon: "bi bi-clock-history" },
+      { label: "Inventory Summary", path: "/admin/inventory-summary", icon: "bi bi-bar-chart" },
+      { label: "Sales Reports", path: "/admin/sales-reports", icon: "bi bi-graph-up" },
+      { label: "Customer Insights", path: "/admin/customer-insights", icon: "bi bi-people" },
+      { label: "Performance Metrics", path: "/admin/performance-metrics", icon: "bi bi-speedometer2" },
+      { label: "Market Comparison", path: "/admin/market-comparison", icon: "bi bi-graph-up" },
+      { label: "Sales Trends", path: "/admin/sales-trends", icon: "bi bi-trending-up" },
+      { label: "Top Selling Cards", path: "/admin/top-selling-cards", icon: "bi bi-award" },
+      { label: "Price History", path: "/admin/price-history", icon: "bi bi-clock-history" },
     ],
   },
   {
@@ -37,23 +37,23 @@ const sidebarItems: SidebarItemData[] = [
     label: "MASTER DATA",
     dropdown: true,
     children: [
-      { label: "Set", path: "/pokemon-sets", icon: "bi bi-collection" },
-      { label: "Card", path: "/pokemon-cards-master", icon: "bi bi-people" }
+      { label: "Set", path: "/admin/pokemon-sets", icon: "bi bi-collection" },
+      { label: "Card", path: "/admin/pokemon-card", icon: "bi bi-people" }
     ],
   },
   {
     icon: "bi bi-person",
     label: "INVENTORY MANAGEMENT",
     dropdown: true,
-    children: [{ label: "Inventory", path: "/inventory", icon: "bi bi-box" }],
+    children: [{ label: "Inventory", path: "/admin/inventory", icon: "bi bi-box" }],
   },
   {
     icon: "bi bi-people",
     label: "MARKET ANALYSIS & PRICING",
     dropdown: true,
     children: [
-      { label: "Market Prices", path: "/market-prices", icon: "bi bi-person-badge" },
-      { label: "Price Alerts", path: "/price-alerts", icon: "bi bi-clock-history" },
+      { label: "Market Prices", path: "/admin/market-price", icon: "bi bi-person-badge" },
+      { label: "Price Alerts", path: "/admin/price-alert", icon: "bi bi-clock-history" },
     ],
   },
   {
@@ -61,8 +61,8 @@ const sidebarItems: SidebarItemData[] = [
     label: "ORDER MANAGEMENT",
     dropdown: true,
     children: [
-      { label: "Orders", path: "/orders", icon: "bi bi-file-earmark-medical" },
-      { label: "Order Details", path: "/order-details", icon: "bi bi-truck" },
+      { label: "Orders", path: "/admin/order", icon: "bi bi-file-earmark-medical" },
+      { label: "Order Details", path: "/admin/order-details", icon: "bi bi-truck" },
 
     ],
   },

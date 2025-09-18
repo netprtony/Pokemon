@@ -9,7 +9,7 @@ import type { OptionItem } from "./Option";
 export interface FieldOption {
   value: string;
   label: string;
-  type?: "number" | "date" | "month" | "text" | "boolean" | "money";
+  type?: "number" | "date" | "month" | "text" | "boolean" | "money" | "datetime";
 }
 
 export interface Filter {

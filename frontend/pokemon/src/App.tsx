@@ -4,7 +4,10 @@ import AdminLayout from "./layouts/AdminLayout";
 import PokemonSetPage from "./pages/admin/PokemonSet";
 import PokemonCardPage from "./pages/admin/PokemonCard";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import OrderPage from "./pages/admin/Order";
+import InventoryPage from "./pages/admin/Inventory";
+import MarketPricePage from "./pages/admin/MarketPrice";
+import PriceAlertPage from "./pages/admin/PriceAlert";
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: any) {
     super(props);
@@ -29,6 +32,10 @@ const App: React.FC = () => {
           <Route path="pokemon-set" element={<PokemonSetPage />} />
           <Route path="*" element={<Navigate to="pokemon-set" replace />} />
           <Route path="pokemon-card" element={<PokemonCardPage />} />
+          <Route path="order" element={<OrderPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="market-price" element={<MarketPricePage />} />
+          <Route path="price-alert" element={<PriceAlertPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/admin/pokemon-set" replace />} />
       </Routes>

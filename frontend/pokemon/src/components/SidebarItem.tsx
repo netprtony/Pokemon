@@ -8,12 +8,12 @@ type ChildItem = {
 };
 
 type SidebarItemProps = {
-  icon: string;               // Bootstrap icon class, e.g. "bi bi-house"
-  label: string;              // main title
-  path?: string;              // direct link
-  subLabel?: string;          // optional right label
-  dropdown?: boolean;         // if true => has children
-  children?: ChildItem[];     // children links
+  icon: string;
+  label: string;
+  path?: string;
+  subLabel?: string;
+  dropdown?: boolean;
+  children?: ChildItem[];
 };
 
 export default function SidebarItem({
@@ -29,9 +29,12 @@ export default function SidebarItem({
   const location = useLocation();
 
   const isActive = path && location.pathname === path;
-  const isChildActive = dropdown && children.some((child) => location.pathname === child.path);
+  const isChildActive =
+    dropdown && children.some((child) => location.pathname === child.path);
 
-  const handleClick = () => {
+  /** ✅ Sửa: Nếu là dropdown thì chỉ mở/đóng, không điều hướng */
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // chặn nổi bọt click từ child
     if (dropdown) {
       setOpen((prev) => !prev);
     } else if (path) {
@@ -39,14 +42,20 @@ export default function SidebarItem({
     }
   };
 
-  // SVG chevron right
+  // SVG icons
   const ChevronRight = (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M4 3l3 3-3 3" stroke="#9CA3AF" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="M4 3l3 3-3 3"
+        stroke="#9CA3AF"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 
-  // SVG chevron down
   const ChevronDown = (
     <svg
       width="12"
@@ -55,10 +64,17 @@ export default function SidebarItem({
       fill="none"
       style={{
         transform: open ? "rotate(180deg)" : "rotate(0deg)",
-        transition: "transform 0.2s"
+        transition: "transform 0.2s",
       }}
     >
-      <path d="M3 5l3 3 3-3" stroke="#6B7280" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="M3 5l3 3 3-3"
+        stroke="#6B7280"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 
@@ -66,19 +82,21 @@ export default function SidebarItem({
     <div className="w-100">
       {/* ITEM CHA */}
       <div
-        className={`d-flex align-items-center justify-content-between py-3 px-3 rounded-lg cursor-pointer 
+        className={`d-flex align-items-center justify-content-between py-3 px-3 rounded-lg 
           transition-colors duration-150 
           ${isActive || isChildActive ? "bg-light" : ""}
           sidebar-item-parent`}
-        onClick={handleClick}
+        onClick={handleClick} // ✅ Sửa: luôn stopPropagation
         style={{
           transition: "background 0.2s",
           background: isActive || isChildActive ? "#f3f4f6" : undefined,
+          cursor: "pointer",
         }}
-        onMouseEnter={e => {
-          if (!isActive && !isChildActive) e.currentTarget.style.background = "#f7fafc";
+        onMouseEnter={(e) => {
+          if (!isActive && !isChildActive)
+            e.currentTarget.style.background = "#f7fafc";
         }}
-        onMouseLeave={e => {
+        onMouseLeave={(e) => {
           if (!isActive && !isChildActive) e.currentTarget.style.background = "";
         }}
       >
@@ -89,11 +107,7 @@ export default function SidebarItem({
 
         <div className="d-flex align-items-center gap-2">
           {subLabel && <span className="text-xs text-secondary">{subLabel}</span>}
-          {dropdown ? (
-            ChevronDown
-          ) : (
-            ChevronRight
-          )}
+          {dropdown ? ChevronDown : ChevronRight}
         </div>
       </div>
 
@@ -104,7 +118,9 @@ export default function SidebarItem({
           style={{
             maxHeight: open ? `${children.length * 44}px` : "0",
             opacity: open ? 1 : 0,
-            transition: "max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s",
+            overflow: "hidden",
+            transition:
+              "max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s",
           }}
         >
           {children.map((item, index) => {
@@ -112,21 +128,24 @@ export default function SidebarItem({
             return (
               <div
                 key={index}
-                className={`ps-5 py-2 text-sm cursor-pointer 
+                className={`ps-5 py-2 text-sm 
                   transition-colors rounded-lg d-flex align-items-center
                   sidebar-item-child
-                  ${childActive ? "bg-light text-primary fw-semibold" : ""}
-                `}
+                  ${childActive ? "bg-light text-primary fw-semibold" : ""}`}
                 style={{
                   color: childActive ? "#2563eb" : "#6b7280",
                   background: childActive ? "#f3f4f6" : undefined,
                   transition: "background 0.2s, color 0.2s",
+                  cursor: "pointer",
                 }}
-                onClick={() => navigate(item.path)}
-                onMouseEnter={e => {
+                onClick={(e) => {
+                  e.stopPropagation(); // ✅ chặn parent toggle
+                  navigate(item.path); // ✅ điều hướng bình thường
+                }}
+                onMouseEnter={(e) => {
                   if (!childActive) e.currentTarget.style.background = "#f7fafc";
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e) => {
                   if (!childActive) e.currentTarget.style.background = "";
                 }}
               >
