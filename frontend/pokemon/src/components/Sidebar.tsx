@@ -37,7 +37,7 @@ const sidebarItems: SidebarItemData[] = [
     label: "MASTER DATA",
     dropdown: true,
     children: [
-      { label: "Set", path: "/admin/pokemon-sets", icon: "bi bi-collection" },
+      { label: "Set", path: "/admin/pokemon-set", icon: "bi bi-collection" },
       { label: "Card", path: "/admin/pokemon-card", icon: "bi bi-people" }
     ],
   },

@@ -37,7 +37,7 @@ const App: React.FC = () => {
           <Route path="market-price" element={<MarketPricePage />} />
           <Route path="price-alert" element={<PriceAlertPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/admin/pokemon-set" replace />} />
+        <Route path="*" element={<Navigate to="/pokemon-set" replace />} />
       </Routes>
     </ErrorBoundary>
   );

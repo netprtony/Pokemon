@@ -135,131 +135,133 @@ export default function DataTable<T>({
         
       </div>
 
-      {/* Table */}
-      <Table hover responsive className="align-middle mb-0" ref={tableRef} style={{ fontSize: "1rem" }}>
-        <thead style={{ background: "#F7F7FA" }}>
-          <tr>
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                data-key={col.key}
-                style={{
-                  cursor: col.onSort ? "pointer" : "default",
-                  textAlign: col.align || "left",
-                  width: colWidths[col.key] || col.width,
-                  whiteSpace: "nowrap",
-                  position: "relative",
-                  fontWeight: 700,
-                  color: "#22223B",
-                  background: "#F7F7FA",
-                  border: "none",
-                  fontSize: "1rem",
-                }}
-                onClick={() => col.onSort && handleSort(col.key)}
-              >
-                {col.label}
-                {col.onSort && (
-                  <span className="ms-1" style={{ fontSize: 12 }}>
-                    {col.sortActive
-                      ? col.sortDirection === "asc"
-                        ? "▲"
-                        : "▼"
-                      : ""}
-                  </span>
-                )}
-                {/* Handle resize */}
-                <div
-                  onMouseDown={(e) => startResize(e, col.key)}
+      {/* Table with scroll */}
+      <div style={{ maxHeight: "70vh", overflow: "auto", width: "170vh" }}>
+        <Table hover responsive className="align-middle mb-0" ref={tableRef} style={{ fontSize: "1rem", minWidth: 1200 }}>
+          <thead style={{ background: "#F7F7FA" }}>
+            <tr>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  data-key={col.key}
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    width: 5,
-                    height: "100%",
-                    cursor: "col-resize",
+                    cursor: col.onSort ? "pointer" : "default",
+                    textAlign: col.align || "left",
+                    width: colWidths[col.key] || col.width,
+                    whiteSpace: "nowrap",
+                    position: "relative",
+                    fontWeight: 700,
+                    color: "#22223B",
+                    background: "#F7F7FA",
+                    border: "none",
+                    fontSize: "1rem",
                   }}
-                />
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={columns.length} className="text-center text-muted py-5">
-                Đang tải dữ liệu...
-              </td>
-            </tr>
-          ) : paginatedData.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="text-center text-muted py-5">
-                Không có dữ liệu
-              </td>
-            </tr>
-          ) : (
-            paginatedData.map((row, idx) => {
-              const globalIdx = (currentPage - 1) * currentPageSize + idx;
-              return (
-                <React.Fragment key={globalIdx}>
-                  <tr
+                  onClick={() => col.onSort && handleSort(col.key)}
+                >
+                  {col.label}
+                  {col.onSort && (
+                    <span className="ms-1" style={{ fontSize: 12 }}>
+                      {col.sortActive
+                        ? col.sortDirection === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </span>
+                  )}
+                  {/* Handle resize */}
+                  <div
+                    onMouseDown={(e) => startResize(e, col.key)}
                     style={{
-                      cursor: renderCollapse ? "pointer" : "default",
-                      background: globalIdx % 2 === 0 ? "#fff" : "#F7F7FA",
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      width: 5,
+                      height: "100%",
+                      cursor: "col-resize",
                     }}
-                    onClick={() => renderCollapse && setOpenRow(openRow === globalIdx ? null : globalIdx)}
-                  >
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        style={{
-                          textAlign: col.align || "left",
-                          verticalAlign: "middle",
-                          border: "none",
-                          fontWeight: col.key === "status" ? 600 : 400,
-                          fontSize: "1rem",
-                        }}
-                      >
-                        {/* Nếu là hình ảnh, cho phép click để xem lớn */}
-                        {col.key.toLowerCase().includes("img") || col.key.toLowerCase().includes("image") || col.key.toLowerCase().includes("symbol") ? (
-                          (row as Record<string, any>)[col.key]? (
-                            <img
-                              src={(row as Record<string, any>)[col.key]}
-                              alt="preview"
-                              style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer", borderRadius: 6 }}
-                              onClick={e => {
-                                e.stopPropagation();
-                                setPreviewImg((row as Record<string, any>)[col.key]);
-                              }}
-                            />
-                          ) : (
-                            <i className="bi bi-image text-secondary fs-3" title="No image" />
-                          )
-                        ) : col.render ? col.render(row, globalIdx) : (row as any)[col.key]}
-                      </td>
-                    ))}
-                  </tr>
-                  {renderCollapse && openRow === globalIdx && (
-                    <tr style={{ background: "#F7F7FA" }}>
-                      <td colSpan={columns.length}>
-                        <div
-                          ref={collapseRef}
-                          className="overflow-hidden border-start border-primary ps-3"
+                  />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length} className="text-center text-muted py-5">
+                  Đang tải dữ liệu...
+                </td>
+              </tr>
+            ) : paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="text-center text-muted py-5">
+                  Không có dữ liệu
+                </td>
+              </tr>
+            ) : (
+              paginatedData.map((row, idx) => {
+                const globalIdx = (currentPage - 1) * currentPageSize + idx;
+                return (
+                  <React.Fragment key={globalIdx}>
+                    <tr
+                      style={{
+                        cursor: renderCollapse ? "pointer" : "default",
+                        background: globalIdx % 2 === 0 ? "#fff" : "#F7F7FA",
+                      }}
+                      onClick={() => renderCollapse && setOpenRow(openRow === globalIdx ? null : globalIdx)}
+                    >
+                      {columns.map((col) => (
+                        <td
+                          key={col.key}
                           style={{
-                            maxHeight,
-                            transition: "max-height 0.3s ease",
+                            textAlign: col.align || "left",
+                            verticalAlign: "middle",
+                            border: "none",
+                            fontWeight: col.key === "status" ? 600 : 400,
+                            fontSize: "1rem",
                           }}
                         >
-                          {renderCollapse(row)}
-                        </div>
-                      </td>
+                          {/* Nếu là hình ảnh, cho phép click để xem lớn */}
+                          {col.key.toLowerCase().includes("img") || col.key.toLowerCase().includes("image") || col.key.toLowerCase().includes("symbol") ? (
+                            (row as Record<string, any>)[col.key]? (
+                              <img
+                                src={(row as Record<string, any>)[col.key]}
+                                alt="preview"
+                                style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer", borderRadius: 6 }}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setPreviewImg((row as Record<string, any>)[col.key]);
+                                }}
+                              />
+                            ) : (
+                              <i className="bi bi-image text-secondary fs-3" title="No image" />
+                            )
+                          ) : col.render ? col.render(row, globalIdx) : (row as any)[col.key]}
+                        </td>
+                      ))}
                     </tr>
-                  )}
-                </React.Fragment>
-              );
-            })
-          )}
-        </tbody>
-      </Table>
+                    {renderCollapse && openRow === globalIdx && (
+                      <tr style={{ background: "#F7F7FA" }}>
+                        <td colSpan={columns.length}>
+                          <div
+                            ref={collapseRef}
+                            className="overflow-hidden border-start border-primary ps-3"
+                            style={{
+                              maxHeight,
+                              transition: "max-height 0.3s ease",
+                            }}
+                          >
+                            {renderCollapse(row)}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
+            )}
+          </tbody>
+        </Table>
+      </div>
       {/* Modal xem hình lớn */}
       <ModalIOS
         isOpen={!!previewImg}

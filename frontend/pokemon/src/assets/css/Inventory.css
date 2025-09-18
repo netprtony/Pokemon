@@ -1,0 +1,7 @@
+.inventory-modal-form label {
+  margin-bottom: 6px;
+}
+.inventory-modal-form input,
+.inventory-modal-form select {
+  margin-bottom: 0;
+}

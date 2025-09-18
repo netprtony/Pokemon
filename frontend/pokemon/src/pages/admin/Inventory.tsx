@@ -7,38 +7,53 @@ import ModalConfirm from "../../components/ModalConfirm";
 import { toast } from "react-toastify";
 import type { Filter } from "../../components/AdvancedFilters";
 import type { FieldOption } from "../../components/AdvancedFilters";
+import "../../assets/css/Inventory.css";
 
 // Kiểu dữ liệu cho 1 dòng Inventory
 export type InventoryRow = {
   inventory_id: number;
   master_card_id: string;
-  card_name?: string;
-  card_set?: string;
-  card_rarity?: string;
-  card_condition?: string;
-  purchase_price?: number;
-  purchase_date?: string;
-  quantity?: number;
-  location?: string;
-  note?: string;
-  created_at?: string;
-  updated_at?: string;
+  quantity_in_stock: number;
+  quantity_sold: number;
+  purchase_price: number;
+  selling_price?: number;
+  storage_location?: string;
+  physical_condition_us: string;
+  physical_condition_jp: string;
+  card_photos?: any;
+  photo_count?: number;
+  date_added: string;
+  last_updated?: string;
+  is_active?: boolean;
+  notes?: string;
+  language?: string;
+  is_graded?: boolean;
+  grade_company?: string;
+  grade_score?: number;
 };
 
 const fieldOptions: FieldOption[] = [
   { value: "inventory_id", label: "ID", type: "number" },
   { value: "master_card_id", label: "Mã thẻ", type: "text" },
-  { value: "card_name", label: "Tên thẻ", type: "text" },
-  { value: "card_set", label: "Bộ thẻ", type: "text" },
-  { value: "card_rarity", label: "Độ hiếm", type: "text" },
-  { value: "card_condition", label: "Tình trạng", type: "text" },
-  { value: "purchase_price", label: "Giá mua", type: "money" },
-  { value: "purchase_date", label: "Ngày mua", type: "date" },
-  { value: "quantity", label: "Số lượng", type: "number" },
-  { value: "location", label: "Vị trí", type: "text" },
+  { value: "quantity_in_stock", label: "Số lượng trong kho", type: "number" },
+  { value: "quantity_sold", label: "Số lượng đã bán", type: "number" },
+  { value: "purchase_rarity", label: "Độ hiếm", type: "text" },
+  { value: "selling_price", label: "Giá bán", type: "money" },
+  { value: "storage_location", label: "Vị trí lưu trữ", type: "text" },
+  { value: "physical_condition_us", label: "Tình trạng (US)", type: "text" },
+  { value: "physical_condition_jp", label: "Tình trạng (JP)", type: "text" },
+  { value: "photo_count", label: "Số lượng ảnh thẻ", type: "number" },
+  { value: "physical_condition", label: "Vị trí đời thực", type: "text" },
   { value: "note", label: "Ghi chú", type: "text" },
-  { value: "created_at", label: "Ngày tạo", type: "datetime" },
-  { value: "updated_at", label: "Ngày cập nhật", type: "datetime" },
+  { value: "physical_condition", label: "Tình trạng vật lý", type: "text" },
+  { value: "date_added", label: "Ngày thêm", type: "datetime" },
+  { value: "last_updated", label: "Lần cập nhật cuối", type: "datetime" },
+  { value: "is_active", label: "Đang hoạt động", type: "boolean" },
+  { value: "language", label: "Ngôn ngữ", type: "text" },
+  { value: "is_graded", label: "Đã chấm điểm", type: "boolean" },
+  { value: "grade_company", label: "Công ty chấm điểm", type: "text" },
+  { value: "grade_score", label: "Điểm chấm", type: "number" },
+  { value: "notes", label: "Ghi chú", type: "text" },
 ];
 
 const API_URL = "http://localhost:8000/inventory";
@@ -48,17 +63,23 @@ type ModalMode = "add" | "edit" | null;
 const defaultForm: InventoryRow = {
   inventory_id: 0,
   master_card_id: "",
-  card_name: "",
-  card_set: "",
-  card_rarity: "",
-  card_condition: "",
-  purchase_price: undefined,
-  purchase_date: "",
-  quantity: 1,
-  location: "",
-  note: "",
-  created_at: "",
-  updated_at: "",
+  quantity_in_stock: 0,
+  quantity_sold: 0,
+  purchase_price: 0,
+  selling_price: undefined,
+  storage_location: "",
+  physical_condition_us: "",
+  physical_condition_jp: "",
+  card_photos: undefined,
+  photo_count: 0,
+  date_added: "",
+  last_updated: "",
+  is_active: true,
+  notes: "",
+  language: "",
+  is_graded: false,
+  grade_company: "",
+  grade_score: 0,
 };
 
 const InventoryPage: React.FC = () => {
@@ -203,19 +224,25 @@ const InventoryPage: React.FC = () => {
 
   // Table columns
   const columns = [
-    { key: "inventory_id", label: "ID", onSort: () => {}, sortActive: sortField === "inventory_id", sortDirection: sortOrder },
-    { key: "master_card_id", label: "Mã thẻ", onSort: () => {}, sortActive: sortField === "master_card_id", sortDirection: sortOrder },
-    { key: "card_name", label: "Tên thẻ", onSort: () => {}, sortActive: sortField === "card_name", sortDirection: sortOrder },
-    { key: "card_set", label: "Bộ thẻ", onSort: () => {}, sortActive: sortField === "card_set", sortDirection: sortOrder },
-    { key: "card_rarity", label: "Độ hiếm", onSort: () => {}, sortActive: sortField === "card_rarity", sortDirection: sortOrder },
-    { key: "card_condition", label: "Tình trạng", onSort: () => {}, sortActive: sortField === "card_condition", sortDirection: sortOrder },
-    { key: "purchase_price", label: "Giá mua", onSort: () => {}, sortActive: sortField === "purchase_price", sortDirection: sortOrder },
-    { key: "purchase_date", label: "Ngày mua", onSort: () => {}, sortActive: sortField === "purchase_date", sortDirection: sortOrder },
-    { key: "quantity", label: "Số lượng", onSort: () => {}, sortActive: sortField === "quantity", sortDirection: sortOrder },
-    { key: "location", label: "Vị trí", onSort: () => {}, sortActive: sortField === "location", sortDirection: sortOrder },
-    { key: "note", label: "Ghi chú", onSort: () => {}, sortActive: sortField === "note", sortDirection: sortOrder },
-    { key: "created_at", label: "Ngày tạo", onSort: () => {}, sortActive: sortField === "created_at", sortDirection: sortOrder },
-    { key: "updated_at", label: "Ngày cập nhật", onSort: () => {}, sortActive: sortField === "updated_at", sortDirection: sortOrder },
+    { key: "inventory_id", label: "ID", onSort: () => handleSort("inventory_id", sortOrder), sortActive: sortField === "inventory_id", sortDirection: sortOrder },
+    { key: "master_card_id", label: "Mã thẻ", onSort: () => handleSort("master_card_id", sortOrder), sortActive: sortField === "master_card_id", sortDirection: sortOrder },
+    { key: "quantity_in_stock", label: "Số lượng trong kho", onSort: () => handleSort("quantity_in_stock", sortOrder), sortActive: sortField === "quantity_in_stock", sortDirection: sortOrder },
+    { key: "quantity_sold", label: "Số lượng đã bán", onSort: () => handleSort("quantity_sold", sortOrder), sortActive: sortField === "quantity_sold", sortDirection: sortOrder },
+    { key: "purchase_price", label: "Giá mua", onSort: () => handleSort("purchase_price", sortOrder), sortActive: sortField === "purchase_price", sortDirection: sortOrder },
+    { key: "selling_price", label: "Giá bán", onSort: () => handleSort("selling_price", sortOrder), sortActive: sortField === "selling_price", sortDirection: sortOrder },
+    { key: "storage_location", label: "Vị trí lưu trữ", onSort: () => handleSort("storage_location", sortOrder), sortActive: sortField === "storage_location", sortDirection: sortOrder },
+    { key: "physical_condition_us", label: "Tình trạng (US)", onSort: () => handleSort("physical_condition_us", sortOrder), sortActive: sortField === "physical_condition_us", sortDirection: sortOrder },
+    { key: "physical_condition_jp", label: "Tình trạng (JP)", onSort: () => handleSort("physical_condition_jp", sortOrder), sortActive: sortField === "physical_condition_jp", sortDirection: sortOrder },
+    { key: "card_photos", label: "Ảnh thẻ", onSort: () => handleSort("card_photos", sortOrder), sortActive: sortField === "card_photos", sortDirection: sortOrder },
+    { key: "photo_count", label: "Số lượng ảnh thẻ", onSort: () => handleSort("photo_count", sortOrder), sortActive: sortField === "photo_count", sortDirection: sortOrder },
+    { key: "date_added", label: "Ngày thêm", onSort: () => handleSort("date_added", sortOrder), sortActive: sortField === "date_added", sortDirection: sortOrder },
+    { key: "last_updated", label: "Lần cập nhật cuối", onSort: () => handleSort("last_updated", sortOrder), sortActive: sortField === "last_updated", sortDirection: sortOrder },
+    { key: "is_active", label: "Đang hoạt động", onSort: () => handleSort("is_active", sortOrder), sortActive: sortField === "is_active", sortDirection: sortOrder },
+    { key: "notes", label: "Ghi chú", onSort: () => handleSort("notes", sortOrder), sortActive: sortField === "notes", sortDirection: sortOrder },
+    { key: "language", label: "Ngôn ngữ", onSort: () => handleSort("language", sortOrder), sortActive: sortField === "language", sortDirection: sortOrder },
+    { key: "is_graded", label: "Đã chấm điểm", onSort: () => handleSort("is_graded", sortOrder), sortActive: sortField === "is_graded", sortDirection: sortOrder },
+    { key: "grade_company", label: "Công ty chấm điểm", onSort: () => handleSort("grade_company", sortOrder), sortActive: sortField === "grade_company", sortDirection: sortOrder },
+    { key: "grade_score", label: "Điểm chấm", onSort: () => handleSort("grade_score", sortOrder), sortActive: sortField === "grade_score", sortDirection: sortOrder },
     {
       key: "action",
       label: "Thao tác",
@@ -263,107 +290,111 @@ const InventoryPage: React.FC = () => {
 
   // Form modal content
   const renderFormModal = () => (
-    <form className="px-3 pb-3" autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-      <div className="mb-3">
+    <form
+      className="inventory-modal-form"
+      autoComplete="off"
+      onSubmit={(e) => { e.preventDefault(); handleSave(); }}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "18px 32px",
+        paddingBottom: 0,
+        minWidth: 600,
+      }}
+    >
+      {/* Cột trái */}
+      <div>
         <label className="form-label fw-semibold">Mã thẻ</label>
-        <input
-          className="form-control"
-          name="master_card_id"
-          value={form.master_card_id}
-          onChange={handleFormChange}
-          required
-        />
+        <input className="form-control" name="master_card_id" value={form.master_card_id} onChange={handleFormChange} required />
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Tên thẻ</label>
-        <input
-          className="form-control"
-          name="card_name"
-          value={form.card_name || ""}
-          onChange={handleFormChange}
-        />
+      <div>
+        <label className="form-label fw-semibold">Số lượng trong kho</label>
+        <input className="form-control" type="number" name="quantity_in_stock" value={form.quantity_in_stock} onChange={handleFormChange} required />
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Bộ thẻ</label>
-        <input
-          className="form-control"
-          name="card_set"
-          value={form.card_set || ""}
-          onChange={handleFormChange}
-        />
+      <div>
+        <label className="form-label fw-semibold">Số lượng đã bán</label>
+        <input className="form-control" type="number" name="quantity_sold" value={form.quantity_sold} onChange={handleFormChange} />
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Độ hiếm</label>
-        <input
-          className="form-control"
-          name="card_rarity"
-          value={form.card_rarity || ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Tình trạng</label>
-        <input
-          className="form-control"
-          name="card_condition"
-          value={form.card_condition || ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
+      <div>
         <label className="form-label fw-semibold">Giá mua</label>
-        <input
-          className="form-control"
-          type="number"
-          name="purchase_price"
-          value={form.purchase_price ?? ""}
-          onChange={handleFormChange}
-        />
+        <input className="form-control" type="number" name="purchase_price" value={form.purchase_price} onChange={handleFormChange} required />
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Ngày mua</label>
-        <input
-          className="form-control"
-          type="date"
-          name="purchase_date"
-          value={form.purchase_date || ""}
-          onChange={handleFormChange}
-        />
+      <div>
+        <label className="form-label fw-semibold">Giá bán</label>
+        <input className="form-control" type="number" name="selling_price" value={form.selling_price ?? ""} onChange={handleFormChange} />
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Số lượng</label>
-        <input
-          className="form-control"
-          type="number"
-          name="quantity"
-          value={form.quantity ?? 1}
-          onChange={handleFormChange}
-          min={1}
-        />
+      <div>
+        <label className="form-label fw-semibold">Vị trí lưu trữ</label>
+        <input className="form-control" name="storage_location" value={form.storage_location ?? ""} onChange={handleFormChange} />
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Vị trí</label>
-        <input
-          className="form-control"
-          name="location"
-          value={form.location || ""}
-          onChange={handleFormChange}
-        />
+      <div>
+        <label className="form-label fw-semibold">Tình trạng (US)</label>
+        <input className="form-control" name="physical_condition_us" value={form.physical_condition_us} onChange={handleFormChange} required />
       </div>
-      <div className="mb-3">
+      <div>
+        <label className="form-label fw-semibold">Tình trạng (JP)</label>
+        <input className="form-control" name="physical_condition_jp" value={form.physical_condition_jp} onChange={handleFormChange} required />
+      </div>
+      <div>
+        <label className="form-label fw-semibold">Số lượng ảnh thẻ</label>
+        <input className="form-control" type="number" name="photo_count" value={form.photo_count ?? 0} onChange={handleFormChange} />
+      </div>
+      <div>
+        <label className="form-label fw-semibold">Ngày thêm</label>
+        <input className="form-control" type="date" name="date_added" value={form.date_added} onChange={handleFormChange} required />
+      </div>
+      <div>
+        <label className="form-label fw-semibold">Đang hoạt động</label>
+        <select className="form-select" name="is_active" value={form.is_active ? "true" : "false"}
+          onChange={e => handleFormChange({
+            ...e,
+            target: { ...e.target, value: e.target.value === "true", name: "is_active", type: "checkbox", checked: e.target.value === "true" }
+          } as any)}
+        >
+          <option value="true">Có</option>
+          <option value="false">Không</option>
+        </select>
+      </div>
+      <div>
         <label className="form-label fw-semibold">Ghi chú</label>
-        <input
-          className="form-control"
-          name="note"
-          value={form.note || ""}
-          onChange={handleFormChange}
-        />
+        <input className="form-control" name="notes" value={form.notes ?? ""} onChange={handleFormChange} />
       </div>
-      <div className="d-flex gap-2 mt-4">
-        <button type="submit" className="btn btn-primary flex-grow-1">
+      <div>
+        <label className="form-label fw-semibold">Ngôn ngữ</label>
+        <input className="form-control" name="language" value={form.language ?? ""} onChange={handleFormChange} />
+      </div>
+      <div>
+        <label className="form-label fw-semibold">Đã chấm điểm</label>
+        <select className="form-select" name="is_graded" value={form.is_graded ? "true" : "false"}
+          onChange={e => handleFormChange({
+            ...e,
+            target: { ...e.target, value: e.target.value === "true", name: "is_graded", type: "checkbox", checked: e.target.value === "true" }
+          } as any)}
+        >
+          <option value="false">Chưa</option>
+          <option value="true">Đã chấm</option>
+        </select>
+      </div>
+      <div>
+        <label className="form-label fw-semibold">Công ty chấm điểm</label>
+        <input className="form-control" name="grade_company" value={form.grade_company ?? ""} onChange={handleFormChange} />
+      </div>
+      <div>
+        <label className="form-label fw-semibold">Điểm chấm</label>
+        <input className="form-control" type="number" name="grade_score" value={form.grade_score ?? ""} onChange={handleFormChange} />
+      </div>
+      {/* Button thao tác ở góc phải dưới */}
+      <div style={{
+        gridColumn: "1 / span 2",
+        display: "flex",
+        justifyContent: "flex-end",
+        gap: 12,
+        marginTop: 24,
+      }}>
+        <button type="submit" className="btn btn-primary">
           {modalMode === "add" ? "Thêm mới" : "Lưu thay đổi"}
         </button>
-        <button type="button" className="btn btn-outline-secondary flex-grow-1" onClick={handleCloseModal}>
+        <button type="button" className="btn btn-outline-secondary" onClick={handleCloseModal}>
           Đóng
         </button>
       </div>
