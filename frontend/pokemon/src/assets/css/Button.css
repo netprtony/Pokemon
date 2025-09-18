@@ -1,0 +1,110 @@
+.mac-btn {
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  padding: 0 28px;
+  height: 40px;
+  font-size: 1.08rem;
+  transition: 
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s,
+    border 0.18s;
+  cursor: pointer;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* Sizes */
+.mac-btn-md { height: 48px; font-size: 1.08rem; }
+.mac-btn-lg { height: 48px; font-size: 1.18rem; }
+
+/* Primary */
+.mac-btn-primary {
+  background: #3385ff;
+  color: #fff;
+}
+.mac-btn-primary:hover {
+  background: #2974e6;
+  box-shadow: 0 0 0 4px #b3d1ff;
+}
+
+/* Primary outline */
+.mac-btn-primary-outline {
+  background: #fff;
+  color: #3385ff;
+  border: 2px solid #b3d1ff;
+}
+.mac-btn-primary-outline:hover {
+  background: #eaf4ff;
+  box-shadow: 0 0 0 4px #b3d1ff;
+}
+
+/* Primary soft */
+.mac-btn-primary-soft {
+  background: #eaf4ff;
+  color: #3385ff;
+}
+.mac-btn-primary-soft:hover {
+  background: #d1e7ff;
+  box-shadow: 0 0 0 4px #b3d1ff;
+}
+
+/* Primary outline soft */
+.mac-btn-primary-outline-soft {
+  background: #fff;
+  color: #3385ff;
+  border: 2px solid #b3d1ff;
+}
+.mac-btn-primary-outline-soft:hover {
+  background: #eaf4ff;
+  box-shadow: 0 0 0 4px #b3d1ff;
+}
+
+/* White */
+.mac-btn-white {
+  background: #fff;
+  color: #222;
+  border: 1px solid #eee;
+}
+.mac-btn-white:hover {
+  background: #f7f7fa;
+  box-shadow: 0 0 0 4px #e0e7ff;
+}
+
+/* White outline */
+.mac-btn-white-outline {
+  background: #fff;
+  color: #222;
+  border: 2px solid #b3d1ff;
+}
+.mac-btn-white-outline:hover {
+  background: #f7f7fa;
+  box-shadow: 0 0 0 4px #b3d1ff;
+}
+
+/* Gray */
+.mac-btn-gray {
+  background: #888;
+  color: #fff;
+}
+.mac-btn-gray:hover {
+  background: #666;
+  box-shadow: 0 0 0 4px #d1d5db;
+}
+
+/* Gray outline */
+.mac-btn-gray-outline {
+  background: #f7f7fa;
+  color: #888;
+  border: 2px solid #d1d5db;
+}
+.mac-btn-gray-outline:hover {
+  background: #e5e7eb;
+  box-shadow: 0 0 0 4px #d1d5db;
+}

@@ -1,12 +1,15 @@
 import React, { useState, useEffect, type ChangeEvent } from "react";
 import { toast } from "react-toastify";
-
+import Button from "./Button";
+import Option from "./Option";
+import Input from "./Input"; // Thêm import Input
+import type { OptionItem } from "./Option";
 
 // Định nghĩa kiểu cho field option và filter
 export interface FieldOption {
   value: string;
   label: string;
-  type?: "number" | "date" | "month" | "text" | "boolean";
+  type?: "number" | "date" | "month" | "text" | "boolean" | "money";
 }
 
 export interface Filter {
@@ -42,6 +45,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   });
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  // Dropdown state cho combobox
+  const [fieldDropdown, setFieldDropdown] = useState(false);
+  const [operatorDropdown, setOperatorDropdown] = useState(false);
+
   useEffect(() => {
     if (fieldOptions && fieldOptions.length && !newFilter.field) {
       setNewFilter((prev) => ({ ...prev, field: fieldOptions[0].value }));
@@ -74,6 +81,27 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
     like: "~",
   };
 
+  // Tạo danh sách OptionItem cho trường
+  const fieldOptionItems: OptionItem[] = fieldOptions.map((opt) => ({
+    label: opt.label,
+    onClick: () => {
+      setNewFilter((prev) => ({ ...prev, field: opt.value }));
+      setFieldDropdown(false);
+    },
+    disabled: false,
+  }));
+
+  // Tạo danh sách OptionItem cho toán tử
+  const operatorItems: OptionItem[] = [
+    { label: "=", onClick: () => { setNewFilter((prev) => ({ ...prev, operator: "eq" })); setOperatorDropdown(false); } },
+    { label: "!=", onClick: () => { setNewFilter((prev) => ({ ...prev, operator: "ne" })); setOperatorDropdown(false); } },
+    { label: ">", onClick: () => { setNewFilter((prev) => ({ ...prev, operator: "gt" })); setOperatorDropdown(false); } },
+    { label: "<", onClick: () => { setNewFilter((prev) => ({ ...prev, operator: "lt" })); setOperatorDropdown(false); } },
+    { label: ">=", onClick: () => { setNewFilter((prev) => ({ ...prev, operator: "ge" })); setOperatorDropdown(false); } },
+    { label: "<=", onClick: () => { setNewFilter((prev) => ({ ...prev, operator: "le" })); setOperatorDropdown(false); } },
+    { label: "Gần bằng", onClick: () => { setNewFilter((prev) => ({ ...prev, operator: "like" })); setOperatorDropdown(false); } },
+  ];
+
   return (
     <div className="mb-4">
       <h5 className="mb-3 badge bg-success ">🔍 Bộ lọc nâng cao</h5>
@@ -89,8 +117,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             onChange={handleSearch}
           />
           {searchTerm && (
-            <button
-              className="btn btn-sm btn-outline-secondary mt-2"
+            <Button
+              variant="gray-outline"
+              size="md"
+              className="mt-2"
               type="button"
               onClick={() => {
                 setSearchTerm("");
@@ -98,7 +128,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               }}
             >
               Xóa tìm kiếm
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -107,42 +137,46 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       <div className="row g-3 align-items-end">
         <div className="col-md-3">
           <label className="form-label badge bg-success">Trường</label>
-          <select
-            className="form-select placeholder-glow"
-            value={newFilter.field}
-            onChange={(e) =>
-              setNewFilter((prev) => ({ ...prev, field: e.target.value }))
-            }
-          >
-            <option value="">-- Chọn trường --</option>
-            {fieldOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div style={{ position: "relative" }}>
+            <Button
+              variant="white-outline"
+              size="md"
+              className="w-100"
+              type="button"
+              onClick={() => setFieldDropdown((v) => !v)}
+              style={{ textAlign: "left", justifyContent: "flex-start" }}
+            >
+              {fieldOptions.find(f => f.value === newFilter.field)?.label || "--"}
+              <span style={{ float: "right", marginLeft: "auto" }}>▼</span>
+            </Button>
+            {fieldDropdown && (
+              <div style={{ position: "absolute", top: "110%", left: 0, zIndex: 20, width: "100%" }}>
+                <Option items={fieldOptionItems} />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="col-md-3">
           <label className="form-label badge bg-success">Toán tử</label>
-          <select
-            className="form-select placeholder-glow"
-            value={newFilter.operator}
-            onChange={(e) =>
-              setNewFilter((prev) => ({
-                ...prev,
-                operator: e.target.value,
-              }))
-            }
-          >
-            <option value="eq">=</option>
-            <option value="ne">!=</option>
-            <option value="gt">{">"}</option>
-            <option value="lt">{"<"}</option>
-            <option value="ge">{">="}</option>
-            <option value="le">{"<="}</option>
-            <option value="like">Gần bằng</option>
-          </select>
+          <div style={{ position: "relative" }}>
+            <Button
+              variant="white-outline"
+              size="md"
+              className="w-100"
+              type="button"
+              onClick={() => setOperatorDropdown((v) => !v)}
+              style={{ textAlign: "left", justifyContent: "flex-start" }}
+            >
+              {operatorLabel[newFilter.operator] || newFilter.operator}
+              <span style={{ float: "right", marginLeft: "auto" }}>▼</span>
+            </Button>
+            {operatorDropdown && (
+              <div style={{ position: "absolute", top: "110%", left: 0, zIndex: 20, width: "100%" }}>
+                <Option items={operatorItems} />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="col-md-3">
@@ -153,37 +187,8 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             );
             if (selectedField?.type === "number") {
               return (
-                <input
-                  type="text"
-                  className="form-control placeholder-glow"
-                  value={
-                    newFilter.value
-                      ? Number(newFilter.value).toLocaleString("vi-VN")
-                      : ""
-                  }
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[.,\s]/g, "");
-                    if (/^\d*$/.test(raw)) {
-                      setNewFilter((prev) => ({
-                        ...prev,
-                        value: raw,
-                      }));
-                    }
-                  }}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="Nhập số..."
-                />
-              );
-            }
-            if (
-              selectedField?.type === "date" ||
-              selectedField?.type === "month"
-            ) {
-              return (
-                <input
-                  type="month"
-                  className="form-control placeholder-glow"
+                <Input
+                  type="number"
                   value={newFilter.value}
                   onChange={(e) =>
                     setNewFilter((prev) => ({
@@ -191,15 +196,48 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                       value: e.target.value,
                     }))
                   }
-                  placeholder="Chọn tháng/năm"
+                  min={0}
+                  label={undefined}
+                  placeholder="Nhập số..."
+                />
+              );
+            }
+            if (selectedField?.type === "money") {
+              return (
+                <Input
+                  type="money"
+                  value={newFilter.value}
+                  onChange={(e) =>
+                    setNewFilter((prev) => ({
+                      ...prev,
+                      value: e.target.value,
+                    }))
+                  }
+                  label={undefined}
+                  placeholder="Nhập số tiền..."
+                />
+              );
+            }
+            if (selectedField?.type === "date") {
+              return (
+                <Input
+                  type="datetime"
+                  value={newFilter.value}
+                  onChange={(e) =>
+                    setNewFilter((prev) => ({
+                      ...prev,
+                      value: e.target.value,
+                    }))
+                  }
+                  label={undefined}
+                  placeholder="Chọn ngày giờ"
                 />
               );
             }
             // Mặc định là text
             return (
-              <input
+              <Input
                 type="text"
-                className="form-control placeholder-glow"
                 value={newFilter.value}
                 onChange={(e) =>
                   setNewFilter((prev) => ({
@@ -207,6 +245,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                     value: e.target.value,
                   }))
                 }
+                label={undefined}
                 placeholder="Nhập giá trị..."
               />
             );
@@ -214,9 +253,9 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
         </div>
 
         <div className="col-md-3 d-flex align-items-end">
-          <button className="btn btn-primary w-100" type="button" onClick={add}>
+          <Button variant="primary" size="md" className="w-100" type="button" onClick={add}>
             ➕ Thêm bộ lọc
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -234,12 +273,17 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                   {fieldOptions.find((opt) => opt.value === f.field)?.label}{" "}
                   {operatorLabel[f.operator] || f.operator} {String(f.value)}
                 </span>
-                <button
+                <Button
+                  variant="gray-outline"
+                  size="md"
                   className="btn-close btn-close-dark ms-2"
                   type="button"
+                  style={{ fontSize: "0.8rem", padding: 0, width: 22, height: 22, minWidth: 22 }}
                   onClick={() => onRemoveFilter && onRemoveFilter(i)}
-                  style={{ fontSize: "0.8rem" }}
-                ></button>
+                  aria-label="Xóa"
+                >
+                  ×
+                </Button>
               </div>
             ))}
           </div>
@@ -248,15 +292,14 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
       {/* Xuất dữ liệu */}
       <div className="mt-4 d-flex gap-2">
-        <button className="btn btn-success d-flex align-items-center gap-2" type="button" onClick={onExportCSV}>
+        <Button variant="primary-soft" size="md" type="button" onClick={onExportCSV}>
           <i className="bi bi-file-earmark-spreadsheet fs-5"></i>
           Export CSV
-        </button>
-        <button className="btn btn-warning d-flex align-items-center gap-2" type="button" onClick={onExportJSON}>
+        </Button>
+        <Button variant="primary-outline-soft" size="md" type="button" onClick={onExportJSON}>
           <i className="bi bi-file-earmark-code fs-5"></i>
           Export JSON
-        </button>
-       
+        </Button>
       </div>
     </div>
   );

@@ -1,0 +1,34 @@
+.modal-grid-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.modal-grid-content > * {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (max-width: 1000px) {
+  .modal-grid-content {
+    grid-template-columns: 1fr;
+  }
+}
+.modal-ios-content {
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.modal-ios-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-ios-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}

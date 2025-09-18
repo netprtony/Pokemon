@@ -1,0 +1,87 @@
+.mac-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mac-input-label {
+  font-size: 0.98rem;
+  color: #222;
+  font-weight: 500;
+  margin-bottom: 0px;
+}
+
+.mac-input {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 1.08rem;
+  background: #fff;
+  color: #222;
+  outline: none;
+  transition: border 0.18s;
+  box-shadow: none;
+}
+
+.mac-input:focus {
+  border-color: #a5b4fc;
+  background: #f7f7fa;
+}
+
+.mac-input-stepper {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #a5b4fc;
+  border-radius: 12px;
+  background: #eaf4ff;
+  padding: 0 0 0 8px;
+  height: 44px;
+}
+
+.mac-input-step {
+  border: none;
+  background: transparent;
+  font-size: 1.08rem;
+  width: 100px;
+  outline: none;
+  color: #222;
+  padding: 0 8px;
+}
+
+.mac-stepper-btns {
+  display: flex;
+  flex-direction: column;
+  margin-left: 4px;
+  height: 36px;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mac-stepper-btn {
+  background: #3385ff;
+  border: none;
+  border-radius: 8px;
+  width: 28px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  transition: background 0.18s;
+}
+
+.mac-stepper-btn:hover {
+  background: #2974e6;
+}
+
+.mac-stepper-btn svg {
+  display: block;
+}
+
+.mac-input[type="file"] {
+  padding: 8px 0;
+  border: none;
+  background: none;
+}
