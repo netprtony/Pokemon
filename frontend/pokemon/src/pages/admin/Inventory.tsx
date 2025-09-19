@@ -13,46 +13,31 @@ import "../../assets/css/Inventory.css";
 export type InventoryRow = {
   inventory_id: number;
   master_card_id: string;
-  quantity_in_stock: number;
-  quantity_sold: number;
-  purchase_price: number;
-  selling_price?: number;
+  photo_avatar?: string;
+  total_quantity: number;
+  quantity_sold?: number;
+  avg_purchase_price?: number;
+  avg_selling_price?: number;
   storage_location?: string;
-  physical_condition_us: string;
-  physical_condition_jp: string;
-  card_photos?: any;
-  photo_count?: number;
+  language?: string;
+  is_active: boolean;
   date_added: string;
   last_updated?: string;
-  is_active?: boolean;
   notes?: string;
-  language?: string;
-  is_graded?: boolean;
-  grade_company?: string;
-  grade_score?: number;
 };
 
 const fieldOptions: FieldOption[] = [
   { value: "inventory_id", label: "ID", type: "number" },
   { value: "master_card_id", label: "Mã thẻ", type: "text" },
-  { value: "quantity_in_stock", label: "Số lượng trong kho", type: "number" },
+  { value: "total_quantity", label: "Tổng số lượng", type: "number" },
   { value: "quantity_sold", label: "Số lượng đã bán", type: "number" },
-  { value: "purchase_rarity", label: "Độ hiếm", type: "text" },
-  { value: "selling_price", label: "Giá bán", type: "money" },
+  { value: "avg_purchase_price", label: "Giá mua trung bình", type: "money" },
+  { value: "avg_selling_price", label: "Giá bán trung bình", type: "money" },
   { value: "storage_location", label: "Vị trí lưu trữ", type: "text" },
-  { value: "physical_condition_us", label: "Tình trạng (US)", type: "text" },
-  { value: "physical_condition_jp", label: "Tình trạng (JP)", type: "text" },
-  { value: "photo_count", label: "Số lượng ảnh thẻ", type: "number" },
-  { value: "physical_condition", label: "Vị trí đời thực", type: "text" },
-  { value: "note", label: "Ghi chú", type: "text" },
-  { value: "physical_condition", label: "Tình trạng vật lý", type: "text" },
   { value: "date_added", label: "Ngày thêm", type: "datetime" },
   { value: "last_updated", label: "Lần cập nhật cuối", type: "datetime" },
   { value: "is_active", label: "Đang hoạt động", type: "boolean" },
   { value: "language", label: "Ngôn ngữ", type: "text" },
-  { value: "is_graded", label: "Đã chấm điểm", type: "boolean" },
-  { value: "grade_company", label: "Công ty chấm điểm", type: "text" },
-  { value: "grade_score", label: "Điểm chấm", type: "number" },
   { value: "notes", label: "Ghi chú", type: "text" },
 ];
 
@@ -63,23 +48,17 @@ type ModalMode = "add" | "edit" | null;
 const defaultForm: InventoryRow = {
   inventory_id: 0,
   master_card_id: "",
-  quantity_in_stock: 0,
+  photo_avatar: "",
+  total_quantity: 0,
   quantity_sold: 0,
-  purchase_price: 0,
-  selling_price: undefined,
+  avg_purchase_price: 0,
+  avg_selling_price: 0,
   storage_location: "",
-  physical_condition_us: "",
-  physical_condition_jp: "",
-  card_photos: undefined,
-  photo_count: 0,
+  language: "EN",
+  is_active: true,
   date_added: "",
   last_updated: "",
-  is_active: true,
   notes: "",
-  language: "",
-  is_graded: false,
-  grade_company: "",
-  grade_score: 0,
 };
 
 const InventoryPage: React.FC = () => {
@@ -104,6 +83,11 @@ const InventoryPage: React.FC = () => {
 
   const [sortField, setSortField] = useState("inventory_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // File upload state
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
+  const [previewImgs, setPreviewImgs] = useState<string[]>([]);
 
   // Fetch data
   const fetchData = async (field = sortField, order = sortOrder) => {
@@ -222,48 +206,81 @@ const InventoryPage: React.FC = () => {
     setFormTouched(true);
   };
 
+  // File upload handlers
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploadFile(e.target.files[0]);
+      setFormTouched(true);
+    }
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!uploadFile || !form.inventory_id) return;
+    const fd = new FormData();
+    fd.append("file", uploadFile);
+    try {
+      const resp = await axios.post(`${API_URL}/${form.inventory_id}/upload-photo`, fd);
+      toast.success("Upload hình thành công!");
+      // Cập nhật lại form.photo_avatar với đường dẫn mới từ API
+      setForm((prev) => ({
+        ...prev,
+        photo_avatar: (resp.data as { photo_avatar: string }).photo_avatar,
+      }));
+      fetchData();
+      setUploadFile(null);
+    } catch {
+      toast.error("Lỗi khi upload hình!");
+    }
+  };
+
+  const handlePreviewImage = (url: string) => setPreviewImg(url);
+  // const handlePreviewImages = (urls: string[] = []) => setPreviewImgs(urls || []);
+
   // Table columns
   const columns = [
-    { key: "inventory_id", label: "ID", onSort: () => handleSort("inventory_id", sortOrder), sortActive: sortField === "inventory_id", sortDirection: sortOrder },
-    { key: "master_card_id", label: "Mã thẻ", onSort: () => handleSort("master_card_id", sortOrder), sortActive: sortField === "master_card_id", sortDirection: sortOrder },
-    { key: "quantity_in_stock", label: "Số lượng trong kho", onSort: () => handleSort("quantity_in_stock", sortOrder), sortActive: sortField === "quantity_in_stock", sortDirection: sortOrder },
-    { key: "quantity_sold", label: "Số lượng đã bán", onSort: () => handleSort("quantity_sold", sortOrder), sortActive: sortField === "quantity_sold", sortDirection: sortOrder },
-    { key: "purchase_price", label: "Giá mua", onSort: () => handleSort("purchase_price", sortOrder), sortActive: sortField === "purchase_price", sortDirection: sortOrder },
-    { key: "selling_price", label: "Giá bán", onSort: () => handleSort("selling_price", sortOrder), sortActive: sortField === "selling_price", sortDirection: sortOrder },
-    { key: "storage_location", label: "Vị trí lưu trữ", onSort: () => handleSort("storage_location", sortOrder), sortActive: sortField === "storage_location", sortDirection: sortOrder },
-    { key: "physical_condition_us", label: "Tình trạng (US)", onSort: () => handleSort("physical_condition_us", sortOrder), sortActive: sortField === "physical_condition_us", sortDirection: sortOrder },
-    { key: "physical_condition_jp", label: "Tình trạng (JP)", onSort: () => handleSort("physical_condition_jp", sortOrder), sortActive: sortField === "physical_condition_jp", sortDirection: sortOrder },
-    { key: "card_photos", label: "Ảnh thẻ", onSort: () => handleSort("card_photos", sortOrder), sortActive: sortField === "card_photos", sortDirection: sortOrder },
-    { key: "photo_count", label: "Số lượng ảnh thẻ", onSort: () => handleSort("photo_count", sortOrder), sortActive: sortField === "photo_count", sortDirection: sortOrder },
-    { key: "date_added", label: "Ngày thêm", onSort: () => handleSort("date_added", sortOrder), sortActive: sortField === "date_added", sortDirection: sortOrder },
-    { key: "last_updated", label: "Lần cập nhật cuối", onSort: () => handleSort("last_updated", sortOrder), sortActive: sortField === "last_updated", sortDirection: sortOrder },
-    { key: "is_active", label: "Đang hoạt động", onSort: () => handleSort("is_active", sortOrder), sortActive: sortField === "is_active", sortDirection: sortOrder },
-    { key: "notes", label: "Ghi chú", onSort: () => handleSort("notes", sortOrder), sortActive: sortField === "notes", sortDirection: sortOrder },
-    { key: "language", label: "Ngôn ngữ", onSort: () => handleSort("language", sortOrder), sortActive: sortField === "language", sortDirection: sortOrder },
-    { key: "is_graded", label: "Đã chấm điểm", onSort: () => handleSort("is_graded", sortOrder), sortActive: sortField === "is_graded", sortDirection: sortOrder },
-    { key: "grade_company", label: "Công ty chấm điểm", onSort: () => handleSort("grade_company", sortOrder), sortActive: sortField === "grade_company", sortDirection: sortOrder },
-    { key: "grade_score", label: "Điểm chấm", onSort: () => handleSort("grade_score", sortOrder), sortActive: sortField === "grade_score", sortDirection: sortOrder },
+    {
+      key: "photo_avatar",
+      label: "",
+      render: (row: InventoryRow) =>
+        row.photo_avatar ? (
+          <img
+            src={row.photo_avatar}
+            alt={row.master_card_id}
+            style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer" }}
+            onClick={() => row.photo_avatar && handlePreviewImage(row.photo_avatar)}
+          />
+        ) : (
+          <i className="bi bi-image text-secondary fs-3" title="No image" />
+        ),
+      width: 50,
+      align: "center" as const,
+    },
+    { key: "inventory_id", label: "ID" },
+    { key: "master_card_id", label: "Mã thẻ" },
+    { key: "total_quantity", label: "Số lượng" },
+    { key: "quantity_sold", label: "Đã bán" },
+    { key: "avg_purchase_price", label: "Giá mua TB" },
+    { key: "avg_selling_price", label: "Giá bán TB" },
+    { key: "storage_location", label: "Vị trí lưu trữ" },
+    { key: "language", label: "Ngôn ngữ" },
+    { key: "is_active", label: "Hoạt động" },
+    { key: "date_added", label: "Ngày thêm" },
+    { key: "last_updated", label: "Cập nhật cuối" },
+    { key: "notes", label: "Ghi chú" },
     {
       key: "action",
       label: "Thao tác",
       align: "center" as const,
       width: 110,
-      render: (row: InventoryRow, _idx: number) => (
+      render: (row: InventoryRow) => (
         <div className="d-flex justify-content-center gap-3">
-          <button
-            className="btn btn-link p-0"
-            title="Sửa"
-            onClick={() => handleEdit(row)}
-          >
+          <button className="btn btn-link p-0" title="Sửa" onClick={() => handleEdit(row)}>
             <i className="bi bi-pencil fs-5 text-warning"></i>
           </button>
-          <button
-            className="btn btn-link p-0"
-            title="Xóa"
-            onClick={() => handleDelete(row)}
-          >
+          <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDelete(row)}>
             <i className="bi bi-trash fs-5 text-danger"></i>
           </button>
+         
         </div>
       ),
     },
@@ -290,54 +307,31 @@ const InventoryPage: React.FC = () => {
 
   // Form modal content
   const renderFormModal = () => (
-    <form
-      className="inventory-modal-form"
-      autoComplete="off"
-      onSubmit={(e) => { e.preventDefault(); handleSave(); }}
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "18px 32px",
-        paddingBottom: 0,
-        minWidth: 600,
-      }}
-    >
+    <form className="px-3 pb-3" autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
       {/* Cột trái */}
       <div>
         <label className="form-label fw-semibold">Mã thẻ</label>
         <input className="form-control" name="master_card_id" value={form.master_card_id} onChange={handleFormChange} required />
       </div>
       <div>
-        <label className="form-label fw-semibold">Số lượng trong kho</label>
-        <input className="form-control" type="number" name="quantity_in_stock" value={form.quantity_in_stock} onChange={handleFormChange} required />
+        <label className="form-label fw-semibold">Tổng số lượng</label>
+        <input className="form-control" type="number" name="total_quantity" value={form.total_quantity} onChange={handleFormChange} required />
       </div>
       <div>
         <label className="form-label fw-semibold">Số lượng đã bán</label>
-        <input className="form-control" type="number" name="quantity_sold" value={form.quantity_sold} onChange={handleFormChange} />
+        <input className="form-control" type="number" name="quantity_sold" value={form.quantity_sold ?? ""} onChange={handleFormChange} />
       </div>
       <div>
-        <label className="form-label fw-semibold">Giá mua</label>
-        <input className="form-control" type="number" name="purchase_price" value={form.purchase_price} onChange={handleFormChange} required />
+        <label className="form-label fw-semibold">Giá mua trung bình</label>
+        <input className="form-control" type="number" name="avg_purchase_price" value={form.avg_purchase_price ?? ""} onChange={handleFormChange} required />
       </div>
       <div>
-        <label className="form-label fw-semibold">Giá bán</label>
-        <input className="form-control" type="number" name="selling_price" value={form.selling_price ?? ""} onChange={handleFormChange} />
+        <label className="form-label fw-semibold">Giá bán trung bình</label>
+        <input className="form-control" type="number" name="avg_selling_price" value={form.avg_selling_price ?? ""} onChange={handleFormChange} />
       </div>
       <div>
         <label className="form-label fw-semibold">Vị trí lưu trữ</label>
         <input className="form-control" name="storage_location" value={form.storage_location ?? ""} onChange={handleFormChange} />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Tình trạng (US)</label>
-        <input className="form-control" name="physical_condition_us" value={form.physical_condition_us} onChange={handleFormChange} required />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Tình trạng (JP)</label>
-        <input className="form-control" name="physical_condition_jp" value={form.physical_condition_jp} onChange={handleFormChange} required />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Số lượng ảnh thẻ</label>
-        <input className="form-control" type="number" name="photo_count" value={form.photo_count ?? 0} onChange={handleFormChange} />
       </div>
       <div>
         <label className="form-label fw-semibold">Ngày thêm</label>
@@ -363,25 +357,28 @@ const InventoryPage: React.FC = () => {
         <label className="form-label fw-semibold">Ngôn ngữ</label>
         <input className="form-control" name="language" value={form.language ?? ""} onChange={handleFormChange} />
       </div>
-      <div>
-        <label className="form-label fw-semibold">Đã chấm điểm</label>
-        <select className="form-select" name="is_graded" value={form.is_graded ? "true" : "false"}
-          onChange={e => handleFormChange({
-            ...e,
-            target: { ...e.target, value: e.target.value === "true", name: "is_graded", type: "checkbox", checked: e.target.value === "true" }
-          } as any)}
+      {/* Ảnh đại diện */}
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Ảnh đại diện</label>
+        <input className="form-control" type="file" accept="image/*" onChange={handleFileChange} />
+        {form.photo_avatar && (
+          <div className="mt-2">
+            <img
+              src={form.photo_avatar}
+              alt="Avatar"
+              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, border: "1px solid #eee", cursor: "pointer" }}
+              onClick={() => form.photo_avatar && handlePreviewImage(form.photo_avatar)}
+            />
+          </div>
+        )}
+        <button
+          type="button"
+          className="btn btn-outline-primary mt-2"
+          onClick={handleUploadPhoto}
+          disabled={!uploadFile}
         >
-          <option value="false">Chưa</option>
-          <option value="true">Đã chấm</option>
-        </select>
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Công ty chấm điểm</label>
-        <input className="form-control" name="grade_company" value={form.grade_company ?? ""} onChange={handleFormChange} />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Điểm chấm</label>
-        <input className="form-control" type="number" name="grade_score" value={form.grade_score ?? ""} onChange={handleFormChange} />
+          Upload ảnh
+        </button>
       </div>
       {/* Button thao tác ở góc phải dưới */}
       <div style={{
@@ -391,10 +388,10 @@ const InventoryPage: React.FC = () => {
         gap: 12,
         marginTop: 24,
       }}>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary flex-grow-1">
           {modalMode === "add" ? "Thêm mới" : "Lưu thay đổi"}
         </button>
-        <button type="button" className="btn btn-outline-secondary" onClick={handleCloseModal}>
+        <button type="button" className="btn btn-outline-secondary flex-grow-1" onClick={handleCloseModal}>
           Đóng
         </button>
       </div>
@@ -460,6 +457,26 @@ const InventoryPage: React.FC = () => {
         confirmText="Đồng ý"
         cancelText="Hủy"
       />
+      <Modal
+        isOpen={!!previewImg}
+        onClose={() => setPreviewImg(null)}
+        title="Xem ảnh"
+      >
+        {previewImg && (
+          <img src={previewImg} alt="Preview" style={{ width: "100%", maxHeight: 400, objectFit: "contain" }} />
+        )}
+      </Modal>
+      <Modal
+        isOpen={previewImgs.length > 0}
+        onClose={() => setPreviewImgs([])}
+        title="Xem tất cả ảnh"
+      >
+        <div className="d-flex flex-wrap gap-3">
+          {previewImgs.map((url, idx) => (
+            <img key={idx} src={url} alt={`Preview ${idx}`} style={{ width: 120, height: 120, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }} />
+          ))}
+        </div>
+      </Modal>
     </div>
   );
 };

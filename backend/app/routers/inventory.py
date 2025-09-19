@@ -68,10 +68,14 @@ def get_inventory(
     valid_sort_fields = {
         "inventory_id": Inventory.inventory_id,
         "master_card_id": Inventory.master_card_id,
-        "quantity_in_stock": Inventory.quantity_in_stock,
-        "purchase_price": Inventory.purchase_price,
+        "total_quantity": Inventory.total_quantity,
+        "quantity_sold": Inventory.quantity_sold,
+        "avg_purchase_price": Inventory.avg_purchase_price,
+        "avg_selling_price": Inventory.avg_selling_price,
+        "storage_location": Inventory.storage_location,
+        "language": Inventory.language,
         "date_added": Inventory.date_added,
-        "last_updated": Inventory.last_updated,
+        "last_updated": Inventory.last_updated
     }
     if sort_field in valid_sort_fields:
         col = valid_sort_fields[sort_field]
@@ -141,7 +145,7 @@ def filter_inventory(
     items = query.offset((page - 1) * page_size).limit(page_size).all()
     return {"items": items, "total": total}
 
-# Upload hình cho card_photos
+# Upload hình cho inventory photo_avatar
 @router.post("/{inventory_id}/upload-photo", response_model=InventoryOut)
 def upload_inventory_photo(
     inventory_id: int,
@@ -161,13 +165,8 @@ def upload_inventory_photo(
     with open(save_path, "wb") as f:
         f.write(file.file.read())
 
-    # Thêm đường dẫn vào card_photos (kiểu List[str])
-    photos = db_item.card_photos or []
-    if isinstance(photos, str):
-        photos = json.loads(photos)
-    photos.append(f"/inventory_images/{filename}")
-    db_item.card_photos = photos
-    db_item.photo_count = len(photos)
+    # Chỉ lưu 1 hình ảnh đại diện
+    db_item.photo_avatar = f"/inventory_images/{filename}"
     db.commit()
     db.refresh(db_item)
     return db_item

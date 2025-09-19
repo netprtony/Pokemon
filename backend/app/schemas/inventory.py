@@ -5,60 +5,41 @@ from pydantic import BaseModel
 class InventoryBase(BaseModel):
     inventory_id: int
     master_card_id: str
-    quantity_in_stock: int
+    photo_avatar: Optional[str]
+    total_quantity: int
     quantity_sold: Optional[int]
-    purchase_price: float
-    selling_price: Optional[float]
+    avg_purchase_price: Optional[float]
+    avg_selling_price: Optional[float]
     storage_location: Optional[str]
-    physical_condition_us: str
-    physical_condition_jp: str
-    card_photos: Optional[List[str]] = None
-    photo_count: Optional[int]
+    language: Optional[str]
+    is_active: bool
     date_added: date
     last_updated: Optional[datetime]
-    is_active: bool
     notes: Optional[str]
-    language: Optional[str]
-    is_graded: bool = False
-    grade_company: Optional[str]
-    grade_score: Optional[float]
 
 class InventoryCreate(BaseModel):
     master_card_id: str
-    quantity_in_stock: int
-    purchase_price: float
-    date_added: date
-    physical_condition_us: str
-    physical_condition_jp: str
-    is_active: bool = True
-    # Các trường khác là optional
+    total_quantity: int
+    photo_avatar: Optional[str] = None
     quantity_sold: Optional[int] = 0
-    selling_price: Optional[float] = None
+    avg_purchase_price: Optional[float] = None
+    avg_selling_price: Optional[float] = None
     storage_location: Optional[str] = None
-    card_photos: Optional[List[str]] = None
-    photo_count: Optional[int] = 0
-    notes: Optional[str] = None
     language: Optional[str] = "EN"
-    is_graded: bool = False
-    grade_company: Optional[str] = None
-    grade_score: Optional[float] = None
+    is_active: bool = True
+    date_added: date
+    notes: Optional[str] = None
 
 class InventoryUpdate(BaseModel):
-    quantity_in_stock: Optional[int]
+    total_quantity: Optional[int]
     quantity_sold: Optional[int]
-    purchase_price: Optional[float]
-    selling_price: Optional[float]
+    photo_avatar: Optional[str]
+    avg_purchase_price: Optional[float]
+    avg_selling_price: Optional[float]
     storage_location: Optional[str]
-    physical_condition_us: Optional[str]
-    physical_condition_jp: Optional[str]
-    card_photos: Optional[List[str]]
-    photo_count: Optional[int]
+    language: Optional[str]
     is_active: Optional[bool]
     notes: Optional[str]
-    language: Optional[str]
-    is_graded: Optional[bool]
-    grade_company: Optional[str]
-    grade_score: Optional[float]
 
 class InventoryOut(InventoryBase):
     class Config:

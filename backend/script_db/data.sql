@@ -73,45 +73,61 @@ CREATE TABLE pokemon_cards_master (
 -- Bảng chính: INVENTORY (Kho hàng thực tế)
 CREATE TABLE inventory (
     inventory_id INT AUTO_INCREMENT PRIMARY KEY,
-    master_card_id VARCHAR(20) NOT NULL, -- Link tới master data
+    master_card_id VARCHAR(20) NOT NULL,  -- Link đến master card
+    photo_avatar VARCHAR(255),  -- Ảnh đại diện thẻ trong kho
     
     -- Business Information
-    quantity_in_stock INT NOT NULL DEFAULT 0,
-    quantity_sold INT DEFAULT 0, -- Để track lịch sử bán
-    purchase_price DECIMAL(12,2) NOT NULL, -- Giá nhập (VNĐ)
-    selling_price DECIMAL(12,2), -- Giá bán hiện tại
+    total_quantity INT NOT NULL DEFAULT 0,
+    quantity_sold INT DEFAULT 0,
+    avg_purchase_price DECIMAL(12,2),  -- Giá nhập trung bình
+    avg_selling_price DECIMAL(12,2),
     
-    -- Physical Storage
-    storage_location VARCHAR(100), -- "Box-001-A1", "Safe-Premium-Slot-05"
-    physical_condition_us ENUM('NearMint', 'LightlyPlayed', 'ModeratelyPlayed', 'HeavilyPlayed', 'Damaged') NOT NULL,
-    physical_condition_jp ENUM('A', 'B', 'C', 'D') NOT NULL,
+    storage_location VARCHAR(100),  -- Vị trí chung (kệ, thùng)
+    language ENUM('EN', 'JP') DEFAULT 'EN',
+    is_active BOOLEAN DEFAULT TRUE,
     
-    -- Card Photos (10+ ảnh chi tiết)
-    card_photos JSON, -- Array URLs: ["front.jpg", "back.jpg", "corner1.jpg", ...]
-    photo_count INT DEFAULT 0, -- Số lượng ảnh thực tế
-    
-    -- Inventory Management
     date_added DATE NOT NULL,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE, -- FALSE khi đã bán hết
-    notes TEXT, -- Ghi chú riêng
-    
-    -- Future expansion fields
-    language VARCHAR(5) DEFAULT 'EN',
-    is_graded BOOLEAN DEFAULT FALSE,
-    grade_company VARCHAR(20), -- PSA, BGS, CGC
-    grade_score DECIMAL(3,1), -- 9.5, 10.0
+    notes TEXT,
     
     FOREIGN KEY (master_card_id) REFERENCES pokemon_cards_master(master_card_id),
     
-    -- Indexes cho performance
     INDEX idx_master_card (master_card_id),
-    INDEX idx_active_stock (is_active, quantity_in_stock),
+    INDEX idx_active (is_active),
+    INDEX idx_location (storage_location)
+);
+CREATE TABLE detail_inventory (
+    detail_id INT AUTO_INCREMENT PRIMARY KEY,
+    inventory_id INT NOT NULL,
+    
+    -- Tình trạng từng thẻ
+    physical_condition_us ENUM('NearMint', 'LightlyPlayed', 'ModeratelyPlayed', 'HeavilyPlayed', 'Damaged') NOT NULL,
+    physical_condition_jp ENUM('A', 'B', 'C', 'D') NOT NULL,
+    
+    is_graded BOOLEAN DEFAULT FALSE,
+    grade_company VARCHAR(20),
+    grade_score DECIMAL(3,1),
+    
+    -- Giá riêng của thẻ này (nếu khác giá chung)
+    purchase_price DECIMAL(12,2),
+    selling_price DECIMAL(12,2),
+    
+    -- Quản lý ảnh
+    card_photos JSON,   -- Lưu mảng ["front.jpg", "back.jpg", ...]
+    photo_count INT GENERATED ALWAYS AS (JSON_LENGTH(card_photos)) STORED,
+    
+    -- Metadata
+    date_added DATE NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_sold BOOLEAN DEFAULT FALSE,
+    notes TEXT,
+    
+    FOREIGN KEY (inventory_id) REFERENCES inventory(inventory_id),
+    
+    INDEX idx_inventory (inventory_id),
     INDEX idx_condition_us (physical_condition_us),
-    INDEX idx_condition_jp (physical_condition_jp),
-    INDEX idx_location (storage_location),
-    INDEX idx_date_added (date_added),
-    INDEX idx_selling_price (selling_price DESC)
+    INDEX idx_graded (is_graded, grade_company),
+    INDEX idx_sold (is_sold)
 );
 
 -- ================================================
@@ -212,128 +228,7 @@ CREATE TABLE order_details (
     INDEX idx_inventory (inventory_id)
 );
 
--- ================================================
--- MODULE 5: REPORTING & ANALYTICS VIEWS
--- ================================================
 
--- View: Inventory Summary (Thống kê kho hàng)
-CREATE VIEW inventory_summary AS
-SELECT 
-    i.inventory_id,
-    i.master_card_id,
-    pcm.name_en,
-    pcm.set_id,
-    ps.set_name_en,
-    i.quantity_in_stock,
-    i.quantity_sold,
-    i.purchase_price,
-    i.selling_price,
-    i.physical_condition_us,
-    i.physical_condition_jp,
-    i.storage_location,
-    
-    -- Tính toán giá trị
-    (i.quantity_in_stock * i.purchase_price) AS total_purchase_value,
-    (i.quantity_in_stock * i.selling_price) AS total_selling_value,
-    (i.selling_price - i.purchase_price) AS unit_profit,
-    ((i.selling_price - i.purchase_price) / i.purchase_price * 100) AS profit_percentage,
-    
-    i.date_added,
-    i.is_active
-FROM inventory i
-JOIN pokemon_cards_master pcm ON i.master_card_id = pcm.master_card_id
-JOIN pokemon_sets ps ON pcm.set_id = ps.set_id
-WHERE i.is_active = TRUE;
-
--- View: Market Comparison (So sánh với thị trường)
-CREATE VIEW market_comparison AS
-SELECT 
-    i.inventory_id,
-    pcm.name_en,
-    i.quantity_in_stock,
-    i.purchase_price,
-    i.selling_price,
-    i.physical_condition_us,
-    
-    -- Market prices
-    mp.tcgplayer_nm_price * mp.usd_to_vnd_rate AS tcg_price_vnd,
-    mp.cardrush_a_price * mp.jpy_to_vnd_rate AS cardrush_price_vnd,
-    
-    -- Comparisons
-    (mp.tcgplayer_nm_price * mp.usd_to_vnd_rate) - i.purchase_price AS tcg_profit_potential,
-    ((mp.tcgplayer_nm_price * mp.usd_to_vnd_rate) - i.purchase_price) / i.purchase_price * 100 AS tcg_profit_percentage,
-    
-    mp.price_date AS last_price_update
-FROM inventory i
-JOIN pokemon_cards_master pcm ON i.master_card_id = pcm.master_card_id
-LEFT JOIN market_prices mp ON pcm.master_card_id = mp.master_card_id
-WHERE i.is_active = TRUE 
-  AND i.quantity_in_stock > 0
-  AND mp.price_date = (
-      SELECT MAX(price_date) 
-      FROM market_prices mp2 
-      WHERE mp2.master_card_id = mp.master_card_id
-  );
-
--- ================================================
--- STORED PROCEDURES FOR INVENTORY OPERATIONS
--- ================================================
-
--- Procedure: Thêm thẻ vào kho
-DELIMITER //
-CREATE PROCEDURE add_card_to_inventory(
-    IN p_master_card_id VARCHAR(20),
-    IN p_quantity INT,
-    IN p_purchase_price DECIMAL(12,2),
-    IN p_selling_price DECIMAL(12,2),
-    IN p_condition_us VARCHAR(20),
-    IN p_condition_jp VARCHAR(5),
-    IN p_storage_location VARCHAR(100),
-    IN p_photos JSON
-)
-BEGIN
-    INSERT INTO inventory (
-        master_card_id, quantity_in_stock, purchase_price, selling_price,
-        physical_condition_us, physical_condition_jp, storage_location,
-        card_photos, photo_count, date_added
-    ) VALUES (
-        p_master_card_id, p_quantity, p_purchase_price, p_selling_price,
-        p_condition_us, p_condition_jp, p_storage_location,
-        p_photos, JSON_LENGTH(p_photos), CURDATE()
-    );
-END//
-
--- Procedure: Cập nhật số lượng sau khi bán
-CREATE PROCEDURE update_inventory_after_sale(
-    IN p_inventory_id INT,
-    IN p_quantity_sold INT
-)
-BEGIN
-    UPDATE inventory 
-    SET quantity_sold = quantity_sold + p_quantity_sold,
-        quantity_in_stock = quantity_in_stock - p_quantity_sold,
-        is_active = CASE 
-            WHEN quantity_in_stock - p_quantity_sold <= 0 THEN FALSE 
-            ELSE TRUE 
-        END
-    WHERE inventory_id = p_inventory_id;
-END//
-
--- Function: Tính tổng giá trị kho
-CREATE FUNCTION calculate_total_inventory_value() 
-RETURNS DECIMAL(15,2)
-READS SQL DATA
-DETERMINISTIC
-BEGIN
-    DECLARE total_value DECIMAL(15,2);
-    
-    SELECT SUM(quantity_in_stock * selling_price) INTO total_value
-    FROM inventory 
-    WHERE is_active = TRUE;
-    
-    RETURN COALESCE(total_value, 0);
-END//
-DELIMITER ;
 
 -- ================================================
 -- SAMPLE DATA FOR TESTING
@@ -362,12 +257,20 @@ INSERT INTO pokemon_cards_master VALUES
 ('jpn1-050', 'jpn1', '50/100', 'Pikachu VMAX', NULL, 'スタートデッキ100', NULL, 'Pokemon', 'VMAX', 320, 'Rare Holo VMAX', '5ban Graphics', 'Electric type attacks and VMAX move', NULL, 2020, FALSE, TRUE),
 ('kor1-010', 'kor1', '10/50', 'Eevee VSTAR', NULL, '코리아팩', NULL, 'Pokemon', 'Basic', 200, 'Rare Holo VSTAR', '5ban Graphics', 'Normal type attacks and VSTAR move', NULL, 2021, FALSE, TRUE);
 
-INSERT INTO inventory (master_card_id, quantity_in_stock, purchase_price, selling_price, physical_condition_us, physical_condition_jp, storage_location, card_photos, photo_count, date_added) VALUES
-('base1-004', 2, 1500000, 3000000, 'LightlyPlayed', 'A', 'Box-001-A1', JSON_ARRAY('https://example.com/photos/charizard_front.jpg', 'https://example.com/photos/charizard_back.jpg'), 2, '2024-01-15'),
-('base1-025', 5, 200000, 500000, 'NearMint', 'A', 'Box-001-A2', JSON_ARRAY('https://example.com/photos/pikachu_front.jpg', 'https://example.com/photos/pikachu_back.jpg'), 2, '2024-02-10'),
-('xy1-143', 3, 800000, 1500000, 'ModeratelyPlayed', 'B', 'Box-002-B1', JSON_ARRAY('https://example.com/photos/mewtwo_front.jpg', 'https://example.com/photos/mewtwo_back.jpg'), 2, '2024-03-05'),
-('sm1-001', 4, 1200000, 2500000, 'LightlyPlayed', 'A', 'Box-002-B2', JSON_ARRAY('https://example.com/photos/incineroar_front.jpg', 'https://example.com/photos/incineroar_back.jpg'), 2, '2024-04-12'),
-('sv1-100', 6, 1000000, 2200000, 'NearMint', 'A', 'Box-003-C1', JSON_ARRAY('https://example.com/photos/fluttermane_front.jpg', 'https://example.com/photos/fluttermane_back.jpg'), 2, '2024-05-20');
+
+INSERT INTO inventory (master_card_id, photo_avatar, total_quantity, quantity_sold, avg_purchase_price, avg_selling_price, storage_location, language, is_active, date_added, notes) VALUES
+('base1-004', 'https://example.com/images/charizard.jpg', 2, 0, 1500000.00, 3000000.00, 'Shelf A1', 'EN', TRUE, '2024-06-01', 'Mint condition'),
+('base1-025', 'https://example.com/images/pikachu.jpg', 5, 1, 200000.00, 500000.00, 'Box B2', 'EN', TRUE, '2024-06-01', 'Slightly played'),
+('xy1-143', 'https://example.com/images/mewtwo_ex.jpg', 3, 0, 1200000.00, 2500000.00, 'Shelf A2', 'EN', TRUE, '2024-06-01', 'Near mint'),
+('sm1-001', 'https://example.com/images/incineroar_gx.jpg', 4, 2, 800000.00, 1500000.00, 'Box C1', 'EN', TRUE, '2024-06-01', 'Lightly played'),
+('sv1-100', 'https://example.com/images/flutter_mane_vstar.jpg', 6, 0, 900000.00, 1800000.00, 'Shelf B1', 'EN', TRUE, '2024-06-01', 'Mint condition');
+INSERT INTO detail_inventory (inventory_id, physical_condition_us, physical_condition_jp, is_graded, grade_company, grade_score, purchase_price, selling_price, card_photos, date_added, is_sold, notes) VALUES
+(1, 'NearMint', 'A', TRUE, 'PSA', 9.5, 1500000.00, 3000000.00, JSON_ARRAY('https://example.com/images/charizard_front.jpg', 'https://example.com/images/charizard_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA'),
+(2, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 200000.00, 500000.00, JSON_ARRAY('https://example.com/images/pikachu_front.jpg', 'https://example.com/images/pikachu_back.jpg'), '2024-06-01', TRUE, 'Slightly played'),
+(3, 'NearMint', 'A', TRUE, 'BGS', 9.0, 1200000.00, 2500000.00, JSON_ARRAY('https://example.com/images/mewtwo_ex_front.jpg', 'https://example.com/images/mewtwo_ex_back.jpg'), '2024-06-01', FALSE, 'Graded by BGS'),
+(4, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 800000.00, 1500000.00, JSON_ARRAY('https://example.com/images/incineroar_gx_front.jpg', 'https://example.com/images/incineroar_gx_back.jpg'), '2024-06-01', TRUE, 'Lightly played'),
+(5, 'NearMint', 'A', TRUE, 'PSA', 10.0, 900000.00, 1800000.00, JSON_ARRAY('https://example.com/images/flutter_mane_vstar_front.jpg', 'https://example.com/images/flutter_mane_vstar_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA');
+
 INSERT INTO market_prices (master_card_id, tcgplayer_nm_price, tcgplayer_lp_price, ebay_avg_price, pricecharting_price, cardrush_a_price, cardrush_b_price, snkrdunk_price, yahoo_auction_avg, usd_to_vnd_rate, jpy_to_vnd_rate, price_date, data_source) VALUES
 ('base1-004', 120.00, 100.00, 130.00, 125.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
 ('base1-025', 15.00, 12.00, 16.00, 15.50, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
@@ -390,7 +293,3 @@ INSERT INTO order_details (order_id, inventory_id, quantity_ordered, unit_price,
 -- INDEXES FOR PERFORMANCE OPTIMIZATION
 -- ================================================
 
--- Composite indexes cho reporting
-CREATE INDEX idx_inventory_summary ON inventory(is_active, quantity_in_stock, date_added);
-CREATE INDEX idx_inventory_profit ON inventory(selling_price, purchase_price);
-CREATE INDEX idx_master_set_rarity ON pokemon_cards_master(set_id, rarity, release_year);

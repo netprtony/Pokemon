@@ -92,27 +92,44 @@ class Inventory(Base):
 
     inventory_id = Column(Integer, primary_key=True, autoincrement=True)
     master_card_id = Column(String(20), ForeignKey("pokemon_cards_master.master_card_id"), nullable=False)
-    quantity_in_stock = Column(Integer, nullable=False, default=0)
+    photo_avatar = Column(String(255))
+    total_quantity = Column(Integer, nullable=False, default=0)
     quantity_sold = Column(Integer, default=0)
-    purchase_price = Column(DECIMAL(12, 2), nullable=False)
-    selling_price = Column(DECIMAL(12, 2))
+    avg_purchase_price = Column(DECIMAL(12, 2))
+    avg_selling_price = Column(DECIMAL(12, 2))
     storage_location = Column(String(100))
-    physical_condition_us = Column(Enum(ConditionUSEnum), nullable=False)
-    physical_condition_jp = Column(String(5), nullable=False)
-    card_photos = Column(JSON)
-    photo_count = Column(Integer, default=0)
+    language = Column(String(5), default="EN")
+    is_active = Column(Boolean, default=True)
     date_added = Column(Date, nullable=False)
     last_updated = Column(TIMESTAMP)
-    is_active = Column(Boolean, default=True)
     notes = Column(Text)
-    language = Column(String(5), default="EN")
+
+    card = relationship("PokemonCardMaster", back_populates="inventory_items")
+    details = relationship("DetailInventory", back_populates="inventory_item")
+    price_alerts = relationship("PriceAlert", back_populates="inventory_item")
+    order_details = relationship("OrderDetail", back_populates="inventory_item")
+
+class DetailInventory(Base):
+    __tablename__ = "detail_inventory"
+
+    detail_id = Column(Integer, primary_key=True, autoincrement=True)
+    inventory_id = Column(Integer, ForeignKey("inventory.inventory_id"), nullable=False)
+
+    physical_condition_us = Column(Enum(ConditionUSEnum), nullable=False)
+    physical_condition_jp = Column(String(5), nullable=False)
     is_graded = Column(Boolean, default=False)
     grade_company = Column(String(20))
     grade_score = Column(DECIMAL(3, 1))
+    purchase_price = Column(DECIMAL(12, 2))
+    selling_price = Column(DECIMAL(12, 2))
+    card_photos = Column(JSON)
+    photo_count = Column(Integer)
+    date_added = Column(Date, nullable=False)
+    last_updated = Column(TIMESTAMP)
+    is_sold = Column(Boolean, default=False)
+    notes = Column(Text)
 
-    card = relationship("PokemonCardMaster", back_populates="inventory_items")
-    price_alerts = relationship("PriceAlert", back_populates="inventory_item")
-    order_details = relationship("OrderDetail", back_populates="inventory_item")
+    inventory_item = relationship("Inventory", back_populates="details")
 
 # ============================================================
 # MARKET ANALYSIS & PRICING
