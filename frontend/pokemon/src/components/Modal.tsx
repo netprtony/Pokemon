@@ -68,7 +68,7 @@ const ModalIOS: React.FC<ModalIOSProps> = ({
               background: "#fff",
               borderRadius: "12px",
               border: "1px solid #d0d0d0", // viền giống macOS
-              width: "1500px",
+              width: "2000px",
               maxWidth: "1000rem",
               minWidth: "340px",
               maxHeight: "80vh",

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, status, Depends, UploadFile, File
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from app.schemas.inventory import (
     InventoryCreate,
@@ -58,7 +58,7 @@ def get_inventory(
     sort_field: Optional[str] = Query("date_added", description="Trường để sắp xếp"),
     sort_order: Optional[str] = Query("asc", description="Thứ tự sắp xếp: asc hoặc desc"),
 ):
-    query = db.query(Inventory)
+    query = db.query(Inventory).options(joinedload(Inventory.card))
     if search:
         query = query.filter(
             Inventory.storage_location.ilike(f"%{search}%")
@@ -85,7 +85,15 @@ def get_inventory(
             query = query.order_by(col.asc())
     total = query.count()
     items = query.offset((page - 1) * page_size).limit(page_size).all()
-    return {"items": items, "total": total}
+
+    # Thêm reference_image_url vào kết quả trả về
+    result = []
+    for item in items:
+        item_dict = item.__dict__.copy()
+        item_dict["reference_image_url"] = item.card.reference_image_url if item.card else None
+        result.append(item_dict)
+
+    return {"items": result, "total": total}
 
 # Lấy tất cả danh sách (không phân trang)
 @router.get("/all", response_model=List[InventoryOut])
@@ -145,28 +153,28 @@ def filter_inventory(
     items = query.offset((page - 1) * page_size).limit(page_size).all()
     return {"items": items, "total": total}
 
-# Upload hình cho inventory photo_avatar
-@router.post("/{inventory_id}/upload-photo", response_model=InventoryOut)
-def upload_inventory_photo(
-    inventory_id: int,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
-    db_item = db.query(Inventory).filter(Inventory.inventory_id == inventory_id).first()
-    if not db_item:
-        raise HTTPException(status_code=404, detail="Inventory not found")
+# # Upload hình cho inventory photo_avatar
+# @router.post("/{inventory_id}/upload-photo", response_model=InventoryOut)
+# def upload_inventory_photo(
+#     inventory_id: int,
+#     file: UploadFile = File(...),
+#     db: Session = Depends(get_db)
+# ):
+#     db_item = db.query(Inventory).filter(Inventory.inventory_id == inventory_id).first()
+#     if not db_item:
+#         raise HTTPException(status_code=404, detail="Inventory not found")
 
-    os.makedirs(INVENTORY_IMAGE_DIR, exist_ok=True)
-    ext = os.path.splitext(file.filename)[1]
-    safe_name = f"{inventory_id}_{db_item.master_card_id}".replace(" ", "_").replace("/", "_")
-    filename = f"{safe_name}{ext}"
-    save_path = os.path.join(INVENTORY_IMAGE_DIR, filename)
+#     os.makedirs(INVENTORY_IMAGE_DIR, exist_ok=True)
+#     ext = os.path.splitext(file.filename)[1]
+#     safe_name = f"{inventory_id}_{db_item.master_card_id}".replace(" ", "_").replace("/", "_")
+#     filename = f"{safe_name}{ext}"
+#     save_path = os.path.join(INVENTORY_IMAGE_DIR, filename)
 
-    with open(save_path, "wb") as f:
-        f.write(file.file.read())
+#     with open(save_path, "wb") as f:
+#         f.write(file.file.read())
 
-    # Chỉ lưu 1 hình ảnh đại diện
-    db_item.photo_avatar = f"/inventory_images/{filename}"
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+#     # Chỉ lưu 1 hình ảnh đại diện
+#     db_item.photo_avatar = f"/inventory_images/{filename}"
+#     db.commit()
+#     db.refresh(db_item)
+#     return db_item

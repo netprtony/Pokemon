@@ -74,7 +74,6 @@ CREATE TABLE pokemon_cards_master (
 CREATE TABLE inventory (
     inventory_id INT AUTO_INCREMENT PRIMARY KEY,
     master_card_id VARCHAR(20) NOT NULL,  -- Link đến master card
-    photo_avatar VARCHAR(255),  -- Ảnh đại diện thẻ trong kho
     
     -- Business Information
     total_quantity INT NOT NULL DEFAULT 0,
@@ -258,18 +257,26 @@ INSERT INTO pokemon_cards_master VALUES
 ('kor1-010', 'kor1', '10/50', 'Eevee VSTAR', NULL, '코리아팩', NULL, 'Pokemon', 'Basic', 200, 'Rare Holo VSTAR', '5ban Graphics', 'Normal type attacks and VSTAR move', NULL, 2021, FALSE, TRUE);
 
 
-INSERT INTO inventory (master_card_id, photo_avatar, total_quantity, quantity_sold, avg_purchase_price, avg_selling_price, storage_location, language, is_active, date_added, notes) VALUES
-('base1-004', 'https://example.com/images/charizard.jpg', 2, 0, 1500000.00, 3000000.00, 'Shelf A1', 'EN', TRUE, '2024-06-01', 'Mint condition'),
-('base1-025', 'https://example.com/images/pikachu.jpg', 5, 1, 200000.00, 500000.00, 'Box B2', 'EN', TRUE, '2024-06-01', 'Slightly played'),
-('xy1-143', 'https://example.com/images/mewtwo_ex.jpg', 3, 0, 1200000.00, 2500000.00, 'Shelf A2', 'EN', TRUE, '2024-06-01', 'Near mint'),
-('sm1-001', 'https://example.com/images/incineroar_gx.jpg', 4, 2, 800000.00, 1500000.00, 'Box C1', 'EN', TRUE, '2024-06-01', 'Lightly played'),
-('sv1-100', 'https://example.com/images/flutter_mane_vstar.jpg', 6, 0, 900000.00, 1800000.00, 'Shelf B1', 'EN', TRUE, '2024-06-01', 'Mint condition');
+INSERT INTO inventory (master_card_id, total_quantity, quantity_sold, avg_purchase_price, avg_selling_price, storage_location, language, is_active, date_added, notes) VALUES
+('base1-004', 2, 0, 1500000, NULL, 'Shelf A1', 'EN', TRUE, '2024-06-01', 'Mint condition'),
+('base1-025', 5, 1, 200000, 300000, 'Box B2', 'EN', TRUE, '2024-06-01', 'Some cards lightly played'),
+('xy1-143', 3, 0, 1200000, NULL, 'Shelf A2', 'EN', TRUE, '2024-06-02', 'Near mint'),
+('sm1-001', 4, 2, 1000000, 1500000, 'Box C1', 'EN', TRUE, '2024-06-03', 'Includes GX move cards'),
+('sv1-100', 6, 0, 800000, NULL, 'Shelf B1', 'EN', TRUE, '2024-06-04', 'Latest series cards');
 INSERT INTO detail_inventory (inventory_id, physical_condition_us, physical_condition_jp, is_graded, grade_company, grade_score, purchase_price, selling_price, card_photos, date_added, is_sold, notes) VALUES
-(1, 'NearMint', 'A', TRUE, 'PSA', 9.5, 1500000.00, 3000000.00, JSON_ARRAY('https://example.com/images/charizard_front.jpg', 'https://example.com/images/charizard_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA'),
-(2, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 200000.00, 500000.00, JSON_ARRAY('https://example.com/images/pikachu_front.jpg', 'https://example.com/images/pikachu_back.jpg'), '2024-06-01', TRUE, 'Slightly played'),
-(3, 'NearMint', 'A', TRUE, 'BGS', 9.0, 1200000.00, 2500000.00, JSON_ARRAY('https://example.com/images/mewtwo_ex_front.jpg', 'https://example.com/images/mewtwo_ex_back.jpg'), '2024-06-01', FALSE, 'Graded by BGS'),
-(4, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 800000.00, 1500000.00, JSON_ARRAY('https://example.com/images/incineroar_gx_front.jpg', 'https://example.com/images/incineroar_gx_back.jpg'), '2024-06-01', TRUE, 'Lightly played'),
-(5, 'NearMint', 'A', TRUE, 'PSA', 10.0, 900000.00, 1800000.00, JSON_ARRAY('https://example.com/images/flutter_mane_vstar_front.jpg', 'https://example.com/images/flutter_mane_vstar_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA');
+(1, 'NearMint', 'A', TRUE, 'PSA', 9.5, 1500000, NULL, JSON_ARRAY('charizard_front.jpg', 'charizard_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA'),
+(1, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1500000, NULL, JSON_ARRAY('charizard_lp_front.jpg', 'charizard_lp_back.jpg'), '2024-06-01', FALSE, 'Lightly played version'),
+(2, 'NearMint', 'A', FALSE, NULL, NULL, 200000, 300000, JSON_ARRAY('pikachu_front.jpg', 'pikachu_back.jpg'), '2024-06-01', TRUE, 'Sold one card'),
+(2, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_lp_front.jpg', 'pikachu_lp_back.jpg'), '2024-06-01', FALSE, 'Lightly played version'),
+(2, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_mp_front.jpg', 'pikachu_mp_back.jpg'), '2024-06-01', FALSE, 'Moderately played version'),
+(2, 'HeavilyPlayed', 'D', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_hp_front.jpg', 'pikachu_hp_back.jpg'), '2024-06-01', FALSE, 'Heavily played version'),
+(2, 'Damaged', 'D', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_damaged_front.jpg', 'pikachu_damaged_back.jpg'), '2024-06-01', FALSE, 'Damaged version'),
+(3, 'NearMint', 'A', TRUE, 'BGS', 9.0, 1200000, NULL, JSON_ARRAY('mewtwo_ex_front.jpg', 'mewtwo_ex_back.jpg'), '2024-06-02', FALSE, 'Graded by BGS'),
+(3, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1200000, NULL, JSON_ARRAY('mewtwo_ex_lp_front.jpg', 'mewtwo_ex_lp_back.jpg'), '2024-06-02', FALSE, 'Lightly played version'),
+(3, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 1200000, NULL, JSON_ARRAY('mewtwo_ex_mp_front.jpg', 'mewtwo_ex_mp_back.jpg'), '2024-06-02', FALSE, 'Moderately played version'),
+(4, 'NearMint', 'A', TRUE, 'PSA', 9.8, 1000000, 1500000, JSON_ARRAY('incineroar_gx_front.jpg', 'incineroar_gx_back.jpg'), '2024-06-03', TRUE, 'Sold two cards'),
+(4, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1000000, NULL, JSON_ARRAY('incineroar_gx_lp_front.jpg', 'incineroar_gx_lp_back.jpg'), '2024-06-03', FALSE, 'Lightly played version'),
+(4, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 1000000, NULL, JSON_ARRAY('incineroar_gx_mp_front.jpg', 'incineroar_gx_mp_back.jpg'), '2024-06-03', FALSE, 'Moderately played version');
 
 INSERT INTO market_prices (master_card_id, tcgplayer_nm_price, tcgplayer_lp_price, ebay_avg_price, pricecharting_price, cardrush_a_price, cardrush_b_price, snkrdunk_price, yahoo_auction_avg, usd_to_vnd_rate, jpy_to_vnd_rate, price_date, data_source) VALUES
 ('base1-004', 120.00, 100.00, 130.00, 125.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),

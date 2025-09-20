@@ -92,7 +92,6 @@ class Inventory(Base):
 
     inventory_id = Column(Integer, primary_key=True, autoincrement=True)
     master_card_id = Column(String(20), ForeignKey("pokemon_cards_master.master_card_id"), nullable=False)
-    photo_avatar = Column(String(255))
     total_quantity = Column(Integer, nullable=False, default=0)
     quantity_sold = Column(Integer, default=0)
     avg_purchase_price = Column(DECIMAL(12, 2))

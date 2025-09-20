@@ -8,12 +8,13 @@ import { toast } from "react-toastify";
 import type { Filter } from "../../components/AdvancedFilters";
 import type { FieldOption } from "../../components/AdvancedFilters";
 import "../../assets/css/Inventory.css";
+import Input from "../../components/Input";
+import Button from "../../components/Button";
 
 // Kiểu dữ liệu cho 1 dòng Inventory
 export type InventoryRow = {
   inventory_id: number;
   master_card_id: string;
-  photo_avatar?: string;
   total_quantity: number;
   quantity_sold?: number;
   avg_purchase_price?: number;
@@ -24,6 +25,7 @@ export type InventoryRow = {
   date_added: string;
   last_updated?: string;
   notes?: string;
+  reference_image_url?: string; // Thêm trường này
 };
 
 const fieldOptions: FieldOption[] = [
@@ -48,7 +50,6 @@ type ModalMode = "add" | "edit" | null;
 const defaultForm: InventoryRow = {
   inventory_id: 0,
   master_card_id: "",
-  photo_avatar: "",
   total_quantity: 0,
   quantity_sold: 0,
   avg_purchase_price: 0,
@@ -59,6 +60,7 @@ const defaultForm: InventoryRow = {
   date_added: "",
   last_updated: "",
   notes: "",
+  reference_image_url: "",
 };
 
 const InventoryPage: React.FC = () => {
@@ -85,7 +87,6 @@ const InventoryPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   // File upload state
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [previewImgs, setPreviewImgs] = useState<string[]>([]);
 
@@ -178,14 +179,19 @@ const InventoryPage: React.FC = () => {
   const handleSave = async () => {
     try {
       if (modalMode === "add") {
-        await axios.post(API_URL, form);
+        const resp = await axios.post(API_URL, form);
         toast.success("Thêm mới thành công!");
+        // Chuyển sang chế độ edit inventory vừa tạo để upload ảnh
+        setForm(resp.data as InventoryRow);
+        setModalMode("edit");
+        fetchData();
+        return;
       } else if (modalMode === "edit") {
         await axios.put(`${API_URL}/${form.inventory_id}`, form);
         toast.success("Cập nhật thành công!");
+        setModalOpen(false);
+        fetchData();
       }
-      setModalOpen(false);
-      fetchData();
     } catch {
       toast.error("Lỗi khi lưu dữ liệu!");
     }
@@ -206,32 +212,7 @@ const InventoryPage: React.FC = () => {
     setFormTouched(true);
   };
 
-  // File upload handlers
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setUploadFile(e.target.files[0]);
-      setFormTouched(true);
-    }
-  };
 
-  const handleUploadPhoto = async () => {
-    if (!uploadFile || !form.inventory_id) return;
-    const fd = new FormData();
-    fd.append("file", uploadFile);
-    try {
-      const resp = await axios.post(`${API_URL}/${form.inventory_id}/upload-photo`, fd);
-      toast.success("Upload hình thành công!");
-      // Cập nhật lại form.photo_avatar với đường dẫn mới từ API
-      setForm((prev) => ({
-        ...prev,
-        photo_avatar: (resp.data as { photo_avatar: string }).photo_avatar,
-      }));
-      fetchData();
-      setUploadFile(null);
-    } catch {
-      toast.error("Lỗi khi upload hình!");
-    }
-  };
 
   const handlePreviewImage = (url: string) => setPreviewImg(url);
   // const handlePreviewImages = (urls: string[] = []) => setPreviewImgs(urls || []);
@@ -239,15 +220,15 @@ const InventoryPage: React.FC = () => {
   // Table columns
   const columns = [
     {
-      key: "photo_avatar",
+      key: "reference_image_url", // Sửa lại key cho đúng với dữ liệu
       label: "",
       render: (row: InventoryRow) =>
-        row.photo_avatar ? (
+        row.reference_image_url ? (
           <img
-            src={row.photo_avatar}
+            src={row.reference_image_url}
             alt={row.master_card_id}
             style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer" }}
-            onClick={() => row.photo_avatar && handlePreviewImage(row.photo_avatar)}
+            onClick={() => row.reference_image_url && handlePreviewImage(row.reference_image_url)}
           />
         ) : (
           <i className="bi bi-image text-secondary fs-3" title="No image" />
@@ -307,93 +288,179 @@ const InventoryPage: React.FC = () => {
 
   // Form modal content
   const renderFormModal = () => (
-    <form className="px-3 pb-3" autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-      {/* Cột trái */}
-      <div>
-        <label className="form-label fw-semibold">Mã thẻ</label>
-        <input className="form-control" name="master_card_id" value={form.master_card_id} onChange={handleFormChange} required />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Tổng số lượng</label>
-        <input className="form-control" type="number" name="total_quantity" value={form.total_quantity} onChange={handleFormChange} required />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Số lượng đã bán</label>
-        <input className="form-control" type="number" name="quantity_sold" value={form.quantity_sold ?? ""} onChange={handleFormChange} />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Giá mua trung bình</label>
-        <input className="form-control" type="number" name="avg_purchase_price" value={form.avg_purchase_price ?? ""} onChange={handleFormChange} required />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Giá bán trung bình</label>
-        <input className="form-control" type="number" name="avg_selling_price" value={form.avg_selling_price ?? ""} onChange={handleFormChange} />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Vị trí lưu trữ</label>
-        <input className="form-control" name="storage_location" value={form.storage_location ?? ""} onChange={handleFormChange} />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Ngày thêm</label>
-        <input className="form-control" type="date" name="date_added" value={form.date_added} onChange={handleFormChange} required />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Đang hoạt động</label>
-        <select className="form-select" name="is_active" value={form.is_active ? "true" : "false"}
-          onChange={e => handleFormChange({
-            ...e,
-            target: { ...e.target, value: e.target.value === "true", name: "is_active", type: "checkbox", checked: e.target.value === "true" }
-          } as any)}
-        >
-          <option value="true">Có</option>
-          <option value="false">Không</option>
-        </select>
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Ghi chú</label>
-        <input className="form-control" name="notes" value={form.notes ?? ""} onChange={handleFormChange} />
-      </div>
-      <div>
-        <label className="form-label fw-semibold">Ngôn ngữ</label>
-        <input className="form-control" name="language" value={form.language ?? ""} onChange={handleFormChange} />
-      </div>
-      {/* Ảnh đại diện */}
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Ảnh đại diện</label>
-        <input className="form-control" type="file" accept="image/*" onChange={handleFileChange} />
-        {form.photo_avatar && (
-          <div className="mt-2">
+    <form
+      className="inventory-modal-form"
+      autoComplete="off"
+      onSubmit={(e) => { e.preventDefault(); handleSave(); }}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gap: "24px 32px",
+        minWidth: 900,
+        alignItems: "start",
+        position: "relative",
+      }}
+    >
+      {/* Cột 1: Chỉ hiển thị ảnh mẫu từ reference_image_url */}
+      <div style={{ gridColumn: "1/2", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Ảnh mẫu</label>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          {form.reference_image_url ? (
             <img
-              src={form.photo_avatar}
-              alt="Avatar"
-              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, border: "1px solid #eee", cursor: "pointer" }}
-              onClick={() => form.photo_avatar && handlePreviewImage(form.photo_avatar)}
+              src={form.reference_image_url}
+              alt="Reference"
+              style={{
+                width: 220,
+                height: 220,
+                objectFit: "contain",
+                borderRadius: 12,
+                border: "1px solid #eee",
+                marginBottom: 12,
+                cursor: "pointer"
+              }}
+              onClick={() => form.reference_image_url && handlePreviewImage(form.reference_image_url)}
             />
-          </div>
-        )}
-        <button
-          type="button"
-          className="btn btn-outline-primary mt-2"
-          onClick={handleUploadPhoto}
-          disabled={!uploadFile}
-        >
-          Upload ảnh
-        </button>
+          ) : (
+            <div
+              style={{
+                width: 220,
+                height: 220,
+                background: "#f7f7fa",
+                borderRadius: 12,
+                border: "1px solid #eee",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 12,
+                color: "#bbb",
+                fontSize: 48,
+              }}
+            >
+              <i className="bi bi-image"></i>
+            </div>
+          )}
+        </div>
       </div>
-      {/* Button thao tác ở góc phải dưới */}
-      <div style={{
-        gridColumn: "1 / span 2",
-        display: "flex",
-        justifyContent: "flex-end",
-        gap: 12,
-        marginTop: 24,
-      }}>
-        <button type="submit" className="btn btn-primary flex-grow-1">
+
+      {/* Cột 2: Các trường chính */}
+      <div style={{ gridColumn: "2/3", display: "flex", flexDirection: "column", gap: 18 }}>
+        <Input
+          label="Mã thẻ"
+          value={form.master_card_id}
+          onChange={handleFormChange}
+          name="master_card_id"
+          type="text"
+          required
+        />
+        <Input
+          label="Tổng số lượng"
+          value={form.total_quantity}
+          onChange={handleFormChange}
+          name="total_quantity"
+          type="number"
+          min={0}
+          required
+        />
+        <Input
+          label="Số lượng đã bán"
+          value={form.quantity_sold}
+          onChange={handleFormChange}
+          name="quantity_sold"
+          type="number"
+          min={0}
+        />
+        <Input
+          label="Mô tả"
+          value={form.notes ?? ""}
+          onChange={handleFormChange}
+          name="notes"
+          type="text"
+        />
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Ngôn ngữ</label>
+          <select
+            className="mac-input"
+            name="language"
+            value={form.language ?? "US"}
+            onChange={handleFormChange}
+            style={{ marginTop: 2 }}
+          >
+            <option value="US">US</option>
+            <option value="JP">JP</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Cột 3: Giá, vị trí, ngày thêm */}
+      <div style={{ gridColumn: "3/4", display: "flex", flexDirection: "column", gap: 18 }}>
+        <Input
+          label="Giá mua trung bình"
+          value={form.avg_purchase_price}
+          onChange={handleFormChange}
+          name="avg_purchase_price"
+          type="number"
+          min={0}
+          step={0.01}
+        />
+        <Input
+          label="Giá bán trung bình"
+          value={form.avg_selling_price}
+          onChange={handleFormChange}
+          name="avg_selling_price"
+          type="number"
+          min={0}
+          step={0.01}
+        />
+        <Input
+          label="Vị trí lưu trữ"
+          value={form.storage_location ?? ""}
+          onChange={handleFormChange}
+          name="storage_location"
+          type="text"
+        />
+        <Input
+          label="Ngày thêm"
+          value={form.date_added || new Date().toISOString().slice(0, 10)}
+          onChange={handleFormChange}
+          name="date_added"
+          type="date"
+          required
+        />
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Đang hoạt động</label>
+          <select
+            className="mac-input"
+            name="is_active"
+            value={form.is_active ? "true" : "false"}
+            onChange={e => handleFormChange({
+              ...e,
+              target: { ...e.target, value: e.target.value === "true", name: "is_active", type: "checkbox", checked: e.target.value === "true" }
+            } as any)}
+            style={{ marginTop: 2 }}
+          >
+            <option value="true">Có</option>
+            <option value="false">Không</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Button thao tác ở góc phải dưới cùng */}
+      <div
+        style={{
+          gridColumn: "3/4",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 12,
+          marginTop: 32,
+          alignSelf: "end"
+        }}
+      >
+        <Button type="submit" variant="primary" size="md">
           {modalMode === "add" ? "Thêm mới" : "Lưu thay đổi"}
-        </button>
-        <button type="button" className="btn btn-outline-secondary flex-grow-1" onClick={handleCloseModal}>
+        </Button>
+        <Button type="button" variant="gray-outline" size="md" onClick={handleCloseModal}>
           Đóng
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -14,7 +14,7 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 2000px) {
   .modal-grid-content {
     grid-template-columns: 1fr;
   }

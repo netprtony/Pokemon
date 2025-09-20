@@ -5,7 +5,6 @@ from pydantic import BaseModel
 class InventoryBase(BaseModel):
     inventory_id: int
     master_card_id: str
-    photo_avatar: Optional[str]
     total_quantity: int
     quantity_sold: Optional[int]
     avg_purchase_price: Optional[float]
@@ -16,11 +15,11 @@ class InventoryBase(BaseModel):
     date_added: date
     last_updated: Optional[datetime]
     notes: Optional[str]
+    reference_image_url: Optional[str]  # Thêm trường này
 
 class InventoryCreate(BaseModel):
     master_card_id: str
     total_quantity: int
-    photo_avatar: Optional[str] = None
     quantity_sold: Optional[int] = 0
     avg_purchase_price: Optional[float] = None
     avg_selling_price: Optional[float] = None
@@ -33,7 +32,6 @@ class InventoryCreate(BaseModel):
 class InventoryUpdate(BaseModel):
     total_quantity: Optional[int]
     quantity_sold: Optional[int]
-    photo_avatar: Optional[str]
     avg_purchase_price: Optional[float]
     avg_selling_price: Optional[float]
     storage_location: Optional[str]

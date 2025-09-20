@@ -1,7 +1,7 @@
 import React from "react";
 import "../assets/css/Input.css";
 
-type InputType = "text" | "money" | "number" | "datetime" | "file";
+type InputType = "text" | "money" | "number" | "datetime" | "file" | "date"; // đã có "file"
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -37,7 +37,6 @@ const Input: React.FC<InputProps> = ({
           className="mac-input"
           value={formatMoney(value)}
           onChange={(e) => {
-            // Chỉ nhận số, bỏ dấu phẩy
             const raw = e.target.value.replace(/[^\d]/g, "");
             onChange({
               ...e,
@@ -61,6 +60,14 @@ const Input: React.FC<InputProps> = ({
       ) : type === "datetime" ? (
         <input
           type="datetime-local"
+          className="mac-input"
+          value={value}
+          onChange={onChange}
+          {...props}
+        />
+      ) : type === "date" ? (
+        <input
+          type="date"
           className="mac-input"
           value={value}
           onChange={onChange}
