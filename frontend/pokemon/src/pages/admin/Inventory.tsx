@@ -5,11 +5,11 @@ import AdvancedFilters from "../../components/AdvancedFilters";
 import Modal from "../../components/Modal";
 import ModalConfirm from "../../components/ModalConfirm";
 import { toast } from "react-toastify";
-import type { Filter } from "../../components/AdvancedFilters";
-import type { FieldOption } from "../../components/AdvancedFilters";
+import type { Filter, FieldOption } from "../../components/AdvancedFilters";
 import "../../assets/css/Inventory.css";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
+import Toggle from "../../components/Toggle";
 
 // Kiểu dữ liệu cho 1 dòng Inventory
 export type InventoryRow = {
@@ -25,7 +25,7 @@ export type InventoryRow = {
   date_added: string;
   last_updated?: string;
   notes?: string;
-  reference_image_url?: string; // Thêm trường này
+  reference_image_url?: string;
 };
 
 const fieldOptions: FieldOption[] = [
@@ -43,7 +43,7 @@ const fieldOptions: FieldOption[] = [
   { value: "notes", label: "Ghi chú", type: "text" },
 ];
 
-const API_URL = "http://localhost:8000/inventory";
+const API_URL = "http://localhost:8000/inventory/";
 
 type ModalMode = "add" | "edit" | null;
 
@@ -69,16 +69,14 @@ const InventoryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [form, setForm] = useState<InventoryRow>(defaultForm);
   const [formTouched, setFormTouched] = useState(false);
 
-  // Confirm modal state
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [confirmMessage, setConfirmMessage] = useState<string>("");
@@ -86,25 +84,28 @@ const InventoryPage: React.FC = () => {
   const [sortField, setSortField] = useState("inventory_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // File upload state
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [previewImgs, setPreviewImgs] = useState<string[]>([]);
 
-  // Fetch data
   const fetchData = async (field = sortField, order = sortOrder) => {
     setLoading(true);
     try {
+      let items: InventoryRow[] = [];
+      let total = 0;
       if (filters.length > 0) {
         const resp = await axios.post(
-          `${API_URL}/filter`,
+          `${API_URL}filter`,
           { filters },
           { params: { page, page_size: pageSize, sort_field: field, sort_order: order } }
         );
-        const data = resp.data as { items: InventoryRow[]; total: number };
-        setData(data.items);
-        setTotal(data.total);
+        const data = resp.data as { items: any[]; total: number };
+        items = data.items.map((row) => ({
+          ...row,
+          reference_image_url: row.card?.reference_image_url ?? "",
+        }));
+        total = data.total;
       } else {
-        const resp = await axios.get<{ items: InventoryRow[]; total: number }>(API_URL, {
+        const resp = await axios.get<{ items: any[]; total: number }>(API_URL, {
           params: {
             page,
             page_size: pageSize,
@@ -113,10 +114,15 @@ const InventoryPage: React.FC = () => {
             sort_order: order,
           },
         });
-        setData(resp.data.items);
-        setTotal(resp.data.total);
+        items = resp.data.items.map((row) => ({
+          ...row,
+          reference_image_url: row.card?.reference_image_url ?? "",
+        }));
+        total = resp.data.total;
       }
-    } catch (err) {
+      setData(items);
+      setTotal(total);
+    } catch {
       toast.error("Lỗi khi tải dữ liệu!");
       setData([]);
       setTotal(0);
@@ -126,10 +132,8 @@ const InventoryPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, filters, searchTerm, sortField, sortOrder]);
 
-  // Thêm mới
   const handleAdd = () => {
     setForm(defaultForm);
     setModalMode("add");
@@ -137,7 +141,6 @@ const InventoryPage: React.FC = () => {
     setFormTouched(false);
   };
 
-  // Sửa
   const handleEdit = (row: InventoryRow) => {
     setForm({ ...row });
     setModalMode("edit");
@@ -145,7 +148,6 @@ const InventoryPage: React.FC = () => {
     setFormTouched(false);
   };
 
-  // Xóa
   const handleDelete = (row: InventoryRow) => {
     setConfirmMessage(`Bạn có chắc muốn xóa thẻ "${row.master_card_id}"?`);
     setConfirmAction(() => async () => {
@@ -161,7 +163,6 @@ const InventoryPage: React.FC = () => {
     setConfirmOpen(true);
   };
 
-  // Đóng modal nhập thông tin (add/edit)
   const handleCloseModal = () => {
     if (formTouched) {
       setConfirmMessage("Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?");
@@ -175,19 +176,17 @@ const InventoryPage: React.FC = () => {
     }
   };
 
-  // Lưu (add/edit)
   const handleSave = async () => {
     try {
+      const { reference_image_url, ...payload } = form;
       if (modalMode === "add") {
-        const resp = await axios.post(API_URL, form);
+        const resp = await axios.post(API_URL, payload);
         toast.success("Thêm mới thành công!");
-        // Chuyển sang chế độ edit inventory vừa tạo để upload ảnh
         setForm(resp.data as InventoryRow);
         setModalMode("edit");
         fetchData();
-        return;
       } else if (modalMode === "edit") {
-        await axios.put(`${API_URL}/${form.inventory_id}`, form);
+        await axios.put(`${API_URL}/${form.inventory_id}`, payload);
         toast.success("Cập nhật thành công!");
         setModalOpen(false);
         fetchData();
@@ -197,25 +196,27 @@ const InventoryPage: React.FC = () => {
     }
   };
 
-  // Xử lý thay đổi form
+  // ✅ Hàm chung cập nhật form
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const target = e.target as HTMLInputElement;
-    const { name, value, type } = target;
+    const { name, value, type, files, checked, dataset } = e.target as HTMLInputElement;
+
     setForm((prev) => ({
       ...prev,
-      [name]: type === "number"
-        ? Number(value)
-        : type === "checkbox"
-        ? target.checked
-        : value,
+      [name]:
+        type === "file"
+          ? files?.[0] ?? null
+          : dataset?.type === "money"
+          ? value === "" ? 0 : Number(value)  // ✅ ép về number
+          : type === "number"
+          ? value === "" ? 0 : Number(value)
+          : type === "checkbox"
+          ? checked
+          : value,
     }));
     setFormTouched(true);
   };
-
-
-
   const handlePreviewImage = (url: string) => setPreviewImg(url);
-  // const handlePreviewImages = (urls: string[] = []) => setPreviewImgs(urls || []);
+
 
   // Table columns
   const columns = [
@@ -231,7 +232,11 @@ const InventoryPage: React.FC = () => {
             onClick={() => row.reference_image_url && handlePreviewImage(row.reference_image_url)}
           />
         ) : (
-          <i className="bi bi-image text-secondary fs-3" title="No image" />
+          <img
+            src="card_images/default-card-image.png" // Đường dẫn ảnh mặc định
+            alt="No image"
+            style={{ width: 36, height: 36, objectFit: "contain", opacity: 0.5 }}
+          />
         ),
       width: 50,
       align: "center" as const,
@@ -301,22 +306,22 @@ const InventoryPage: React.FC = () => {
         position: "relative",
       }}
     >
-      {/* Cột 1: Chỉ hiển thị ảnh mẫu từ reference_image_url */}
+      {/* Cột 1: Chỉ hiển thị ảnh đại diện từ reference_image_url */}
       <div style={{ gridColumn: "1/2", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Ảnh mẫu</label>
+        <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Ảnh đại diện thẻ</label>
         <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           {form.reference_image_url ? (
             <img
               src={form.reference_image_url}
               alt="Reference"
               style={{
-                width: 220,
-                height: 220,
+                width: 550,
+                height: 550,
                 objectFit: "contain",
                 borderRadius: 12,
                 border: "1px solid #eee",
                 marginBottom: 12,
-                cursor: "pointer"
+                cursor: "zoom-in",
               }}
               onClick={() => form.reference_image_url && handlePreviewImage(form.reference_image_url)}
             />
@@ -377,7 +382,7 @@ const InventoryPage: React.FC = () => {
           type="text"
         />
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Ngôn ngữ</label>
+          <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>Ngôn ngữ</label>
           <select
             className="mac-input"
             name="language"
@@ -395,21 +400,17 @@ const InventoryPage: React.FC = () => {
       <div style={{ gridColumn: "3/4", display: "flex", flexDirection: "column", gap: 18 }}>
         <Input
           label="Giá mua trung bình"
+          name="avg_purchase_price"
+          type="money"
           value={form.avg_purchase_price}
           onChange={handleFormChange}
-          name="avg_purchase_price"
-          type="number"
-          min={0}
-          step={0.01}
         />
         <Input
           label="Giá bán trung bình"
+          name="avg_selling_price"
+          type="money"
           value={form.avg_selling_price}
           onChange={handleFormChange}
-          name="avg_selling_price"
-          type="number"
-          min={0}
-          step={0.01}
         />
         <Input
           label="Vị trí lưu trữ"
@@ -420,27 +421,37 @@ const InventoryPage: React.FC = () => {
         />
         <Input
           label="Ngày thêm"
-          value={form.date_added || new Date().toISOString().slice(0, 10)}
+          value={
+        form.date_added
+          ? (() => {
+          const d = new Date(form.date_added);
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          return `${day}/${month}/${year}`;
+            })()
+          : (() => {
+          const d = new Date();
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          return `${day}/${month}/${year}`;
+            })()
+          }
           onChange={handleFormChange}
           name="date_added"
-          type="date"
+          type="text"
           required
         />
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Đang hoạt động</label>
-          <select
-            className="mac-input"
-            name="is_active"
-            value={form.is_active ? "true" : "false"}
-            onChange={e => handleFormChange({
-              ...e,
-              target: { ...e.target, value: e.target.value === "true", name: "is_active", type: "checkbox", checked: e.target.value === "true" }
-            } as any)}
-            style={{ marginTop: 2 }}
-          >
-            <option value="true">Có</option>
-            <option value="false">Không</option>
-          </select>
+          <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>Đang hoạt động</label>
+            <Toggle
+              checked={form.is_active}
+              onChange={(checked) => {
+                setForm((prev) => ({ ...prev, is_active: checked }));
+                setFormTouched(true);
+              }}
+         />
         </div>
       </div>
 

@@ -1,0 +1,37 @@
+.mac-toggle {
+  display: inline-block;
+  width: 52px;
+  height: 32px;
+  position: relative;
+  cursor: pointer;
+}
+.mac-toggle-slider {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #e5e5e5;
+  border-radius: 32px;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.mac-toggle.checked .mac-toggle-slider {
+  background: #34c759;
+}
+.mac-toggle-slider:before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 26px;
+  height: 26px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.mac-toggle.checked .mac-toggle-slider:before {
+  transform: translateX(20px);
+}
+.mac-toggle.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

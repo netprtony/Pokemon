@@ -8,7 +8,7 @@ from app.schemas.inventory import (
     PaginatedInventory,
 )
 from app.schemas.filter import FilterRequest
-from app.models import Inventory
+from app.models import Inventory, PokemonCardMaster
 from app.database import get_db
 import os
 import json
@@ -19,12 +19,12 @@ INVENTORY_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/invent
 # Thêm mới
 @router.post("/", response_model=InventoryOut, status_code=status.HTTP_201_CREATED)
 def create_inventory(data: InventoryCreate, db: Session = Depends(get_db)):
-    data_dict = data.dict(exclude_unset=True)
-    db_item = Inventory(**data_dict)
+    db_item = Inventory(**data.dict(exclude_unset=True))
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    return db_item
+    # Trả về inventory kèm thông tin card
+    return db.query(Inventory).options(joinedload(Inventory.card)).filter(Inventory.inventory_id == db_item.inventory_id).first()
 
 # Sửa
 @router.put("/{inventory_id}", response_model=InventoryOut)
@@ -36,7 +36,8 @@ def update_inventory(inventory_id: int, data: InventoryUpdate, db: Session = Dep
         setattr(db_item, key, value)
     db.commit()
     db.refresh(db_item)
-    return db_item
+    # Trả về inventory kèm thông tin card
+    return db.query(Inventory).options(joinedload(Inventory.card)).filter(Inventory.inventory_id == db_item.inventory_id).first()
 
 # Xóa
 @router.delete("/{inventory_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -55,10 +56,10 @@ def get_inventory(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100, description="Số mục trên mỗi trang"),
     search: str = Query(None, description="Từ khóa tìm kiếm"),
-    sort_field: Optional[str] = Query("date_added", description="Trường để sắp xếp"),
+    sort_field: Optional[str] = Query("inventory_id", description="Trường để sắp xếp"),
     sort_order: Optional[str] = Query("asc", description="Thứ tự sắp xếp: asc hoặc desc"),
 ):
-    query = db.query(Inventory).options(joinedload(Inventory.card))
+    query = db.query(Inventory).join(PokemonCardMaster, Inventory.master_card_id == PokemonCardMaster.master_card_id).options(joinedload(Inventory.card))
     if search:
         query = query.filter(
             Inventory.storage_location.ilike(f"%{search}%")
@@ -85,20 +86,12 @@ def get_inventory(
             query = query.order_by(col.asc())
     total = query.count()
     items = query.offset((page - 1) * page_size).limit(page_size).all()
-
-    # Thêm reference_image_url vào kết quả trả về
-    result = []
-    for item in items:
-        item_dict = item.__dict__.copy()
-        item_dict["reference_image_url"] = item.card.reference_image_url if item.card else None
-        result.append(item_dict)
-
-    return {"items": result, "total": total}
+    return {"items": items, "total": total}
 
 # Lấy tất cả danh sách (không phân trang)
 @router.get("/all", response_model=List[InventoryOut])
 def get_all_inventory(db: Session = Depends(get_db)):
-    return db.query(Inventory).order_by(Inventory.date_added).all()
+    return db.query(Inventory).options(joinedload(Inventory.card)).order_by(Inventory.date_added).all()
 
 # Filter nâng cao
 @router.post("/filter", response_model=PaginatedInventory)

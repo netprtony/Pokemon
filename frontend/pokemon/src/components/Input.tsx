@@ -1,7 +1,7 @@
 import React from "react";
 import "../assets/css/Input.css";
 
-type InputType = "text" | "money" | "number" | "datetime" | "file" | "date"; // đã có "file"
+type InputType = "text" | "money" | "number" | "datetime" | "file" | "date" | "stepper";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -28,24 +28,84 @@ const Input: React.FC<InputProps> = ({
   max,
   ...props
 }) => {
+  // Stepper handler
+  const handleStepper = (delta: number) => {
+    let newValue = Number(value) + delta;
+    if (typeof min === "number") newValue = Math.max(min, newValue);
+    if (typeof max === "number") newValue = Math.min(max, newValue);
+    const event = {
+      target: {
+        name: props.name,
+        value: newValue,
+        type: "number"
+      }
+    };
+    onChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <div className="mac-input-group">
       {label && <label className="mac-input-label">{label}</label>}
       {type === "money" ? (
         <input
           type="text"
+          data-type="money" // ✅ để handleFormChange biết đây là money
           className="mac-input"
-          value={formatMoney(value)}
+          value={value === "" ? "" : formatMoney(value)}
           onChange={(e) => {
             const raw = e.target.value.replace(/[^\d]/g, "");
-            onChange({
+
+            // 🔧 Tạo event mới, giữ name, value và truyền dataset.type
+            const customEvent = {
               ...e,
-              target: { ...e.target, value: raw }
-            });
+              target: {
+                ...e.target,
+                name: e.target.name,
+                value: raw,
+                dataset: { type: "money" }
+              }
+            } as React.ChangeEvent<HTMLInputElement>;
+
+            onChange(customEvent);
+          }}
+          onBlur={(e) => {
+            const raw = e.target.value.replace(/[^\d]/g, "");
+            e.target.value = formatMoney(raw);
           }}
           placeholder={props.placeholder || "Nhập số tiền..."}
           {...props}
+          step={undefined} // Không truyền step cho type money
         />
+      ) : type === "stepper" ? (
+        <div className="mac-stepper">
+          <button
+            type="button"
+            className="mac-stepper-btn"
+            onClick={() => handleStepper(-step)}
+            disabled={typeof min === "number" && Number(value) <= min}
+          >
+            <span style={{ fontSize: 32, fontWeight: 500 }}>−</span>
+          </button>
+          <input
+            type="number"
+            className="mac-stepper-input"
+            value={value}
+            onChange={onChange}
+            min={min}
+            max={max}
+            step={step}
+            {...props}
+            style={{ textAlign: "center", width: 60, fontSize: 20, background: "transparent", border: "none" }}
+          />
+          <button
+            type="button"
+            className="mac-stepper-btn"
+            onClick={() => handleStepper(step)}
+            disabled={typeof max === "number" && Number(value) >= max}
+          >
+            <span style={{ fontSize: 32, fontWeight: 500 }}>+</span>
+          </button>
+        </div>
       ) : type === "number" ? (
         <input
           type="number"

@@ -187,8 +187,19 @@ export default function DataTable<T>({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={columns.length} className="text-center text-muted py-5">
-                  Đang tải dữ liệu...
+                <td colSpan={columns.length} className="text-center py-5">
+                  <div className="d-flex flex-column align-items-center gap-2">
+                    <div className="placeholder-glow w-100 mb-3">
+                      <span className="placeholder col-12" style={{ height: 32, borderRadius: 8 }}></span>
+                    </div>
+                    <div className="placeholder-glow w-100 mb-3">
+                      <span className="placeholder col-12" style={{ height: 32, borderRadius: 8 }}></span>
+                    </div>
+                    <div className="placeholder-glow w-100 mb-3">
+                      <span className="placeholder col-12" style={{ height: 32, borderRadius: 8 }}></span>
+                    </div>
+                    <span className="text-muted mt-3">Đang tải dữ liệu...</span>
+                  </div>
                 </td>
               </tr>
             ) : paginatedData.length === 0 ? (

@@ -1,0 +1,30 @@
+.mac-spinner-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #888;
+  font-size: 28px;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.mac-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 5px solid #e0e0e0;
+  border-top: 5px solid #a0a0a0;
+  animation: mac-spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes mac-spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
+.mac-spinner-text {
+  color: #888;
+  font-size: 28px;
+  font-weight: 400;
+}
