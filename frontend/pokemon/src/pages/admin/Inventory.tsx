@@ -27,7 +27,22 @@ export type InventoryRow = {
   notes?: string;
   reference_image_url?: string;
 };
-
+export type DetailInventoryForm = {
+  detail_id: number;
+  inventory_id: number;
+  physical_condition_us: string;
+  physical_condition_jp: string;
+  is_graded: boolean;
+  grade_company: string;
+  grade_score: string;
+  purchase_price: string;
+  selling_price: string;
+  card_photos: string[];
+  date_added: string;
+  last_updated: string;
+  is_sold: boolean;
+  notes: string;
+};
 const fieldOptions: FieldOption[] = [
   { value: "inventory_id", label: "ID", type: "number" },
   { value: "master_card_id", label: "Mã thẻ", type: "text" },
@@ -63,6 +78,23 @@ const defaultForm: InventoryRow = {
   reference_image_url: "",
 };
 
+const defaultDetailForm = {
+  detail_id: 0,
+  inventory_id: 0,
+  physical_condition_us: "",
+  physical_condition_jp: "",
+  is_graded: false,
+  grade_company: "",
+  grade_score: "",
+  purchase_price: "",
+  selling_price: "",
+  card_photos: [],
+  date_added: "",
+  last_updated: "",
+  is_sold: false,
+  notes: "",
+};
+
 const InventoryPage: React.FC = () => {
   const [data, setData] = useState<InventoryRow[]>([]);
   const [filters, setFilters] = useState<Filter[]>([]);
@@ -86,6 +118,15 @@ const InventoryPage: React.FC = () => {
 
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [previewImgs, setPreviewImgs] = useState<string[]>([]);
+  const [detailData, setDetailData] = useState<Record<number, any[]>>({});
+
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailForm, setDetailForm] = useState(defaultDetailForm);
+  const [detailModalMode, setDetailModalMode] = useState<"add" | "edit" | null>(null);
+  const [detailFormTouched, setDetailFormTouched] = useState(false);
+
+  const [detailImages, setDetailImages] = useState<File[]>([]);
+  const [detailAngles, setDetailAngles] = useState<string[]>([]);
 
   const fetchData = async (field = sortField, order = sortOrder) => {
     setLoading(true);
@@ -162,9 +203,10 @@ const InventoryPage: React.FC = () => {
     });
     setConfirmOpen(true);
   };
+  
 
   const handleCloseModal = () => {
-    if (formTouched) {
+    if (formTouched || detailFormTouched) {
       setConfirmMessage("Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát?");
       setConfirmAction(() => () => {
         setModalOpen(false);
@@ -260,6 +302,9 @@ const InventoryPage: React.FC = () => {
       width: 110,
       render: (row: InventoryRow) => (
         <div className="d-flex justify-content-center gap-3">
+          <button className="btn btn-link p-0" title="Thêm chi tiết kho" onClick={() => handleAddDetail(row)}>
+            <i className="bi bi-plus fs-5 text-success"></i>
+          </button>
           <button className="btn btn-link p-0" title="Sửa" onClick={() => handleEdit(row)}>
             <i className="bi bi-pencil fs-5 text-warning"></i>
           </button>
@@ -482,6 +527,206 @@ const InventoryPage: React.FC = () => {
     setPage(1);
   }
 
+  const fetchDetailInventory = async (inventory_id: number) => {
+    try {
+      const resp = await axios.get(`http://localhost:8000/detail-inventory/by-inventory/${inventory_id}`);
+      setDetailData(prev => ({ ...prev, [inventory_id]: resp.data as any[] }));
+    } catch {
+      toast.error("Không thể tải chi tiết inventory!");
+      setDetailData(prev => ({ ...prev, [inventory_id]: [] }));
+    }
+  };
+
+  const renderDetailTable = (inventory_id: number) => {
+    const details = detailData[inventory_id] || [];
+    return (
+      <div style={{ background: "#F7F7FA", borderRadius: 12, padding: 16 }}>
+        <h6 className="fw-bold mb-2">Chi tiết thẻ</h6>
+        <table className="table table-bordered table-sm mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ảnh</th>
+              <th>Điều kiện US</th>
+              <th>Điều kiện JP</th>
+              <th>Đã chấm điểm</th>
+              <th>Hãng chấm</th>
+              <th>Điểm</th>
+              <th>Giá mua</th>
+              <th>Giá bán</th>
+              <th>Ngày thêm</th>
+              <th>Cập nhật cuối</th>
+              <th>Đã bán</th>
+              <th>Ghi chú</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {details.length === 0 ? (
+              <tr>
+                <td colSpan={14} className="text-center text-muted">Không có dữ liệu</td>
+              </tr>
+            ) : details.map((row: any) => (
+              <tr key={row.detail_id}>
+                <td>{row.detail_id}</td>
+                <td>
+                  <div className="d-flex gap-2 flex-wrap">
+                    {row.card_photos?.map((img: string, idx: number) => (
+                      <img
+                        key={idx}
+                        src={`/detail_inventory_images/${img}`}
+                        alt={`photo-${idx}`}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          objectFit: "contain",
+                          borderRadius: 6,
+                          border: "1px solid #eee",
+                          cursor: "pointer"
+                        }}
+                        onClick={() => handlePreviewImage(`/detail_inventory_images/${img}`)}
+                      />
+                    ))}
+                  </div>
+                </td>
+                <td>{row.physical_condition_us}</td>
+                <td>{row.physical_condition_jp}</td>
+                <td>{row.is_graded ? "Đã chấm" : "Chưa chấm"}</td>
+                <td>{row.grade_company || "-"}</td>
+                <td>{row.grade_score ?? "-"}</td>
+                <td>{row.purchase_price ? row.purchase_price.toLocaleString("vi-VN") : "-"}</td>
+                <td>{row.selling_price ? row.selling_price.toLocaleString("vi-VN") : "-"}</td>
+                <td>
+                  {row.date_added
+                  ? row.date_added.substring(0, 10)
+                  : (() => {
+                    const d = new Date();
+                    const day = String(d.getDate()).padStart(2, "0");
+                    const month = String(d.getMonth() + 1).padStart(2, "0");
+                    const year = d.getFullYear();
+                    return `${year}-${month}-${day}`;
+                    })()
+                  }
+                </td>
+                <td>{row.last_updated ? row.last_updated.substring(0, 10) : "-"}</td>
+                <td>{row.is_sold ? "Đã bán" : "Chưa bán"}</td>
+                <td>{row.notes}</td>
+                <td>
+                  <button
+                  className="btn btn-link p-0"
+                  title="Sửa"
+                  onClick={() => handleEditDetail(row)}
+                >
+                  <i className="bi bi-pencil fs-6 text-warning"></i>
+                </button>
+                <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDeleteDetail(row)}>
+                  <i className="bi bi-trash fs-6 text-danger"></i>
+                </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderCollapse = (row: InventoryRow) => {
+    // Nếu chưa có detail, fetch
+    if (!detailData[row.inventory_id]) {
+      fetchDetailInventory(row.inventory_id);
+      return <div className="text-muted py-3">Đang tải chi tiết...</div>;
+    }
+    return renderDetailTable(row.inventory_id);
+  };
+
+  function handleAddDetail(row: InventoryRow) {
+    setDetailForm({ ...defaultDetailForm, inventory_id: row.inventory_id });
+    setDetailModalMode("add");
+    setDetailModalOpen(true);
+    setDetailFormTouched(false);
+  }
+  function handleEditDetail(row: any) {
+    setDetailForm({ ...row });
+    setDetailModalMode("edit");
+    setDetailModalOpen(true);
+    setDetailFormTouched(false);
+  }
+  async function handleSaveDetail() {
+    try {
+      let savedDetail: DetailInventoryForm | null = null;
+      if (detailModalMode === "add") {
+        const resp = await axios.post<DetailInventoryForm>("http://localhost:8000/detail-inventory/", detailForm);
+        toast.success("Thêm chi tiết thành công!");
+        savedDetail = resp.data;
+      } else if (detailModalMode === "edit") {
+        const resp = await axios.put<DetailInventoryForm>(
+          `http://localhost:8000/detail-inventory/${detailForm.detail_id}`,
+          detailForm
+        );
+        toast.success("Cập nhật chi tiết thành công!");
+        savedDetail = resp.data;
+      }
+
+      // Nếu có ảnh thì upload
+      if (detailImages.length > 0 && savedDetail) {
+        const formData = new FormData();
+        detailImages.forEach(file => formData.append("files", file));
+        // Tạo query string cho angles
+        const query = new URLSearchParams({
+          inventory_id: String(savedDetail.inventory_id),
+          ...detailAngles.reduce((acc, angle) => {
+            acc[`angles`] = acc[`angles`]
+              ? Array.isArray(acc[`angles`])
+                ? [...acc[`angles`], angle]
+                : [acc[`angles`], angle]
+              : angle;
+            return acc;
+          }, {} as Record<string, any>)
+        }).toString();
+
+        await axios.post(
+          `http://localhost:8000/detail-inventory/${savedDetail.detail_id}/upload-photos?${query}`,
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        toast.success("Upload ảnh thành công!");
+      }
+
+      fetchDetailInventory(detailForm.inventory_id);
+      setDetailModalOpen(false);
+      setDetailImages([]);
+      setDetailAngles([]);
+    } catch {
+      toast.error("Lỗi khi lưu chi tiết hoặc upload ảnh!");
+    }
+  }
+
+  function handleDeleteDetail(row: any) {
+    setConfirmMessage(`Bạn có chắc muốn xóa chi tiết ID ${row.detail_id}?`);
+    setConfirmAction(() => async () => {
+      try {
+        await axios.delete(`http://localhost:8000/detail-inventory/${row.detail_id}`);
+        toast.success("Xóa chi tiết thành công!");
+        fetchDetailInventory(row.inventory_id);
+      } catch {
+        toast.error("Lỗi khi xóa chi tiết!");
+      }
+      setConfirmOpen(false);
+    });
+    setConfirmOpen(true);
+  }
+  
+
+  function handleDetailFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    setDetailForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+    setDetailFormTouched(true);
+  }
+
   return (
     <div className="container-fluid py-4">
       <h3 className="mb-3 fw-bold">Danh sách kho thẻ</h3>
@@ -512,6 +757,7 @@ const InventoryPage: React.FC = () => {
         onSort={handleSort}
         sortField={sortField}
         sortOrder={sortOrder}
+        renderCollapse={renderCollapse}
       />
       {/* Modal nhập thông tin */}
       <Modal
@@ -554,6 +800,105 @@ const InventoryPage: React.FC = () => {
             <img key={idx} src={url} alt={`Preview ${idx}`} style={{ width: 120, height: 120, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }} />
           ))}
         </div>
+      </Modal>
+      <Modal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        title={detailModalMode === "add" ? "Thêm chi tiết thẻ" : "Sửa chi tiết thẻ"}
+      >
+        <form
+          autoComplete="off"
+          onSubmit={(e) => { e.preventDefault(); handleSaveDetail(); }}
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, minWidth: 600 }}
+        >
+          <Input
+            label="Điều kiện US"
+            name="physical_condition_us"
+            type="text"
+            value={detailForm.physical_condition_us}
+            onChange={handleDetailFormChange}
+            required
+          />
+          <Input
+            label="Điều kiện JP"
+            name="physical_condition_jp"
+            type="text"
+            value={detailForm.physical_condition_jp}
+            onChange={handleDetailFormChange}
+          />
+          <Toggle
+            checked={detailForm.is_graded}
+            onChange={(checked) => setDetailForm((prev) => ({ ...prev, is_graded: checked }))}
+          />
+          <Input
+            label="Hãng chấm"
+            name="grade_company"
+            type="text"
+            value={detailForm.grade_company}
+            onChange={handleDetailFormChange}
+          />
+          <Input
+            label="Điểm"
+            name="grade_score"
+            type="number"
+            value={detailForm.grade_score}
+            onChange={handleDetailFormChange}
+            min={0}
+            max={10}
+          />
+          <Input
+            label="Giá mua"
+            name="purchase_price"
+            type="money"
+            value={detailForm.purchase_price}
+            onChange={handleDetailFormChange}
+          />
+          <Input
+            label="Giá bán"
+            name="selling_price"
+            type="money"
+            value={detailForm.selling_price}
+            onChange={handleDetailFormChange}
+          />
+          <Input
+            label="Ngày thêm"
+            name="date_added"
+            type="date"
+            value={detailForm.date_added}
+            onChange={handleDetailFormChange}
+          />
+          <Toggle
+            checked={detailForm.is_sold}
+            onChange={(checked) => setDetailForm((prev) => ({ ...prev, is_sold: checked }))}
+          />
+          <Input
+            label="Ghi chú"
+            name="notes"
+            type="text"
+            value={detailForm.notes}
+            onChange={handleDetailFormChange}
+          />
+          <div style={{ gridColumn: "1/3" }}>
+            <label className="mac-input-label">Ảnh chi tiết (có thể chọn nhiều)</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={e => setDetailImages(Array.from(e.target.files || []))}
+              className="mac-input"
+            />
+            <label className="mac-input-label mt-2">Góc chụp (phân cách bằng dấu phẩy, ví dụ: front,back,corner1)</label>
+            <input
+              type="text"
+              value={detailAngles.join(",")}
+              onChange={e => setDetailAngles(e.target.value.split(",").map(s => s.trim()))}
+              className="mac-input"
+              placeholder="front,back,corner1"
+            />
+          </div>
+          <Button type="submit" variant="primary">Lưu</Button>
+          <Button type="button" variant="gray-outline" onClick={() => setDetailModalOpen(false)}>Đóng</Button>
+        </form>
       </Modal>
     </div>
   );

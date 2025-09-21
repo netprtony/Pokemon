@@ -8,6 +8,7 @@ from app.routers import (
     order_router,
     inventory_router,
     price_alert_router,
+    inventory_detail_router,
 )  
 app = FastAPI()
 
@@ -31,6 +32,7 @@ app.include_router(order_detail_router)
 app.include_router(order_router)
 app.include_router(inventory_router)
 app.include_router(price_alert_router)
+app.include_router(inventory_detail_router)
 @app.get("/")
 def read_root():
     return {"message": "CORS đã bật thành công"}

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, status, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Query, status, Depends, UploadFile, File, Body
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
@@ -100,16 +100,45 @@ async def upload_detail_photos(
         with open(save_path, "wb") as f:
             content = await file.read()
             f.write(content)
-        saved_files.append(f"/detail_inventory_images/{base_name}")
+        saved_files.append(f"{base_name}")
 
     # Cập nhật card_photos
     photos = db_item.card_photos or []
     if isinstance(photos, str):
-        photos = json.loads(photos)
+        try:
+            photos = json.loads(photos)
+        except Exception:
+            photos = []
     photos.extend(saved_files)
-    db_item.card_photos = photos
-    db_item.photo_count = len(photos)
+    # Nếu cột card_photos là ARRAY thì gán trực tiếp, nếu là TEXT thì lưu json.dumps
+    if hasattr(DetailInventory, "card_photos") and str(DetailInventory.card_photos.type).lower().find("array") >= 0:
+        db_item.card_photos = photos
+    else:
+        db_item.card_photos = json.dumps(photos)
+
     db.commit()
     db.refresh(db_item)
-    return db_item
+
+    # Trả về card_photos là mảng
+    result = db_item.__dict__.copy()
+    if isinstance(result["card_photos"], str):
+        try:
+            result["card_photos"] = json.loads(result["card_photos"])
+        except Exception:
+            result["card_photos"] = []
+    return result
+
+
+@router.get("/by-inventory/{inventory_id}", response_model=List[DetailInventoryOut])
+def get_details_by_inventory_id(
+    inventory_id: int,
+    db: Session = Depends(get_db)
+):
+    details = db.query(DetailInventory).filter(DetailInventory.inventory_id == inventory_id).order_by(DetailInventory.date_added.desc()).all()
+    # Chuyển card_photos thành list nếu là string
+    for item in details:
+        if isinstance(item.card_photos, str):
+            item.card_photos = json.loads(item.card_photos)
+    return details
+
 

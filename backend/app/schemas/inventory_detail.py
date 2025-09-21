@@ -48,3 +48,7 @@ class DetailInventoryOut(DetailInventoryBase):
     class Config:
         orm_mode = True
 
+class PaginatedDetailInventory(BaseModel):
+    items: List[DetailInventoryOut]
+    total: int
+

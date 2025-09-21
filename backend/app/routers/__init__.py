@@ -5,6 +5,7 @@ from .order_detail import router as order_detail_router
 from .order import router as order_router
 from .inventory import router as inventory_router
 from .price_alert import router as price_alert_router
+from .inventory_detail import router as inventory_detail_router
 
 __all__ = [
     "pokemon_set_router",
@@ -14,4 +15,5 @@ __all__ = [
     "order_router",
     "inventory_router",
     "price_alert_router",
+    "inventory_detail_router",
 ]
