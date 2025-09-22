@@ -1,6 +1,6 @@
 from typing import List, Optional
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel
 
 class PokemonCardBase(BaseModel):
     master_card_id: str
@@ -12,14 +12,11 @@ class PokemonCardBase(BaseModel):
     version_original: Optional[str] = None
     supertype: str
     subtypes: Optional[str] = None
-    hp: Optional[int] = None
     rarity: str
     illustrator: Optional[str] = None
-    spec: Optional[str] = None
     reference_image_url: Optional[str] = None
-    release_year: Optional[int] = None
-    is_promo: bool = False
-    is_special_variant: bool = False
+    flavorText: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
 class PokemonCardCreate(PokemonCardBase):
     pass
@@ -31,14 +28,11 @@ class PokemonCardUpdate(BaseModel):
     version_original: Optional[str] = None
     supertype: Optional[str] = None
     subtypes: Optional[str] = None
-    hp: Optional[int] = None
     rarity: Optional[str] = None
     illustrator: Optional[str] = None
-    spec: Optional[str] = None
     reference_image_url: Optional[str] = None
-    release_year: Optional[int] = None
-    is_promo: Optional[bool] = None
-    is_special_variant: Optional[bool] = None
+    flavorText: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True

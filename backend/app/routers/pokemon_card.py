@@ -26,7 +26,6 @@ def create_pokemon_card(data: PokemonCardCreate, db: Session = Depends(get_db)):
     db.refresh(db_card)
     return db_card
 
-# Sửa
 @router.put("/{master_card_id}", response_model=PokemonCardOut)
 def update_pokemon_card(master_card_id: str, data: PokemonCardUpdate, db: Session = Depends(get_db)):
     db_card = db.query(PokemonCardMaster).filter(PokemonCardMaster.master_card_id == master_card_id).first()
@@ -53,9 +52,9 @@ def delete_pokemon_card(master_card_id: str, db: Session = Depends(get_db)):
 def get_pokemon_cards(
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100, description="Số mục trên mỗi trang"),
+    page_size: int = Query(20, ge=1, le=5000, description="Số mục trên mỗi trang"),
     search: str = Query(None, description="Từ khóa tìm kiếm tên thẻ"),
-    sort_field: Optional[str] = Query("release_year", description="Trường để sắp xếp"),
+    sort_field: Optional[str] = Query("master_card_id", description="Trường để sắp xếp"),
     sort_order: Optional[str] = Query("asc", description="Thứ tự sắp xếp: asc hoặc desc"),
 ):
     query = db.query(PokemonCardMaster)
@@ -72,7 +71,6 @@ def get_pokemon_cards(
         "set_id": PokemonCardMaster.set_id,
         "card_number": PokemonCardMaster.card_number,
         "name_en": PokemonCardMaster.name_en,
-        "release_year": PokemonCardMaster.release_year,
         "rarity": PokemonCardMaster.rarity,
     }
     if sort_field in valid_sort_fields:

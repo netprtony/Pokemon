@@ -32,7 +32,6 @@ interface DataTableProps<T> {
 export default function DataTable<T>({
   columns,
   data,
-  pageSizeOptions = [5, 10, 20, 50],
   totalRows,
   page,
   setPage,
@@ -46,7 +45,7 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   // State nội bộ
   const [internalPage, setInternalPage] = useState(1);
-  const [internalPageSize, setInternalPageSize] = useState(pageSizeOptions[0]);
+  const [internalPageSize, setInternalPageSize] = useState(pageSize ?? 10); // mặc định 10 nếu không truyền vào
   const [openRow, setOpenRow] = useState<number | null>(null);
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
   const [previewImg, setPreviewImg] = useState<string | null>(null);
@@ -60,8 +59,7 @@ export default function DataTable<T>({
 
   const total = totalRows ?? data.length;
   const totalPages = Math.max(1, Math.ceil(total / currentPageSize));
-  
-  
+
   const paginatedData =
     page && setPage
       ? data
@@ -75,7 +73,7 @@ export default function DataTable<T>({
       setMaxHeight("0px");
     }
   }, [openRow]);
-  
+
   const handleSort = (field: string) => {
     if (onSort) {
       let order: "asc" | "desc" = "asc";
@@ -114,30 +112,32 @@ export default function DataTable<T>({
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div className="d-flex align-items-center gap-2">
           <span className="fw-semibold">Show</span>
-          <Form.Select
+          <Form.Control
+            type="number"
             size="sm"
             style={{ width: 70, fontWeight: 500 }}
             value={currentPageSize}
+            min={1}
             onChange={(e) => {
+              const val = Math.max(1, Number(e.target.value));
               setPageSize
-                ? (setPageSize(Number(e.target.value)), setPage?.(1))
-                : (setInternalPageSize(Number(e.target.value)), setInternalPage(1));
+                ? (setPageSize(val), setPage?.(1))
+                : (setInternalPageSize(val), setInternalPage(1));
             }}
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </Form.Select>
+          />
           <span className="fw-semibold">entries</span>
         </div>
-        
       </div>
 
       {/* Table with scroll */}
-      <div style={{ maxHeight: "70vh", overflow: "auto", width: "170vh" }}>
-        <Table hover responsive className="align-middle mb-0" ref={tableRef} style={{ fontSize: "1rem", minWidth: 1200 }}>
+      <div style={{ maxHeight: "70vh", overflowY: "auto", overflowX: "auto", width: "100%", maxWidth: "1630px" }}>
+        <Table
+          hover
+          responsive
+          className="align-middle mb-0"
+          ref={tableRef}
+          style={{ fontSize: "1rem", minWidth: 1200 }}
+        >
           <thead style={{ background: "#F7F7FA" }}>
             <tr>
               {columns.map((col) => (
@@ -246,7 +246,11 @@ export default function DataTable<T>({
                             ) : (
                               <i className="bi bi-image text-secondary fs-3" title="No image" />
                             )
-                          ) : col.render ? col.render(row, globalIdx) : (row as any)[col.key]}
+                          ) : col.render ? col.render(row, globalIdx) : (
+                            typeof (row as any)[col.key] === "string" && (row as any)[col.key].length > 20
+                              ? ((row as any)[col.key].slice(0, 20) + "...")
+                              : (row as any)[col.key]
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -307,7 +311,7 @@ export default function DataTable<T>({
           </span>
           <span className="text-muted ms-1">of {total} entries</span>
         </div>
-        <div>
+        <div className="d-flex align-items-center gap-2">
           <Pagination className="mb-0">
             <Pagination.Prev
               disabled={currentPage === 1}
@@ -317,27 +321,28 @@ export default function DataTable<T>({
                   : setInternalPage(Math.max(1, currentPage - 1))
               }
             />
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Pagination.Item
-                key={i + 1}
-                active={currentPage === i + 1}
-                onClick={() =>
-                  setPage
-                    ? setPage(i + 1)
-                    : setInternalPage(i + 1)
-                }
-                style={{
-                  borderRadius: "8px",
-                  fontWeight: 600,
-                  background: currentPage === i + 1 ? "#6C63FF" : "#F7F7FA",
-                  color: currentPage === i + 1 ? "#fff" : "#22223B",
-                  border: "none",
-                  margin: "0 2px",
-                }}
-              >
-                {i + 1}
-              </Pagination.Item>
-            ))}
+          </Pagination>
+          <Form.Control
+            type="number"
+            min={1}
+            max={totalPages}
+            value={currentPage}
+            style={{ width: 70, fontWeight: 600, borderRadius: 8 }}
+            onChange={e => {
+              let val = Number(e.target.value);
+              if (isNaN(val) || val < 1) val = 1;
+              if (val > totalPages) val = totalPages;
+              setPage ? setPage(val) : setInternalPage(val);
+            }}
+            onBlur={e => {
+              let val = Number(e.target.value);
+              if (isNaN(val) || val < 1) val = 1;
+              if (val > totalPages) val = totalPages;
+              setPage ? setPage(val) : setInternalPage(val);
+            }}
+          />
+          <span className="fw-semibold ms-1">/ {totalPages}</span>
+          <Pagination className="mb-0">
             <Pagination.Next
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() =>

@@ -19,16 +19,14 @@ export type PokemonCardRow = {
   version_original?: string;
   supertype: string;
   subtypes?: string;
-  hp?: number;
   rarity: string;
   illustrator?: string;
-  spec?: string;
   reference_image_url?: string;
-  release_year?: number;
-  is_promo?: boolean;
-  is_special_variant?: boolean;
+  flavorText?: string;
+  updated_at?: string;
 };
 
+// Field options cho filter
 const fieldOptions: FieldOption[] = [
   { value: "master_card_id", label: "Master Card ID", type: "text" },
   { value: "set_id", label: "Set ID", type: "text" },
@@ -39,13 +37,11 @@ const fieldOptions: FieldOption[] = [
   { value: "version_original", label: "Phiên bản gốc", type: "text" },
   { value: "supertype", label: "Supertype", type: "text" },
   { value: "subtypes", label: "Subtypes", type: "text" },
-  { value: "hp", label: "HP", type: "number" },
   { value: "rarity", label: "Độ hiếm", type: "text" },
   { value: "illustrator", label: "Họa sĩ", type: "text" },
-  { value: "spec", label: "Spec", type: "text" },
-  { value: "release_year", label: "Năm phát hành", type: "number" },
-  { value: "is_promo", label: "Promo", type: "boolean" },
-  { value: "is_special_variant", label: "Special Variant", type: "boolean" },
+  { value: "reference_image_url", label: "Hình tham khảo", type: "text" },
+  { value: "flavorText", label: "Flavor Text", type: "text" },
+  { value: "updated_at", label: "Ngày cập nhật", type: "date" },
 ];
 
 const API_URL = "http://localhost:8000/pokemon-cards";
@@ -62,14 +58,11 @@ const defaultForm: PokemonCardRow = {
   version_original: "",
   supertype: "",
   subtypes: "",
-  hp: undefined,
   rarity: "",
   illustrator: "",
-  spec: "",
   reference_image_url: "",
-  release_year: undefined,
-  is_promo: false,
-  is_special_variant: false,
+  flavorText: "",
+  updated_at: "",
 };
 
 const PokemonCardPage: React.FC = () => {
@@ -262,13 +255,27 @@ const PokemonCardPage: React.FC = () => {
     { key: "version_original", label: "Phiên bản gốc", onSort: () => {}, sortActive: sortField === "version_original", sortDirection: sortOrder },
     { key: "supertype", label: "Supertype", onSort: () => {}, sortActive: sortField === "supertype", sortDirection: sortOrder },
     { key: "subtypes", label: "Subtypes", onSort: () => {}, sortActive: sortField === "subtypes", sortDirection: sortOrder },
-    { key: "hp", label: "HP", onSort: () => {}, sortActive: sortField === "hp", sortDirection: sortOrder },
     { key: "rarity", label: "Độ hiếm", onSort: () => {}, sortActive: sortField === "rarity", sortDirection: sortOrder },
     { key: "illustrator", label: "Họa sĩ", onSort: () => {}, sortActive: sortField === "illustrator", sortDirection: sortOrder },
-    { key: "spec", label: "Spec", onSort: () => {}, sortActive: sortField === "spec", sortDirection: sortOrder },
-    { key: "release_year", label: "Năm phát hành", onSort: () => {}, sortActive: sortField === "release_year", sortDirection: sortOrder },
-    { key: "is_promo", label: "Promo", onSort: () => {}, sortActive: sortField === "is_promo", sortDirection: sortOrder },
-    { key: "is_special_variant", label: "Special Variant", onSort: () => {}, sortActive: sortField === "is_special_variant", sortDirection: sortOrder },
+    {
+      key: "flavorText",
+      label: "Flavor Text",
+      render: (row: PokemonCardRow) => row.flavorText || "-",
+      onSort: () => {},
+      sortActive: sortField === "flavorText",
+      sortDirection: sortOrder,
+    },
+    {
+      key: "updated_at",
+      label: "Ngày cập nhật",
+      render: (row: PokemonCardRow) =>
+        row.updated_at
+          ? new Date(row.updated_at).toLocaleString("vi-VN")
+          : "-",
+      onSort: () => {},
+      sortActive: sortField === "updated_at",
+      sortDirection: sortOrder,
+    },
     {
       key: "action",
       label: "Thao tác",
@@ -292,7 +299,6 @@ const PokemonCardPage: React.FC = () => {
           </button>
         </div>
       ),
-      // KHÔNG thêm onSort/sortActive/sortDirection cho cột này
     },
   ];
 
@@ -406,16 +412,6 @@ const PokemonCardPage: React.FC = () => {
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">HP</label>
-        <input
-          className="form-control"
-          type="number"
-          name="hp"
-          value={form.hp ?? ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Độ hiếm</label>
         <input
           className="form-control"
@@ -435,41 +431,11 @@ const PokemonCardPage: React.FC = () => {
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Spec</label>
+        <label className="form-label fw-semibold">Flavor Text</label>
         <input
           className="form-control"
-          name="spec"
-          value={form.spec || ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Năm phát hành</label>
-        <input
-          className="form-control"
-          type="number"
-          name="release_year"
-          value={form.release_year ?? ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Promo</label>
-        <input
-          className="form-check-input ms-2"
-          type="checkbox"
-          name="is_promo"
-          checked={!!form.is_promo}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Special Variant</label>
-        <input
-          className="form-check-input ms-2"
-          type="checkbox"
-          name="is_special_variant"
-          checked={!!form.is_special_variant}
+          name="flavorText"
+          value={form.flavorText || ""}
           onChange={handleFormChange}
         />
       </div>
@@ -490,6 +456,16 @@ const PokemonCardPage: React.FC = () => {
             />
           </div>
         )}
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Ngày cập nhật</label>
+        <input
+          className="form-control"
+          type="datetime-local"
+          name="updated_at"
+          value={form.updated_at ? form.updated_at.substring(0, 16) : ""}
+          onChange={handleFormChange}
+        />
       </div>
       <div className="d-flex gap-2 mt-4">
         <button type="submit" className="btn btn-primary flex-grow-1">
@@ -525,20 +501,23 @@ const PokemonCardPage: React.FC = () => {
           <i className="bi bi-plus-lg me-2"></i> Thêm thẻ mới
         </button>
       </div>
-      <DataTable
-        columns={columns}
-        data={data}
-        pageSizeOptions={[5, 10, 20, 50]}
-        totalRows={total}
-        page={page}
-        setPage={setPage}
-        pageSize={pageSize}
-        setPageSize={setPageSize}
-        loading={loading}
-        onSort={handleSort}
-        sortField={sortField}
-        sortOrder={sortOrder}
-      />
+      {/* Thêm scroll ngang cho bảng */}
+      <div style={{ overflowX: "auto" }}>
+        <DataTable
+          columns={columns}
+          data={data}
+          pageSizeOptions={[5, 10, 20, 50]}
+          totalRows={total}
+          page={page}
+          setPage={setPage}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          loading={loading}
+          onSort={handleSort}
+          sortField={sortField}
+          sortOrder={sortOrder}
+        />
+      </div>
       {/* Modal nhập thông tin */}
       <Modal
         isOpen={modalOpen}

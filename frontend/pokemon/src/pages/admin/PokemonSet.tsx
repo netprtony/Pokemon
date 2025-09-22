@@ -14,23 +14,26 @@ export type PokemonSetRow = {
   set_name_en: string;
   set_name_original?: string;
   series?: string;
-  release_year: number;
-  total_cards?: number;
-  set_symbol_url?: string;
-  region?: string;
-  series_order?: number;
-  created_at?: string;
+  release_date?: string; // ISO date string
+  printed_total?: number;
+  total?: number;
+  ptcgo_code?: string;
+  image_symbol?: string;
+  updated_at?: string;
 };
 
+// Field options cho filter
 const fieldOptions: FieldOption[] = [
   { value: "set_id", label: "Set ID", type: "text" },
   { value: "set_name_en", label: "Tên bộ (EN)", type: "text" },
   { value: "set_name_original", label: "Tên gốc", type: "text" },
   { value: "series", label: "Series", type: "text" },
-  { value: "release_year", label: "Năm phát hành", type: "number" },
-  { value: "total_cards", label: "Tổng số thẻ", type: "number" },
-  { value: "region", label: "Region", type: "text" },
-  { value: "series_order", label: "Thứ tự series", type: "number" },
+  { value: "release_date", label: "Ngày phát hành", type: "date" },
+  { value: "printed_total", label: "Tổng số thẻ in", type: "number" },
+  { value: "total", label: "Tổng số thẻ", type: "number" },
+  { value: "ptcgo_code", label: "PTCGO Code", type: "text" },
+  { value: "image_symbol", label: "Biểu tượng", type: "text" },
+  { value: "updated_at", label: "Ngày cập nhật", type: "date" },
 ];
 
 const API_URL = "http://localhost:8000/pokemon-sets";
@@ -42,11 +45,12 @@ const defaultForm: PokemonSetRow = {
   set_name_en: "",
   set_name_original: "",
   series: "",
-  release_year: new Date().getFullYear(),
-  total_cards: undefined,
-  set_symbol_url: "",
-  region: "",
-  series_order: undefined,
+  release_date: "",
+  printed_total: undefined,
+  total: undefined,
+  ptcgo_code: "",
+  image_symbol: "",
+  updated_at: "",
 };
 
 const PokemonSetPage: React.FC = () => {
@@ -207,12 +211,12 @@ const PokemonSetPage: React.FC = () => {
   // Table columns
   const columns = [
     {
-      key: "set_symbol_url",
+      key: "image_symbol",
       label: "",
       render: (row: PokemonSetRow) =>
-        row.set_symbol_url ? (
+        row.image_symbol ? (
           <img
-            src={row.set_symbol_url}
+            src={row.image_symbol}
             alt={row.set_name_en}
             style={{ width: 36, height: 36, objectFit: "contain" }}
           />
@@ -222,7 +226,7 @@ const PokemonSetPage: React.FC = () => {
       width: 50,
       align: "center" as const,
       onSort: () => {},
-      sortActive: sortField === "set_symbol_url",
+      sortActive: sortField === "image_symbol",
       sortDirection: sortOrder,
     },
     {
@@ -238,19 +242,29 @@ const PokemonSetPage: React.FC = () => {
     { key: "set_name_en", label: "Tên bộ (EN)", onSort: () => {}, sortActive: sortField === "set_name_en", sortDirection: sortOrder },
     { key: "set_name_original", label: "Tên gốc", onSort: () => {}, sortActive: sortField === "set_name_original", sortDirection: sortOrder },
     { key: "series", label: "Series", onSort: () => {}, sortActive: sortField === "series", sortDirection: sortOrder },
-    { key: "release_year", label: "Năm", onSort: () => {}, sortActive: sortField === "release_year", sortDirection: sortOrder },
-    { key: "total_cards", label: "Số thẻ", onSort: () => {}, sortActive: sortField === "total_cards", sortDirection: sortOrder },
-    { key: "region", label: "Region", onSort: () => {}, sortActive: sortField === "region", sortDirection: sortOrder },
-    { key: "series_order", label: "Thứ tự series", onSort: () => {}, sortActive: sortField === "series_order", sortDirection: sortOrder },
     {
-      key: "created_at",
-      label: "Ngày tạo",
+      key: "release_date",
+      label: "Ngày phát hành",
       render: (row: PokemonSetRow) =>
-        row.created_at
-          ? new Date(row.created_at).toLocaleString("vi-VN")
+        row.release_date
+          ? new Date(row.release_date).toLocaleDateString("vi-VN")
           : "-",
       onSort: () => {},
-      sortActive: sortField === "created_at",
+      sortActive: sortField === "release_date",
+      sortDirection: sortOrder,
+    },
+    { key: "printed_total", label: "Tổng số thẻ in", onSort: () => {}, sortActive: sortField === "printed_total", sortDirection: sortOrder },
+    { key: "total", label: "Tổng số thẻ", onSort: () => {}, sortActive: sortField === "total", sortDirection: sortOrder },
+    { key: "ptcgo_code", label: "PTCGO Code", onSort: () => {}, sortActive: sortField === "ptcgo_code", sortDirection: sortOrder },
+    {
+      key: "updated_at",
+      label: "Ngày cập nhật",
+      render: (row: PokemonSetRow) =>
+        row.updated_at
+          ? new Date(row.updated_at).toLocaleString("vi-VN")
+          : "-",
+      onSort: () => {},
+      sortActive: sortField === "updated_at",
       sortDirection: sortOrder,
     },
     {
@@ -276,7 +290,6 @@ const PokemonSetPage: React.FC = () => {
           </button>
         </div>
       ),
-      // KHÔNG thêm onSort/sortActive/sortDirection cho cột này
     },
   ];
 
@@ -343,14 +356,23 @@ const PokemonSetPage: React.FC = () => {
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Năm phát hành</label>
+        <label className="form-label fw-semibold">Ngày phát hành</label>
+        <input
+          className="form-control"
+          type="date"
+          name="release_date"
+          value={form.release_date || ""}
+          onChange={handleFormChange}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Tổng số thẻ in</label>
         <input
           className="form-control"
           type="number"
-          name="release_year"
-          value={form.release_year}
+          name="printed_total"
+          value={form.printed_total ?? ""}
           onChange={handleFormChange}
-          required
         />
       </div>
       <div className="mb-3">
@@ -358,27 +380,17 @@ const PokemonSetPage: React.FC = () => {
         <input
           className="form-control"
           type="number"
-          name="total_cards"
-          value={form.total_cards ?? ""}
+          name="total"
+          value={form.total ?? ""}
           onChange={handleFormChange}
         />
       </div>
       <div className="mb-3">
-        <label className="form-label fw-semibold">Region</label>
+        <label className="form-label fw-semibold">PTCGO Code</label>
         <input
           className="form-control"
-          name="region"
-          value={form.region || ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Thứ tự series</label>
-        <input
-          className="form-control"
-          type="number"
-          name="series_order"
-          value={form.series_order ?? ""}
+          name="ptcgo_code"
+          value={form.ptcgo_code || ""}
           onChange={handleFormChange}
         />
       </div>
@@ -390,15 +402,25 @@ const PokemonSetPage: React.FC = () => {
           accept="image/*"
           onChange={handleFileChange}
         />
-        {form.set_symbol_url && (
+        {form.image_symbol && (
           <div className="mt-2">
             <img
-              src={form.set_symbol_url}
+              src={form.image_symbol}
               alt="Set Symbol"
               style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }}
             />
           </div>
         )}
+      </div>
+      <div className="mb-3">
+        <label className="form-label fw-semibold">Ngày cập nhật</label>
+        <input
+          className="form-control"
+          type="datetime-local"
+          name="updated_at"
+          value={form.updated_at ? form.updated_at.substring(0, 16) : ""}
+          onChange={handleFormChange}
+        />
       </div>
       <div className="d-flex gap-2 mt-4">
         <button type="submit" className="btn btn-primary flex-grow-1">

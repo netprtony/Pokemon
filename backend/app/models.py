@@ -12,7 +12,7 @@ Base = declarative_base()
 # ENUMS
 # ============================================================
 
-class SupertypeEnum(enum.Enum):
+class SupertypeEnum(str, enum.Enum):
     Pokemon = "Pokemon"
     Trainer = "Trainer"
     Energy = "Energy"
@@ -24,14 +24,14 @@ class ConditionUSEnum(str, enum.Enum):
     HeavilyPlayed = "Heavily Played"
     Damaged = "Damaged"
 
-class OrderStatusEnum(enum.Enum):
+class OrderStatusEnum(str, enum.Enum):
     PENDING = "PENDING"
     COMPLETED = "COMPLETED"
     SHIPPED = "SHIPPED"
     DELIVERED = "DELIVERED"
     CANCELLED = "CANCELLED"
 
-class AlertTypeEnum(enum.Enum):
+class AlertTypeEnum(str, enum.Enum):
     PROFIT_OPPORTUNITY = "PROFIT_OPPORTUNITY"
     PRICE_DROP = "PRICE_DROP"
     HIGH_DEMAND = "HIGH_DEMAND"
@@ -48,40 +48,38 @@ class PokemonSet(Base):
     set_name_en = Column(String(100), nullable=False)
     set_name_original = Column(String(100))
     series = Column(String(50))
-    release_year = Column(Integer, nullable=False)
-    total_cards = Column(Integer)
-    set_symbol_url = Column(String(255))
-    region = Column(String(5), default="EN")
-    series_order = Column(Integer)
-    created_at = Column(DateTime, default=func.now())
+    release_date = Column(Date)
+    printed_total = Column(Integer)
+    total = Column(Integer)
+    ptcgo_code = Column(String(10))
+    image_symbol = Column(String(100))
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     cards = relationship("PokemonCardMaster", back_populates="set")
+
 
 class PokemonCardMaster(Base):
     __tablename__ = "pokemon_cards_master"
 
     master_card_id = Column(String(20), primary_key=True)
     set_id = Column(String(15), ForeignKey("pokemon_sets.set_id"), nullable=False)
-    card_number = Column(String(15), nullable=False
-    )
+    card_number = Column(String(15), nullable=False)
     name_en = Column(String(100), nullable=False)
     name_original = Column(String(100))
     version_en = Column(String(100))
     version_original = Column(String(100))
     supertype = Column(Enum(SupertypeEnum), nullable=False)
     subtypes = Column(String(100))
-    hp = Column(Integer)
     rarity = Column(String(30), nullable=False)
-    illustrator = Column(String(100))
-    spec = Column(Text)
-    reference_image_url = Column(String(255))
-    release_year = Column(Integer)
-    is_promo = Column(Boolean, default=False)
-    is_special_variant = Column(Boolean, default=False)
+    illustrator = Column(String(50))
+    reference_image_url = Column(String(100))
+    flavorText = Column(Text)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     set = relationship("PokemonSet", back_populates="cards")
     inventory_items = relationship("Inventory", back_populates="card")
     market_prices = relationship("MarketPrice", back_populates="card")
+
 
 # ============================================================
 # INVENTORY MANAGEMENT
@@ -99,14 +97,15 @@ class Inventory(Base):
     storage_location = Column(String(100))
     language = Column(String(5), default="EN")
     is_active = Column(Boolean, default=True)
-    date_added = Column(Date, nullable=False)
-    last_updated = Column(TIMESTAMP)
+    date_added = Column(Date, nullable=False, default=func.current_date())
+    last_updated = Column(TIMESTAMP, default=func.now(), onupdate=func.now())
     notes = Column(Text)
 
     card = relationship("PokemonCardMaster", back_populates="inventory_items")
     details = relationship("DetailInventory", back_populates="inventory_item")
     price_alerts = relationship("PriceAlert", back_populates="inventory_item")
     order_details = relationship("OrderDetail", back_populates="inventory_item")
+
 
 class DetailInventory(Base):
     __tablename__ = "detail_inventory"
@@ -123,12 +122,13 @@ class DetailInventory(Base):
     selling_price = Column(DECIMAL(12, 2))
     card_photos = Column(JSON)
     photo_count = Column(Integer)
-    date_added = Column(Date, nullable=False)
-    last_updated = Column(TIMESTAMP)
+    date_added = Column(Date, nullable=False, default=func.current_date())
+    last_updated = Column(TIMESTAMP, default=func.now(), onupdate=func.now())
     is_sold = Column(Boolean, default=False)
     notes = Column(Text)
 
     inventory_item = relationship("Inventory", back_populates="details")
+
 
 # ============================================================
 # MARKET ANALYSIS & PRICING
@@ -155,6 +155,7 @@ class MarketPrice(Base):
 
     card = relationship("PokemonCardMaster", back_populates="market_prices")
 
+
 class PriceAlert(Base):
     __tablename__ = "price_alerts"
 
@@ -166,10 +167,11 @@ class PriceAlert(Base):
     price_difference = Column(DECIMAL(12, 2))
     percentage_change = Column(DECIMAL(6, 2))
     alert_message = Column(Text)
-    alert_date = Column(Date, nullable=False)
+    alert_date = Column(Date, nullable=False, default=func.current_date())
     is_acknowledged = Column(Boolean, default=False)
 
     inventory_item = relationship("Inventory", back_populates="price_alerts")
+
 
 # ============================================================
 # ORDER MANAGEMENT
@@ -179,7 +181,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     order_id = Column(Integer, primary_key=True, autoincrement=True)
-    order_date = Column(Date, nullable=False)
+    order_date = Column(Date, nullable=False, default=func.current_date())
     customer_name = Column(String(100))
     customer_contact = Column(Text)
     order_status = Column(Enum(OrderStatusEnum), default=OrderStatusEnum.PENDING)
@@ -187,10 +189,11 @@ class Order(Base):
     shipping_address = Column(Text)
     payment_method = Column(String(50))
     platform = Column(String(50))
-    created_at = Column(TIMESTAMP)
-    updated_at = Column(TIMESTAMP)
+    created_at = Column(TIMESTAMP, default=func.now())
+    updated_at = Column(TIMESTAMP, default=func.now(), onupdate=func.now())
 
     order_details = relationship("OrderDetail", back_populates="order")
+
 
 class OrderDetail(Base):
     __tablename__ = "order_details"

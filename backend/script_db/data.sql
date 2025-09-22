@@ -18,15 +18,12 @@ CREATE TABLE pokemon_sets (
     set_name_en VARCHAR(100) NOT NULL,
     set_name_original VARCHAR(100), -- Tên gốc nếu không phải tiếng Anh
     series VARCHAR(50),
-    release_year YEAR NOT NULL,
-    total_cards INT,
-    set_symbol_url VARCHAR(255),
-    region VARCHAR(5) DEFAULT 'EN', -- EN, JP, KR, etc.
-    series_order INT, -- Thứ tự series để sắp xếp
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    INDEX idx_series_year (series, release_year),
-    INDEX idx_series_order (series_order)
+    release_date DATE, 
+    printed_total INT,
+    total INT, 
+	ptcgo_code VARCHAR(10), 
+    image_symbol  VARCHAR(100),
+    updated_at DATETIME
 );
 
 -- Bảng Master Cards (Toàn bộ thẻ Pokemon từng release)
@@ -46,24 +43,20 @@ CREATE TABLE pokemon_cards_master (
     -- Card properties
     supertype ENUM('Pokemon', 'Trainer', 'Energy') NOT NULL,
     subtypes VARCHAR(100), -- "Stage 1", "Basic", "Item"
-    hp INT,
     rarity VARCHAR(30) NOT NULL,
-    illustrator VARCHAR(100), -- Tên họa sĩ
-    spec TEXT, -- Thông số đặc biệt (attacks, abilities, etc.)
+    illustrator VARCHAR(50), -- Tên họa sĩ
     
     -- Reference image (1 ảnh đại diện)
-    reference_image_url VARCHAR(255),
+    reference_image_url VARCHAR(100),
     
     -- Metadata
-    release_year YEAR,
-    is_promo BOOLEAN DEFAULT FALSE,
-    is_special_variant BOOLEAN DEFAULT FALSE, -- Holo, reverse holo, etc.
+    flavorText TEXT,
+    updated_at DATETIME,
     
     FOREIGN KEY (set_id) REFERENCES pokemon_sets(set_id),
     INDEX idx_name_en (name_en),
     INDEX idx_set_number (set_id, card_number),
-    INDEX idx_rarity (rarity),
-    INDEX idx_year (release_year)
+    INDEX idx_rarity (rarity)
 );
 
 -- ================================================
@@ -233,36 +226,15 @@ CREATE TABLE order_details (
 -- SAMPLE DATA FOR TESTING
 -- ================================================
 
--- Insert sample sets
-INSERT INTO pokemon_sets (set_id, set_name_en, set_name_original, series, release_year, total_cards, set_symbol_url, region, series_order) VALUES
-('base1', 'Base Set', NULL, 'Original', 1999, 102, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/base/base1.png', 'EN', 1),
-('base2', 'Jungle', NULL, 'Original', 1999, 64, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/base/base2.png', 'EN', 2),
-('base3', 'Fossil', NULL, 'Original', 1999, 62, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/base/base3.png', 'EN', 3),
-('xy1', 'XY', NULL, 'XY', 2014, 146, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/xy/xy1.png', 'EN', 10),
-('sm1', 'Sun & Moon', NULL, 'Sun & Moon', 2017, 163, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/sm/sm1.png', 'EN', 20),
-('sv1', 'Scarlet & Violet', NULL, 'Scarlet & Violet', 2022, 203, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/sv/sv1.png', 'EN', 30),
-('jpn1', 'スタートデッキ100', 'Start Deck 100', 'Special', 2020, 100, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/special/jpn1.png', 'JP', 1),
-('kor1', '코리아팩', 'Korea Pack', 'Special', 2021, 50, 'https://assets.pokemon.com/assets/cms2/img/trading-card-game/series/special/kor1.png', 'KR', 1);
-
-
--- Insert sample master cards
-INSERT INTO pokemon_cards_master VALUES
-('base1-004', 'base1', '4/102', 'Charizard', NULL, 'Base Set', NULL, 'Pokemon', 'Stage 2', 120, 'Rare Holo', 'Mitsuhiro Arita', 'Fire type attacks', NULL, 1999, FALSE, FALSE),
-('base1-025', 'base1', '25/102', 'Pikachu', NULL, 'Base Set', NULL, 'Pokemon', 'Basic', 60, 'Common', 'Atsuko Nishida', 'Electric attacks', NULL, 1999, FALSE, FALSE),
-('base1-002', 'base1', '2/102', 'Blastoise', NULL, 'Base Set', NULL, 'Pokemon', 'Stage 2', 100, 'Rare Holo', 'Ken Sugimori', 'Water type attacks', NULL, 1999, FALSE, FALSE),
-('xy1-143', 'xy1', '143/146', 'Mewtwo EX', NULL, 'XY', NULL, 'Pokemon', 'Basic', 170, 'Ultra Rare', '5ban Graphics', 'Psychic attacks', NULL, 2014, FALSE, TRUE),
-('sm1-001', 'sm1', '1/163', 'Incineroar GX', NULL, 'Sun & Moon', NULL, 'Pokemon', 'Stage 2', 250, 'Ultra Rare', '5ban Graphics', 'Fire type attacks and GX move', NULL, 2017, FALSE, TRUE),
-('sv1-100', 'sv1', '100/203', 'Flutter Mane VSTAR', NULL, 'Scarlet & Violet', NULL, 'Pokemon', 'Basic', 130, 'Rare Holo VSTAR', '5ban Graphics', 'Psychic attacks and VSTAR move', NULL, 2022, FALSE, TRUE),
-('jpn1-050', 'jpn1', '50/100', 'Pikachu VMAX', NULL, 'スタートデッキ100', NULL, 'Pokemon', 'VMAX', 320, 'Rare Holo VMAX', '5ban Graphics', 'Electric type attacks and VMAX move', NULL, 2020, FALSE, TRUE),
-('kor1-010', 'kor1', '10/50', 'Eevee VSTAR', NULL, '코리아팩', NULL, 'Pokemon', 'Basic', 200, 'Rare Holo VSTAR', '5ban Graphics', 'Normal type attacks and VSTAR move', NULL, 2021, FALSE, TRUE);
 
 
 INSERT INTO inventory (master_card_id, total_quantity, quantity_sold, avg_purchase_price, avg_selling_price, storage_location, language, is_active, date_added, notes) VALUES
-('base1-004', 2, 0, 1500000, NULL, 'Shelf A1', 'EN', TRUE, '2024-06-01', 'Mint condition'),
-('base1-025', 5, 1, 200000, 300000, 'Box B2', 'EN', TRUE, '2024-06-01', 'Some cards lightly played'),
-('xy1-143', 3, 0, 1200000, NULL, 'Shelf A2', 'EN', TRUE, '2024-06-02', 'Near mint'),
-('sm1-001', 4, 2, 1000000, 1500000, 'Box C1', 'EN', TRUE, '2024-06-03', 'Includes GX move cards'),
-('sv1-100', 6, 0, 800000, NULL, 'Shelf B1', 'EN', TRUE, '2024-06-04', 'Latest series cards');
+('base1-11', 2, 0, 1500000, NULL, 'Shelf A1', 'EN', TRUE, '2024-06-01', 'Mint condition'),
+('base1-12', 5, 1, 200000, 300000, 'Box B2', 'EN', TRUE, '2024-06-01', 'Some cards lightly played'),
+('base1-13', 3, 0, 1200000, NULL, 'Shelf A2', 'EN', TRUE, '2024-06-02', 'Near mint'),
+('base1-14', 4, 2, 1000000, 1500000, 'Box C1', 'EN', TRUE, '2024-06-03', 'Includes GX move cards'),
+('base1-15', 6, 0, 800000, NULL, 'Shelf B1', 'EN', TRUE, '2024-06-04', 'Latest series cards');
+
 INSERT INTO detail_inventory (inventory_id, physical_condition_us, physical_condition_jp, is_graded, grade_company, grade_score, purchase_price, selling_price, card_photos, date_added, is_sold, notes) VALUES
 (1, 'NearMint', 'A', TRUE, 'PSA', 9.5, 1500000, NULL, JSON_ARRAY('charizard_front.jpg', 'charizard_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA'),
 (1, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1500000, NULL, JSON_ARRAY('charizard_lp_front.jpg', 'charizard_lp_back.jpg'), '2024-06-01', FALSE, 'Lightly played version'),

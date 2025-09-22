@@ -1,31 +1,33 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class PokemonSetBase(BaseModel):
     set_id: str
     set_name_en: str
-    set_name_original: Optional[str] 
+    set_name_original: Optional[str] = None
     series: Optional[str] = None
-    release_year: int
-    total_cards: Optional[int] = None
-    set_symbol_url: Optional[str] = None
-    region: Optional[str] = None
-    series_order: Optional[int] = None
-    created_at: Optional[datetime] = None
+    release_date: Optional[date] = None
+    printed_total: Optional[int] = None
+    total: Optional[int] = None
+    ptcgo_code: Optional[str] = None
+    image_symbol: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
 class PokemonSetCreate(PokemonSetBase):
     pass
+
 class PokemonSetUpdate(BaseModel):
     set_name_en: Optional[str] = None
     set_name_original: Optional[str] = None
     series: Optional[str] = None
-    release_year: Optional[int] = None
-    total_cards: Optional[int] = None
-    set_symbol_url: Optional[str] = None
-    region: Optional[str] = None
-    series_order: Optional[int] = None
+    release_date: Optional[date] = None
+    printed_total: Optional[int] = None
+    total: Optional[int] = None
+    ptcgo_code: Optional[str] = None
+    image_symbol: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
@@ -33,7 +35,7 @@ class PokemonSetUpdate(BaseModel):
 class PokemonSetOut(PokemonSetBase):
     class Config:
         orm_mode = True
-        
+
 class PaginatedPokemonSet(BaseModel):
     items: List[PokemonSetOut]
     total: int

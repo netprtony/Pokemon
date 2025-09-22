@@ -20,7 +20,6 @@ SYMBOL_SET_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/symbol_set"
 @router.post("/", response_model=PokemonSetOut, status_code=status.HTTP_201_CREATED)
 def create_pokemon_set(data: PokemonSetBase, db: Session = Depends(get_db)):
     data_dict = data.dict(exclude_unset=True)
-    data_dict.pop("created_at", None)  # Bỏ trường này nếu có
     db_set = PokemonSet(**data_dict)
     db.add(db_set)
     db.commit()
@@ -33,7 +32,7 @@ def update_pokemon_set(set_id: str, data: PokemonSetBase, db: Session = Depends(
     db_set = db.query(PokemonSet).filter(PokemonSet.set_id == set_id).first()
     if not db_set:
         raise HTTPException(status_code=404, detail="Set not found")
-    for key, value in data.dict().items():
+    for key, value in data.dict(exclude_unset=True).items():
         setattr(db_set, key, value)
     db.commit()
     db.refresh(db_set)
@@ -56,7 +55,7 @@ def get_pokemon_sets(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100, description="Số mục trên mỗi trang"),
     search: str = Query(None, description="Từ khóa tìm kiếm tên bộ bài"),
-    sort_field: Optional[str] = Query("series_order", description="Trường để sắp xếp"),
+    sort_field: Optional[str] = Query("series", description="Trường để sắp xếp"),
     sort_order: Optional[str] = Query("asc", description="Thứ tự sắp xếp: asc hoặc desc"),
 ):
     query = db.query(PokemonSet)
@@ -65,12 +64,13 @@ def get_pokemon_sets(
         query = query.filter(
             PokemonSet.set_name_en.ilike(f"%{search}%")
             | PokemonSet.set_name_original.ilike(f"%{search}%")
-            | PokemonSet.series.ilike(f"%{search}%")
+            | PokemonSet.printed_total.ilike(f"%{search}%")
             | PokemonSet.region.ilike(f"%{search}%")
-            | PokemonSet.total_cards.ilike(f"%{search}%")
-            | PokemonSet.release_year.ilike(f"%{search}%")
+            | PokemonSet.total.ilike(f"%{search}%")
+            | PokemonSet.release_date.ilike(f"%{search}%")
             | PokemonSet.set_id.ilike(f"%{search}%")
-            | PokemonSet.series_order.ilike(f"%{search}%")
+            | PokemonSet.ptcgo_code.ilike(f"%{search}%")
+            | PokemonSet.series.ilike(f"%{search}%")
         )
     # thêm xử lý sort
     valid_sort_fields = {
@@ -78,10 +78,11 @@ def get_pokemon_sets(
         "set_name_en": PokemonSet.set_name_en,
         "set_name_original": PokemonSet.set_name_original,
         "series": PokemonSet.series,
-        "release_year": PokemonSet.release_year,
-        "total_cards": PokemonSet.total_cards,
-        "series_order": PokemonSet.series_order,
-        "created_at": PokemonSet.created_at,
+        "release_date": PokemonSet.release_date,
+        "printed_total": PokemonSet.printed_total,
+        "total": PokemonSet.total,
+        "ptcgo_code": PokemonSet.ptcgo_code,
+        "updated_at": PokemonSet.updated_at,
     }
     if sort_field in valid_sort_fields:
         col = valid_sort_fields[sort_field]
@@ -103,7 +104,7 @@ def filter_pokemon_sets(
     filter_request: FilterRequest,
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100, description="Số mục trên mỗi trang"),
+    page_size: int = Query(20, ge=1, le=200, description="Số mục trên mỗi trang"),
     sort_field: Optional[str] = Query("series_order", description="Trường để sắp xếp"),
     sort_order: Optional[str] = Query("asc", description="Thứ tự sắp xếp: asc hoặc desc"),
 ):
