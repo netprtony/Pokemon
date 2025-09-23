@@ -32,8 +32,6 @@ const fieldOptions: FieldOption[] = [
   { value: "printed_total", label: "Tổng số thẻ in", type: "number" },
   { value: "total", label: "Tổng số thẻ", type: "number" },
   { value: "ptcgo_code", label: "PTCGO Code", type: "text" },
-  { value: "image_symbol", label: "Biểu tượng", type: "text" },
-  { value: "updated_at", label: "Ngày cập nhật", type: "date" },
 ];
 
 const API_URL = "http://localhost:8000/pokemon-sets";
@@ -169,11 +167,13 @@ const PokemonSetPage: React.FC = () => {
   // Lưu (add/edit)
   const handleSave = async () => {
     try {
+      const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+      const payload = { ...form, updated_at: now };
       if (modalMode === "add") {
-        await axios.post(API_URL, form);
+        await axios.post(API_URL, payload);
         toast.success("Thêm mới thành công!");
       } else if (modalMode === "edit") {
-        await axios.put(`${API_URL}/${form.set_id}`, form);
+        await axios.put(`${API_URL}/${form.set_id}`, payload);
         toast.success("Cập nhật thành công!");
       }
       // Nếu có upload ảnh
@@ -315,8 +315,51 @@ const PokemonSetPage: React.FC = () => {
 
   // Form modal content
   const renderFormModal = () => (
-    <form className="px-3 pb-3" autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-      <div className="mb-3">
+    <form
+      className="pokemonset-modal-form"
+      autoComplete="off"
+      onSubmit={(e) => { e.preventDefault(); handleSave(); }}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gap: "24px 32px",
+        minWidth: 900,
+        alignItems: "start",
+        position: "relative",
+      }}
+    >
+      {/* Cột 1: Ảnh biểu tượng bộ bài */}
+      <div style={{ gridColumn: "1/2", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Biểu tượng bộ bài</label>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <input
+            className="form-control"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+          {form.image_symbol && (
+            <div className="mt-2">
+              <img
+                src={form.image_symbol}
+                alt="Set Symbol"
+                style={{
+                  width: 220,
+                  height: 220,
+                  objectFit: "contain",
+                  borderRadius: 12,
+                  border: "1px solid #eee",
+                  marginBottom: 12,
+                  cursor: "zoom-in",
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Cột 2: Các trường thông tin chính */}
+      <div style={{ gridColumn: "2/3", display: "flex", flexDirection: "column", gap: 18 }}>
         <label className="form-label fw-semibold">Set ID</label>
         <input
           className="form-control"
@@ -326,8 +369,6 @@ const PokemonSetPage: React.FC = () => {
           disabled={modalMode === "edit"}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Tên bộ (EN)</label>
         <input
           className="form-control"
@@ -336,8 +377,6 @@ const PokemonSetPage: React.FC = () => {
           onChange={handleFormChange}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Tên gốc</label>
         <input
           className="form-control"
@@ -345,8 +384,6 @@ const PokemonSetPage: React.FC = () => {
           value={form.set_name_original || ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Series</label>
         <input
           className="form-control"
@@ -354,8 +391,11 @@ const PokemonSetPage: React.FC = () => {
           value={form.series || ""}
           onChange={handleFormChange}
         />
+        
       </div>
-      <div className="mb-3">
+
+      {/* Cột 3: Ngày, số lượng */}
+      <div style={{ gridColumn: "3/4", display: "flex", flexDirection: "column", gap: 18 }}>
         <label className="form-label fw-semibold">Ngày phát hành</label>
         <input
           className="form-control"
@@ -364,8 +404,6 @@ const PokemonSetPage: React.FC = () => {
           value={form.release_date || ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Tổng số thẻ in</label>
         <input
           className="form-control"
@@ -374,8 +412,6 @@ const PokemonSetPage: React.FC = () => {
           value={form.printed_total ?? ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Tổng số thẻ</label>
         <input
           className="form-control"
@@ -384,8 +420,6 @@ const PokemonSetPage: React.FC = () => {
           value={form.total ?? ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">PTCGO Code</label>
         <input
           className="form-control"
@@ -394,35 +428,18 @@ const PokemonSetPage: React.FC = () => {
           onChange={handleFormChange}
         />
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Biểu tượng bộ bài</label>
-        <input
-          className="form-control"
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-        />
-        {form.image_symbol && (
-          <div className="mt-2">
-            <img
-              src={form.image_symbol}
-              alt="Set Symbol"
-              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }}
-            />
-          </div>
-        )}
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Ngày cập nhật</label>
-        <input
-          className="form-control"
-          type="datetime-local"
-          name="updated_at"
-          value={form.updated_at ? form.updated_at.substring(0, 16) : ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="d-flex gap-2 mt-4">
+
+      {/* Button thao tác ở góc phải dưới cùng */}
+      <div
+        style={{
+          gridColumn: "3/4",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 12,
+          marginTop: 32,
+          alignSelf: "end"
+        }}
+      >
         <button type="submit" className="btn btn-primary flex-grow-1">
           {modalMode === "add" ? "Thêm mới" : "Lưu thay đổi"}
         </button>

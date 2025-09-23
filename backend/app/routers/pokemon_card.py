@@ -104,7 +104,13 @@ def filter_pokemon_cards(
         "set_id": PokemonCardMaster.set_id,
         "card_number": PokemonCardMaster.card_number,
         "name_en": PokemonCardMaster.name_en,
-        "release_year": PokemonCardMaster.release_year,
+        "name_original" : PokemonCardMaster.name_original,
+        "version_en": PokemonCardMaster.version_en,
+        "version_original": PokemonCardMaster.version_original,
+        "supertype": PokemonCardMaster.supertype,
+        "subtypes": PokemonCardMaster.subtypes,
+        "illustrator": PokemonCardMaster.illustrator,
+        "flavorText": PokemonCardMaster.flavorText,
         "rarity": PokemonCardMaster.rarity,
     }
     for filter in filter_request.filters:

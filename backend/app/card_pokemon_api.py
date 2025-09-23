@@ -26,10 +26,12 @@ def convert_to_dict(obj):
 session = next(database.get_db())  # SQLAlchemy Session
 
 def fetch_and_save_cards():
-    page = 8
+    page = 31
     page_size = 250
     retries = 3
     delay = 5
+    max_api_fail = 5
+    api_fail_count = 0
 
     # Lấy danh sách set để kiểm tra set_id
     for attempt in range(retries):
@@ -37,7 +39,7 @@ def fetch_and_save_cards():
             sets = Set.all()
             break
         except Exception as e:
-            err_msg = e.decode() if isinstance(e, bytes) else str(e)
+            err_msg = e.decode() if isinstance(e, bytes) else (e if isinstance(e, str) else str(e).decode() if isinstance(str(e), bytes) else str(e))
             print(f"Lỗi khi lấy danh sách set: {err_msg}")
             time.sleep(delay)
     else:
@@ -112,25 +114,27 @@ def fetch_and_save_cards():
             print(f"Đã xuất {len(export_cards)} thẻ ra {out_path}")
             page += 1
             time.sleep(1)
+            api_fail_count = 0  # reset nếu thành công
 
         except RequestException as e:
             print(f"Lỗi tại trang {page}: {e}")
-            if "504" in str(e):
-                print("Gặp lỗi 504 Gateway Timeout, thử lại sau vài giây...")
-                time.sleep(delay)
-                retries -= 1
-                if retries == 0:
-                    print(f"Trang {page} bị bỏ qua do lỗi 504 liên tục.")
-                    page += 1
-                    retries = 3
-            else:
-                raise e
+            api_fail_count += 1
+            if api_fail_count >= max_api_fail:
+                print("API gặp lỗi liên tục, dừng chương trình.")
+                break
+            print(f"Bỏ qua trang {page} do lỗi, chuyển sang trang tiếp theo.")
+            page += 1
+            time.sleep(delay)
+
         except Exception as e:
-            try:
-                print(f"Lỗi không xác định tại trang {page}: {e}")
-            except Exception:
-                print(f"Lỗi không xác định tại trang {page}: {e!r}")
-            break
+            print(f"Lỗi không xác định tại trang {page}: {e}")
+            api_fail_count += 1
+            if api_fail_count >= max_api_fail:
+                print("API gặp lỗi liên tục, dừng chương trình.")
+                break
+            print(f"Bỏ qua trang {page} do lỗi, chuyển sang trang tiếp theo.")
+            page += 1
+            time.sleep(delay)
 
 try:
     fetch_and_save_cards()

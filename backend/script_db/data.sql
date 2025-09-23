@@ -271,4 +271,3 @@ INSERT INTO order_details (order_id, inventory_id, quantity_ordered, unit_price,
 -- ================================================
 -- INDEXES FOR PERFORMANCE OPTIMIZATION
 -- ================================================
-

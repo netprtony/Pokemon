@@ -65,7 +65,6 @@ def get_pokemon_sets(
             PokemonSet.set_name_en.ilike(f"%{search}%")
             | PokemonSet.set_name_original.ilike(f"%{search}%")
             | PokemonSet.printed_total.ilike(f"%{search}%")
-            | PokemonSet.region.ilike(f"%{search}%")
             | PokemonSet.total.ilike(f"%{search}%")
             | PokemonSet.release_date.ilike(f"%{search}%")
             | PokemonSet.set_id.ilike(f"%{search}%")
@@ -115,10 +114,11 @@ def filter_pokemon_sets(
         "set_name_en": PokemonSet.set_name_en,
         "set_name_original": PokemonSet.set_name_original,
         "series": PokemonSet.series,
-        "release_year": PokemonSet.release_year,
-        "total_cards": PokemonSet.total_cards,
-        "series_order": PokemonSet.series_order,
-        "created_at": PokemonSet.created_at,
+        "printed_total" : PokemonSet.printed_total,
+        "release_date": PokemonSet.release_date,
+        "total": PokemonSet.total,
+        "ptcgo_code": PokemonSet.ptcgo_code,
+        "updated_at": PokemonSet.updated_at,
     }
     # Áp dụng các bộ lọc từ filter_request
     for filter in filter_request.filters:

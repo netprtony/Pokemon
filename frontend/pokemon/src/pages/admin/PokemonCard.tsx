@@ -181,11 +181,13 @@ const PokemonCardPage: React.FC = () => {
   // Lưu (add/edit)
   const handleSave = async () => {
     try {
+      const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+      const payload = { ...form, updated_at: now };
       if (modalMode === "add") {
-        await axios.post(API_URL, form);
+        await axios.post(API_URL, payload);
         toast.success("Thêm mới thành công!");
       } else if (modalMode === "edit") {
-        await axios.put(`${API_URL}/${form.master_card_id}`, form);
+        await axios.put(`${API_URL}/${form.master_card_id}`, payload);
         toast.success("Cập nhật thành công!");
       }
       // Nếu có upload ảnh
@@ -323,8 +325,51 @@ const PokemonCardPage: React.FC = () => {
 
   // Form modal content
   const renderFormModal = () => (
-    <form className="px-3 pb-3" autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-      <div className="mb-3">
+    <form
+      className="pokemoncard-modal-form"
+      autoComplete="off"
+      onSubmit={(e) => { e.preventDefault(); handleSave(); }}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gap: "24px 32px",
+        minWidth: 900,
+        alignItems: "start",
+        position: "relative",
+      }}
+    >
+      {/* Cột 1: Ảnh tham khảo */}
+      <div style={{ gridColumn: "1/2", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Hình tham khảo</label>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <input
+            className="form-control"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+          {form.reference_image_url && (
+            <div className="mt-2">
+              <img
+              src={form.reference_image_url}
+              alt="Card Image"
+              style={{
+                width: 500,
+                height: 500,
+                objectFit: "contain",
+                borderRadius: 12,
+                border: "1px solid #eee",
+                marginBottom: 12,
+                cursor: "zoom-in",
+              }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Cột 2: Thông tin chính */}
+      <div style={{ gridColumn: "2/3", display: "flex", flexDirection: "column", gap: 18 }}>
         <label className="form-label fw-semibold">Master Card ID</label>
         <input
           className="form-control"
@@ -334,8 +379,6 @@ const PokemonCardPage: React.FC = () => {
           disabled={modalMode === "edit"}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Set ID</label>
         <input
           className="form-control"
@@ -344,8 +387,6 @@ const PokemonCardPage: React.FC = () => {
           onChange={handleFormChange}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Số thẻ</label>
         <input
           className="form-control"
@@ -354,8 +395,6 @@ const PokemonCardPage: React.FC = () => {
           onChange={handleFormChange}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Tên (EN)</label>
         <input
           className="form-control"
@@ -364,8 +403,6 @@ const PokemonCardPage: React.FC = () => {
           onChange={handleFormChange}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Tên gốc</label>
         <input
           className="form-control"
@@ -373,8 +410,6 @@ const PokemonCardPage: React.FC = () => {
           value={form.name_original || ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Phiên bản (EN)</label>
         <input
           className="form-control"
@@ -382,17 +417,11 @@ const PokemonCardPage: React.FC = () => {
           value={form.version_en || ""}
           onChange={handleFormChange}
         />
+        
       </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Phiên bản gốc</label>
-        <input
-          className="form-control"
-          name="version_original"
-          value={form.version_original || ""}
-          onChange={handleFormChange}
-        />
-      </div>
-      <div className="mb-3">
+
+      {/* Cột 3: Thuộc tính thẻ */}
+      <div style={{ gridColumn: "3/4", display: "flex", flexDirection: "column", gap: 18 }}>
         <label className="form-label fw-semibold">Supertype</label>
         <input
           className="form-control"
@@ -401,8 +430,6 @@ const PokemonCardPage: React.FC = () => {
           onChange={handleFormChange}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Subtypes</label>
         <input
           className="form-control"
@@ -410,8 +437,6 @@ const PokemonCardPage: React.FC = () => {
           value={form.subtypes || ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Độ hiếm</label>
         <input
           className="form-control"
@@ -420,8 +445,6 @@ const PokemonCardPage: React.FC = () => {
           onChange={handleFormChange}
           required
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Họa sĩ</label>
         <input
           className="form-control"
@@ -429,8 +452,6 @@ const PokemonCardPage: React.FC = () => {
           value={form.illustrator || ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
         <label className="form-label fw-semibold">Flavor Text</label>
         <input
           className="form-control"
@@ -438,36 +459,26 @@ const PokemonCardPage: React.FC = () => {
           value={form.flavorText || ""}
           onChange={handleFormChange}
         />
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Hình tham khảo</label>
+        <label className="form-label fw-semibold">Phiên bản gốc</label>
         <input
           className="form-control"
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-        />
-        {form.reference_image_url && (
-          <div className="mt-2">
-            <img
-              src={form.reference_image_url}
-              alt="Card Image"
-              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }}
-            />
-          </div>
-        )}
-      </div>
-      <div className="mb-3">
-        <label className="form-label fw-semibold">Ngày cập nhật</label>
-        <input
-          className="form-control"
-          type="datetime-local"
-          name="updated_at"
-          value={form.updated_at ? form.updated_at.substring(0, 16) : ""}
+          name="version_original"
+          value={form.version_original || ""}
           onChange={handleFormChange}
         />
       </div>
-      <div className="d-flex gap-2 mt-4">
+
+      {/* Button thao tác ở góc phải dưới cùng */}
+      <div
+        style={{
+          gridColumn: "3/4",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 12,
+          marginTop: 32,
+          alignSelf: "end"
+        }}
+      >
         <button type="submit" className="btn btn-primary flex-grow-1">
           {modalMode === "add" ? "Thêm mới" : "Lưu thay đổi"}
         </button>

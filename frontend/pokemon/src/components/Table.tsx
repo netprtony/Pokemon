@@ -237,7 +237,7 @@ export default function DataTable<T>({
                               <img
                                 src={(row as Record<string, any>)[col.key]}
                                 alt="preview"
-                                style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer", borderRadius: 6 }}
+                                style={{ width: 100, height: 100, objectFit: "contain", cursor: "pointer", borderRadius: 6 }}
                                 onClick={e => {
                                   e.stopPropagation();
                                   setPreviewImg((row as Record<string, any>)[col.key]);
