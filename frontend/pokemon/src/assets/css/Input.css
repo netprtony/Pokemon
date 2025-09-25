@@ -9,6 +9,8 @@
   color: #222;
   font-weight: 500;
   margin-bottom: 0px;
+  margin-right: 2px;
+  margin-left: 10px;
 }
 
 .mac-input {
@@ -94,4 +96,7 @@
   padding: 8px 0;
   border: none;
   background: none;
+}
+.mac-modal {
+  z-index: 2000 !important;
 }

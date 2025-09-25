@@ -1,6 +1,6 @@
 // Sidebar.tsx
 import SidebarItem from "./SidebarItem";
-
+import "../assets/css/theme.css";
 type SidebarChild = {
   label: string;
   path: string;
@@ -81,8 +81,8 @@ const sidebarItems: SidebarItemData[] = [
 export default function Sidebar() {
   return (
     <div
-      className="bg-white border-end p-3 d-flex flex-column"
-      style={{ width: "240px", height: "100vh" }}
+      className="sidebar-macos d-flex flex-column p-4"
+      style={{ width: "260px", height: "100vh" }}
     >
       {sidebarItems.map((item, idx) => (
         <SidebarItem

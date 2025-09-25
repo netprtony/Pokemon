@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Table, Pagination, Form } from "react-bootstrap";
 import ModalIOS from "./Modal"; // Import your modal component here
-
+import "../assets/css/theme.css";
 type Column<T> = {
   key: string;
   label: string;
@@ -138,7 +138,7 @@ export default function DataTable<T>({
           ref={tableRef}
           style={{ fontSize: "1rem", minWidth: 1200 }}
         >
-          <thead style={{ background: "#F7F7FA" }}>
+          <thead style={{ background: "var(--table-header-bg)" }}>
             <tr>
               {columns.map((col) => (
                 <th
@@ -151,8 +151,8 @@ export default function DataTable<T>({
                     whiteSpace: "nowrap",
                     position: "relative",
                     fontWeight: 700,
-                    color: "#22223B",
-                    background: "#F7F7FA",
+                    color: "var(--table-header-text)",
+                    background: "var(--table-header-bg)",
                     border: "none",
                     fontSize: "1rem",
                   }}
@@ -187,16 +187,25 @@ export default function DataTable<T>({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={columns.length} className="text-center py-5">
+                <td colSpan={columns.length} className="text-center py-5" style={{
+                  background: "var(--table-header-bg)",
+                  color: "var(--table-header-text)"
+                }}>
                   <div className="d-flex flex-column align-items-center gap-2">
                     <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 32, borderRadius: 8 }}></span>
+                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
                     </div>
                     <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 32, borderRadius: 8 }}></span>
+                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
                     </div>
                     <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 32, borderRadius: 8 }}></span>
+                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
+                    </div>
+                    <div className="placeholder-glow w-100 mb-3">
+                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
+                    </div>
+                    <div className="placeholder-glow w-100 mb-3">
+                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
                     </div>
                     <span className="text-muted mt-3">Đang tải dữ liệu...</span>
                   </div>
@@ -204,7 +213,10 @@ export default function DataTable<T>({
               </tr>
             ) : paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center text-muted py-5">
+                <td colSpan={columns.length} className="text-center text-muted py-5" style={{
+                  background: "var(--table-header-bg)",
+                  color: "var(--table-header-text)"
+                }}>
                   Không có dữ liệu
                 </td>
               </tr>
@@ -216,7 +228,9 @@ export default function DataTable<T>({
                     <tr
                       style={{
                         cursor: renderCollapse ? "pointer" : "default",
-                        background: globalIdx % 2 === 0 ? "#fff" : "#F7F7FA",
+                        background: globalIdx % 2 === 0 ? "var(--sidebar-bg)" : "var(--filter-bg)",
+                        color: "var(--sidebar-text)",
+                        transition: "background 0.2s, color 0.2s",
                       }}
                       onClick={() => renderCollapse && setOpenRow(openRow === globalIdx ? null : globalIdx)}
                     >
@@ -229,6 +243,8 @@ export default function DataTable<T>({
                             border: "none",
                             fontWeight: col.key === "status" ? 600 : 400,
                             fontSize: "1rem",
+                            background: "inherit",
+                            color: "inherit",
                           }}
                         >
                           {/* Nếu là hình ảnh, cho phép click để xem lớn */}
@@ -255,7 +271,7 @@ export default function DataTable<T>({
                       ))}
                     </tr>
                     {renderCollapse && openRow === globalIdx && (
-                      <tr style={{ background: "#F7F7FA" }}>
+                      <tr style={{ background: "var(--filter-bg)", color: "var(--filter-text)" }}>
                         <td colSpan={columns.length}>
                           <div
                             ref={collapseRef}
@@ -263,6 +279,8 @@ export default function DataTable<T>({
                             style={{
                               maxHeight,
                               transition: "max-height 0.3s ease",
+                              background: "var(--filter-bg)",
+                              color: "var(--filter-text)",
                             }}
                           >
                             {renderCollapse(row)}

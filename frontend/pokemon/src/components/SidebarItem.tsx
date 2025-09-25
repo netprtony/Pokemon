@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-
+import "../assets/css/theme.css";
 type ChildItem = {
   label: string;
   path: string;
@@ -28,9 +28,9 @@ export default function SidebarItem({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = path && location.pathname === path;
-  const isChildActive =
-    dropdown && children.some((child) => location.pathname === child.path);
+  // Xác định active: cha active khi path trùng hoặc có con active
+  const isChildActive = dropdown && children.some((child) => location.pathname === child.path);
+  const isActive = (path && location.pathname === path) || isChildActive;
 
   /** ✅ Sửa: Nếu là dropdown thì chỉ mở/đóng, không điều hướng */
   const handleClick = (e: React.MouseEvent) => {
@@ -82,31 +82,24 @@ export default function SidebarItem({
     <div className="w-100">
       {/* ITEM CHA */}
       <div
-        className={`d-flex align-items-center justify-content-between py-3 px-3 rounded-lg 
-          transition-colors duration-150 
-          ${isActive || isChildActive ? "bg-light" : ""}
-          sidebar-item-parent`}
-        onClick={handleClick} // ✅ Sửa: luôn stopPropagation
+        className={`sidebar-item-macos d-flex align-items-center justify-content-between py-3 px-3
+          rounded-4 transition-colors
+          ${isActive ? "active" : ""}
+        `}
+        onClick={handleClick}
         style={{
-          transition: "background 0.2s",
-          background: isActive || isChildActive ? "#f3f4f6" : undefined,
           cursor: "pointer",
-        }}
-        onMouseEnter={(e) => {
-          if (!isActive && !isChildActive)
-            e.currentTarget.style.background = "#f7fafc";
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive && !isChildActive) e.currentTarget.style.background = "";
+          userSelect: "none",
+          background: isActive ? "#e4e4e4" : "transparent",
+          color: isActive ? "#222" : "#222",
         }}
       >
         <div className="d-flex align-items-center gap-3">
-          <i className={`${icon} fs-5 text-primary`} />
-          <span className="text-dark text-sm fw-medium">{label}</span>
+          <i className={`${icon} fs-5`} style={{ color: isActive ? "#1976d2" : "#222", opacity: 1 }} />
+          <span style={{ color: isActive ? "#222" : "#222", fontWeight: 500, fontSize: 15 }}>{label}</span>
         </div>
-
         <div className="d-flex align-items-center gap-2">
-          {subLabel && <span className="text-xs text-secondary">{subLabel}</span>}
+          {subLabel && <span style={{ color: "#949494", fontSize: 13 }}>{subLabel}</span>}
           {dropdown ? ChevronDown : ChevronRight}
         </div>
       </div>
@@ -114,13 +107,12 @@ export default function SidebarItem({
       {/* DROPDOWN CHILDREN */}
       {dropdown && (
         <div
-          className="sidebar-dropdown-children"
+          className="sidebar-dropdown-macos"
           style={{
             maxHeight: open ? `${children.length * 44}px` : "0",
             opacity: open ? 1 : 0,
             overflow: "hidden",
-            transition:
-              "max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s",
+            transition: "max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s",
           }}
         >
           {children.map((item, index) => {
@@ -128,28 +120,29 @@ export default function SidebarItem({
             return (
               <div
                 key={index}
-                className={`ps-5 py-2 text-sm 
-                  transition-colors rounded-lg d-flex align-items-center
-                  sidebar-item-child
-                  ${childActive ? "bg-light text-primary fw-semibold" : ""}`}
+                className={`sidebar-item-macos d-flex align-items-center ps-5 py-2 rounded-4
+                  ${childActive ? "active" : ""}
+                `}
                 style={{
-                  color: childActive ? "#2563eb" : "#6b7280",
-                  background: childActive ? "#f3f4f6" : undefined,
-                  transition: "background 0.2s, color 0.2s",
+                  color: childActive ? "#222" : "#949494",
+                  background: childActive ? "#e4e4e4" : "transparent",
+                  fontWeight: childActive ? 600 : 400,
+                  fontSize: 14,
                   cursor: "pointer",
+                  transition: "background 0.2s, color 0.2s",
                 }}
                 onClick={(e) => {
-                  e.stopPropagation(); // ✅ chặn parent toggle
-                  navigate(item.path); // ✅ điều hướng bình thường
+                  e.stopPropagation();
+                  navigate(item.path);
                 }}
                 onMouseEnter={(e) => {
-                  if (!childActive) e.currentTarget.style.background = "#f7fafc";
+                  if (!childActive) e.currentTarget.style.background = "#f5f5f5";
                 }}
                 onMouseLeave={(e) => {
-                  if (!childActive) e.currentTarget.style.background = "";
+                  if (!childActive) e.currentTarget.style.background = "transparent";
                 }}
               >
-                {item.icon && <i className={item.icon + " me-2"} />}
+                {item.icon && <i className={item.icon + " me-2"} style={{ color: "#000000ff", opacity: 0.8 }} />}
                 {item.label}
               </div>
             );

@@ -15,16 +15,15 @@ import json
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 INVENTORY_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/inventory_images")
-
 # Thêm mới
 @router.post("/", response_model=InventoryOut, status_code=status.HTTP_201_CREATED)
 def create_inventory(data: InventoryCreate, db: Session = Depends(get_db)):
-    db_item = Inventory(**data.dict(exclude_unset=True))
+    data_dict = data.dict(exclude_unset=True)
+    db_item = Inventory(**data_dict)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    # Trả về inventory kèm thông tin card
-    return db.query(Inventory).options(joinedload(Inventory.card)).filter(Inventory.inventory_id == db_item.inventory_id).first()
+    return db_item
 
 # Sửa
 @router.put("/{inventory_id}", response_model=InventoryOut)

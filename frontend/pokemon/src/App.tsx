@@ -8,6 +8,9 @@ import OrderPage from "./pages/admin/Order";
 import PokemonCardPage from "./pages/admin/PokemonCard";
 import PokemonSetPage from "./pages/admin/PokemonSet";
 import PriceAlertPage from "./pages/admin/PriceAlert";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: any) {
     super(props);
@@ -27,8 +30,10 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <Routes>
-        <Route path="/admin" element={<AdminLayout />}>
+      {/* ToastContainer nên đặt ở đây để dùng cho toàn bộ app */}
+      <ToastContainer position="top-right" autoClose={3000} />
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
           <Route path="pokemon-set" element={<PokemonSetPage />} />
           <Route path="*" element={<Navigate to="pokemon-set" replace />} />
           <Route path="pokemon-card" element={<PokemonCardPage />} />

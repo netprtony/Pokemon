@@ -65,13 +65,30 @@ def get_pokemon_cards(
             | PokemonCardMaster.rarity.ilike(f"%{search}%")
             | PokemonCardMaster.set_id.ilike(f"%{search}%")
             | PokemonCardMaster.card_number.ilike(f"%{search}%")
+            | PokemonCardMaster.master_card_id.ilike(f"%{search}%")
+            | PokemonCardMaster.version_en.ilike(f"%{search}%")
+            | PokemonCardMaster.version_original.ilike(f"%{search}%")
+            | PokemonCardMaster.supertype.ilike(f"%{search}%")
+            | PokemonCardMaster.subtypes.ilike(f"%{search}%")
+            | PokemonCardMaster.illustrator.ilike(f"%{search}%")
+            | PokemonCardMaster.flavorText.ilike(f"%{search}%")
+            | PokemonCardMaster.updated_at.ilike(f"%{search}%")
         )
     valid_sort_fields = {
         "master_card_id": PokemonCardMaster.master_card_id,
+        "name_original": PokemonCardMaster.name_original,
+        "version_en": PokemonCardMaster.version_en,
+        "version_original": PokemonCardMaster.version_original,
+        "supertype": PokemonCardMaster.supertype,
+        "subtypes": PokemonCardMaster.subtypes,
+        "illustrator": PokemonCardMaster.illustrator,
+        "flavorText": PokemonCardMaster.flavorText,
+        "updated_at": PokemonCardMaster.updated_at,
         "set_id": PokemonCardMaster.set_id,
         "card_number": PokemonCardMaster.card_number,
         "name_en": PokemonCardMaster.name_en,
         "rarity": PokemonCardMaster.rarity,
+
     }
     if sort_field in valid_sort_fields:
         col = valid_sort_fields[sort_field]
@@ -171,3 +188,22 @@ def upload_card_image(
     db.commit()
     db.refresh(db_card)
     return db_card
+
+@router.get("/search-id-card", response_model=List[dict])
+def search_id_card(
+    search: str,
+    db: Session = Depends(get_db)
+):
+    results = db.query(
+        PokemonCardMaster.master_card_id,
+        PokemonCardMaster.reference_image_url
+    ).filter(
+        PokemonCardMaster.master_card_id.ilike(f"%{search}%")
+    ).all()
+    return [
+        {
+            "master_card_id": r.master_card_id,
+            "reference_image_url": r.reference_image_url
+        }
+        for r in results
+    ]

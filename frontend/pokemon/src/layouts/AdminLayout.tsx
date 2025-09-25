@@ -6,11 +6,11 @@ import Header from "../components/Header";
 const AdminLayout: React.FC = () => (
   <div className="d-flex">
     <Sidebar />
-    <div className="flex-grow-1">
+    <div className="flex-grow-1" >
       <Header 
-        userName="Guy Hawkins"
+        userName="Netprotony"
         userRole="Admin"
-        userAvatar="/images/avatar.jpg"
+        userAvatar="public/images/avatars/default.png"
         unreadMessages={2}
         unreadNotifications={4}
       />

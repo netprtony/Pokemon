@@ -1,6 +1,6 @@
 # model.py
 from sqlalchemy import (
-    Column, String, Integer, Float, Date, DateTime, Text, Boolean,
+    Column, Computed, String, Integer, Float, Date, DateTime, Text, Boolean,
     ForeignKey, Enum, DECIMAL, JSON, TIMESTAMP, func
 )
 from sqlalchemy.orm import declarative_base, relationship
@@ -121,7 +121,7 @@ class DetailInventory(Base):
     purchase_price = Column(DECIMAL(12, 2))
     selling_price = Column(DECIMAL(12, 2))
     card_photos = Column(JSON)
-    photo_count = Column(Integer)
+    photo_count = Column(Integer, Computed("JSON_LENGTH(card_photos)"), nullable=False)
     date_added = Column(Date, nullable=False, default=func.current_date())
     last_updated = Column(TIMESTAMP, default=func.now(), onupdate=func.now())
     is_sold = Column(Boolean, default=False)

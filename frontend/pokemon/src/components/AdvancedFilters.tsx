@@ -4,8 +4,8 @@ import Button from "./Button";
 import Option from "./Option";
 import Input from "./Input"; // Thêm import Input
 import type { OptionItem } from "./Option";
-
 // Định nghĩa kiểu cho field option và filter
+import "../assets/css/theme.css";
 export interface FieldOption {
   value: string;
   label: string;
@@ -103,9 +103,8 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   ];
 
   return (
-    <div className="mb-4">
+    <div className="advanced-filters mb-4">
       <h5 className="mb-3 badge bg-success ">🔍 Bộ lọc nâng cao</h5>
-
       {/* Thanh tìm kiếm */}
       <div className="row g-3 mb-3">
         <div className="col-md-12">

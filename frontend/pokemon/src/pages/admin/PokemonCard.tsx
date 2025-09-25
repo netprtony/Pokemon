@@ -497,7 +497,6 @@ const PokemonCardPage: React.FC = () => {
 
   return (
     <div className="container-fluid py-4">
-      <h3 className="mb-3 fw-bold">Danh sách thẻ Pokemon</h3>
       <AdvancedFilters
         fieldOptions={fieldOptions}
         filters={filters}

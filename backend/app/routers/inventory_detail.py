@@ -17,7 +17,10 @@ DETAIL_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/detail_in
 # Thêm mới
 @router.post("/", response_model=DetailInventoryOut, status_code=status.HTTP_201_CREATED)
 def create_detail_inventory(data: DetailInventoryCreate, db: Session = Depends(get_db)):
-    db_item = DetailInventory(**data.dict(exclude_unset=True))
+    filtered_data = data.dict(exclude_unset=True)
+    # Xóa photo_count nếu có trong dict (đề phòng trường hợp model SQLAlchemy nhận vào)
+    filtered_data.pop("photo_count", None)  # Sửa lại cho chắc chắn
+    db_item = DetailInventory(**filtered_data)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
@@ -29,7 +32,11 @@ def update_detail_inventory(detail_id: int, data: DetailInventoryUpdate, db: Ses
     db_item = db.query(DetailInventory).filter(DetailInventory.detail_id == detail_id).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="DetailInventory not found")
-    for key, value in data.dict(exclude_unset=True).items():
+    update_data = data.dict(exclude_unset=True)
+    # Loại bỏ photo_count nếu có
+    if "photo_count" in update_data:
+        del update_data["photo_count"]
+    for key, value in update_data.items():
         setattr(db_item, key, value)
     db.commit()
     db.refresh(db_item)

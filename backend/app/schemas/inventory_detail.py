@@ -28,6 +28,7 @@ class DetailInventoryCreate(BaseModel):
     grade_score: Optional[float] = None
     purchase_price: Optional[float] = None
     selling_price: Optional[float] = None
+    is_sold: bool = False
     card_photos: Optional[List[str]] = None
     date_added: date
     notes: Optional[str] = None
@@ -41,6 +42,7 @@ class DetailInventoryUpdate(BaseModel):
     purchase_price: Optional[float]
     selling_price: Optional[float]
     card_photos: Optional[List[str]]
+    photo_count: Optional[int]
     is_sold: Optional[bool]
     notes: Optional[str]
 
