@@ -34,13 +34,29 @@ def update_detail_inventory(detail_id: int, data: DetailInventoryUpdate, db: Ses
         raise HTTPException(status_code=404, detail="DetailInventory not found")
     update_data = data.dict(exclude_unset=True)
     # Loại bỏ photo_count nếu có
-    if "photo_count" in update_data:
-        del update_data["photo_count"]
+    update_data.pop("photo_count", None)
+    # Nếu có card_photos thì cập nhật lại (ghi đè, không nối thêm)
+    if "card_photos" in update_data:
+        photos = update_data["card_photos"]
+        if photos is not None:
+            # Nếu cột là ARRAY thì gán trực tiếp, nếu là TEXT thì lưu json.dumps
+            if hasattr(DetailInventory, "card_photos") and str(DetailInventory.card_photos.type).lower().find("array") >= 0:
+                db_item.card_photos = photos
+            else:
+                db_item.card_photos = json.dumps(photos)
+        del update_data["card_photos"]
     for key, value in update_data.items():
         setattr(db_item, key, value)
     db.commit()
     db.refresh(db_item)
-    return db_item
+    # Trả về card_photos là mảng
+    result = db_item.__dict__.copy()
+    if isinstance(result.get("card_photos"), str):
+        try:
+            result["card_photos"] = json.loads(result["card_photos"])
+        except Exception:
+            result["card_photos"] = []
+    return result
 
 # Xóa
 @router.delete("/{detail_id}", status_code=status.HTTP_204_NO_CONTENT)

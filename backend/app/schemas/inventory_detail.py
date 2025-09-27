@@ -45,6 +45,7 @@ class DetailInventoryUpdate(BaseModel):
     photo_count: Optional[int]
     is_sold: Optional[bool]
     notes: Optional[str]
+    last_updated: Optional[datetime]
 
 class DetailInventoryOut(DetailInventoryBase):
     class Config:

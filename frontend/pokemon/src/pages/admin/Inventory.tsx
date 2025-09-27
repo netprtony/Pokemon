@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import DataTable from "../../components/Table";
 import AdvancedFilters from "../../components/AdvancedFilters";
@@ -12,7 +12,38 @@ import Button from "../../components/Button";
 import Toggle from "../../components/Toggle";
 import AsyncSelect from "react-select/async";
 
-// Kiểu dữ liệu cho 1 dòng Inventory
+// --- Constants & Mapping ---
+const API_URL = "http://localhost:8000/inventory/";
+const US_OPTIONS = [
+  { value: "NearMint", label: "Near Mint" },
+  { value: "LightlyPlayed", label: "Lightly Played" },
+  { value: "ModeratelyPlayed", label: "Moderately Played" },
+  { value: "HeavilyPlayed", label: "Heavily Played" },
+  { value: "Damaged", label: "Damaged" },
+];
+
+const JP_OPTIONS = [
+  { value: "A", label: "A" },
+  { value: "B", label: "B" },
+  { value: "C", label: "C" },
+  { value: "D", label: "D" },
+];
+
+// Ánh xạ US <-> JP
+const US_TO_JP: Record<string, string> = {
+  NearMint: "A",
+  LightlyPlayed: "B",
+  ModeratelyPlayed: "C",
+  HeavilyPlayed: "D",
+  Damaged: "D",
+};
+const JP_TO_US: Record<string, string> = {
+  A: "NearMint",
+  B: "LightlyPlayed",
+  C: "ModeratelyPlayed",
+  D: "HeavilyPlayed", // hoặc "Damaged" nếu muốn
+};
+
 export type InventoryRow = {
   inventory_id: number;
   master_card_id: string;
@@ -59,10 +90,6 @@ const fieldOptions: FieldOption[] = [
   { value: "notes", label: "Ghi chú", type: "text" },
 ];
 
-const API_URL = "http://localhost:8000/inventory/";
-
-type ModalMode = "add" | "edit" | null;
-
 const defaultForm: InventoryRow = {
   inventory_id: 0,
   master_card_id: "",
@@ -97,70 +124,37 @@ const defaultDetailForm = {
   notes: "",
 };
 
-const US_OPTIONS = [
-  { value: "NearMint", label: "Near Mint" },
-  { value: "LightlyPlayed", label: "Lightly Played" },
-  { value: "ModeratelyPlayed", label: "Moderately Played" },
-  { value: "HeavilyPlayed", label: "Heavily Played" },
-  { value: "Damaged", label: "Damaged" },
-];
-
-const JP_OPTIONS = [
-  { value: "A", label: "A" },
-  { value: "B", label: "B" },
-  { value: "C", label: "C" },
-  { value: "D", label: "D" },
-];
-
-// Ánh xạ US <-> JP
-const US_TO_JP: Record<string, string> = {
-  NearMint: "A",
-  LightlyPlayed: "B",
-  ModeratelyPlayed: "C",
-  HeavilyPlayed: "D",
-  Damaged: "D",
-};
-const JP_TO_US: Record<string, string> = {
-  A: "NearMint",
-  B: "LightlyPlayed",
-  C: "ModeratelyPlayed",
-  D: "HeavilyPlayed", // hoặc "Damaged" nếu muốn
+// --- Helper functions ---
+const formatDate = (date: string) => {
+  if (!date) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+  const parts = date.split(/[-\/]/);
+  if (parts.length === 3 && parts[2].length === 4)
+    return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+  return date;
 };
 
-const InventoryPage: React.FC = () => {
+// --- Custom hooks ---
+function useInventoryData({
+  filters,
+  searchTerm,
+  page,
+  pageSize,
+  sortField,
+  sortOrder,
+}: {
+  filters: Filter[];
+  searchTerm: string;
+  page: number;
+  pageSize: number;
+  sortField: string;
+  sortOrder: "asc" | "desc";
+}) {
   const [data, setData] = useState<InventoryRow[]>([]);
-  const [filters, setFilters] = useState<Filter[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [form, setForm] = useState<InventoryRow>(defaultForm);
-  const [formTouched, setFormTouched] = useState(false);
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
-  const [confirmMessage, setConfirmMessage] = useState<string>("");
-
-  const [sortField, setSortField] = useState("inventory_id");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-
-  const [previewImg, setPreviewImg] = useState<string | null>(null);
-  const [previewImgs, setPreviewImgs] = useState<string[]>([]);
-  const [detailData, setDetailData] = useState<Record<number, any[]>>({});
-
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [detailForm, setDetailForm] = useState(defaultDetailForm);
-  const [detailModalMode, setDetailModalMode] = useState<"add" | "edit" | null>(null);
-  const [detailFormTouched, setDetailFormTouched] = useState(false);
-
-  const [detailImages, setDetailImages] = React.useState<{file: File, name: string}[]>([]);
-  const [detailAngles, setDetailAngles] = React.useState<string[]>([]);
-
-  const fetchData = async (field = sortField, order = sortOrder) => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       let items: InventoryRow[] = [];
@@ -169,7 +163,7 @@ const InventoryPage: React.FC = () => {
         const resp = await axios.post(
           `${API_URL}filter`,
           { filters },
-          { params: { page, page_size: pageSize, sort_field: field, sort_order: order } }
+          { params: { page, page_size: pageSize, sort_field: sortField, sort_order: sortOrder } }
         );
         const data = resp.data as { items: any[]; total: number };
         items = data.items.map((row) => ({
@@ -179,13 +173,7 @@ const InventoryPage: React.FC = () => {
         total = data.total;
       } else {
         const resp = await axios.get<{ items: any[]; total: number }>(API_URL, {
-          params: {
-            page,
-            page_size: pageSize,
-            search: searchTerm,
-            sort_field: field,
-            sort_order: order,
-          },
+          params: { page, page_size: pageSize, search: searchTerm, sort_field: sortField, sort_order: sortOrder },
         });
         items = resp.data.items.map((row) => ({
           ...row,
@@ -201,12 +189,119 @@ const InventoryPage: React.FC = () => {
       setTotal(0);
     }
     setLoading(false);
-  };
+  }, [filters, searchTerm, page, pageSize, sortField, sortOrder]);
 
-  useEffect(() => {
-    fetchData();
-  }, [page, pageSize, filters, searchTerm, sortField, sortOrder]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+  return { data, total, loading, fetchData };
+}
 
+// --- Table columns ---
+const getColumns = (
+  handlePreviewImage: (url: string) => void,
+  handleAddDetail: (row: InventoryRow) => void,
+  handleEdit: (row: InventoryRow) => void,
+  handleDelete: (row: InventoryRow) => void
+) => [
+  {
+    key: "reference_image_url",
+    label: "",
+    render: (row: InventoryRow) =>
+      row.reference_image_url ? (
+        <img
+          src={row.reference_image_url}
+          alt={row.master_card_id}
+          style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer" }}
+          onClick={() => row.reference_image_url && handlePreviewImage(row.reference_image_url)}
+        />
+      ) : (
+        <img alt="No image" style={{ width: 36, height: 36, objectFit: "contain", opacity: 0.5 }} />
+      ),
+    width: 50,
+    align: "center" as const,
+  },
+  { key: "inventory_id", label: "ID" },
+  { key: "master_card_id", label: "Mã thẻ" },
+  { key: "total_quantity", label: "Số lượng" },
+  { key: "quantity_sold", label: "Đã bán" },
+  { key: "avg_purchase_price", label: "Giá mua TB" },
+  { key: "avg_selling_price", label: "Giá bán TB" },
+  { key: "storage_location", label: "Vị trí lưu trữ" },
+  { key: "language", label: "Ngôn ngữ" },
+  {
+    key: "is_active",
+    label: "Hoạt động",
+    render: (row: InventoryRow) =>
+      row.is_active ? (
+        <span className="badge bg-success">Còn hàng</span>
+      ) : (
+        <span className="badge bg-danger">Hết hàng</span>
+      ),
+    align: "center" as const,
+    width: 90,
+  },
+  { key: "date_added", label: "Ngày thêm" },
+  { key: "last_updated", label: "Cập nhật cuối" },
+  { key: "notes", label: "Ghi chú" },
+  {
+    key: "action",
+    label: "Thao tác",
+    align: "center" as const,
+    width: 110,
+    render: (row: InventoryRow) => (
+      <div className="d-flex justify-content-center gap-3">
+        <button className="btn btn-link p-0" title="Thêm chi tiết kho" onClick={() => handleAddDetail(row)}>
+          <i className="bi bi-plus fs-5 text-success"></i>
+        </button>
+        <button className="btn btn-link p-0" title="Sửa" onClick={() => handleEdit(row)}>
+          <i className="bi bi-pencil fs-5 text-warning"></i>
+        </button>
+        <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDelete(row)}>
+          <i className="bi bi-trash fs-5 text-danger"></i>
+        </button>
+      </div>
+    ),
+  },
+];
+
+// --- Main Component ---
+const InventoryPage: React.FC = () => {
+  // --- State ---
+  const [filters, setFilters] = useState<Filter[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sortField, setSortField] = useState("inventory_id");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // --- Data ---
+  const { data, total, loading, fetchData } = useInventoryData({
+    filters, searchTerm, page, pageSize, sortField, sortOrder
+  });
+
+  // --- Modal, Form, Detail State ---
+  type ModalMode = "add" | "edit" | null;
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [form, setForm] = useState<InventoryRow>(defaultForm);
+  const [formTouched, setFormTouched] = useState(false);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState<string>("");
+
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
+  const [previewImgs, setPreviewImgs] = useState<string[]>([]);
+  const [detailData, setDetailData] = useState<Record<number, any[]>>({});
+
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailForm, setDetailForm] = useState(defaultDetailForm);
+  const [detailModalMode, setDetailModalMode] = useState<"add" | "edit" | null>(null);
+  const [detailFormTouched, setDetailFormTouched] = useState(false);
+
+  const [detailImages, setDetailImages] = React.useState<{file: File, name: string}[]>([]);
+  const [detailAngles, setDetailAngles] = React.useState<string[]>([]);
+
+  // --- Handlers ---
   const handleAdd = () => {
     setForm(defaultForm);
     setModalMode("add");
@@ -303,72 +398,7 @@ const InventoryPage: React.FC = () => {
 
 
   // Table columns
-  const columns = [
-    {
-      key: "reference_image_url", // Sửa lại key cho đúng với dữ liệu
-      label: "",
-      render: (row: InventoryRow) =>
-        row.reference_image_url ? (
-          <img
-            src={row.reference_image_url}
-            alt={row.master_card_id}
-            style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer" }}
-            onClick={() => row.reference_image_url && handlePreviewImage(row.reference_image_url)}
-          />
-        ) : (
-          <img
-            // Đường dẫn ảnh mặc định
-                  alt="No image"
-                  style={{ width: 36, height: 36, objectFit: "contain", opacity: 0.5 }}
-                  />
-                ),
-                width: 50,
-                align: "center" as const,
-              },
-              { key: "inventory_id", label: "ID" },
-              { key: "master_card_id", label: "Mã thẻ" },
-              { key: "total_quantity", label: "Số lượng" },
-              { key: "quantity_sold", label: "Đã bán" },
-              { key: "avg_purchase_price", label: "Giá mua TB" },
-              { key: "avg_selling_price", label: "Giá bán TB" },
-              { key: "storage_location", label: "Vị trí lưu trữ" },
-              { key: "language", label: "Ngôn ngữ" },
-              {
-                key: "is_active",
-                label: "Hoạt động",
-                render: (row: InventoryRow) =>
-                row.is_active ? (
-                  <span className="badge bg-success">Còn hàng</span>
-                ) : (
-                  <span className="badge bg-danger">Hết hàng</span>
-                ),
-                align: "center" as const,
-                width: 90,
-              },
-              { key: "date_added", label: "Ngày thêm" },
-              { key: "last_updated", label: "Cập nhật cuối" },
-              { key: "notes", label: "Ghi chú" },
-              {
-                key: "action",
-                label: "Thao tác",
-                align: "center" as const,
-                width: 110,
-                render: (row: InventoryRow) => (
-        <div className="d-flex justify-content-center gap-3">
-          <button className="btn btn-link p-0" title="Thêm chi tiết kho" onClick={() => handleAddDetail(row)}>
-            <i className="bi bi-plus fs-5 text-success"></i>
-          </button>
-          <button className="btn btn-link p-0" title="Sửa" onClick={() => handleEdit(row)}>
-            <i className="bi bi-pencil fs-5 text-warning"></i>
-          </button>
-          <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDelete(row)}>
-            <i className="bi bi-trash fs-5 text-danger"></i>
-          </button>
-         
-        </div>
-      ),
-    },
-  ];
+  const columns = getColumns(handlePreviewImage, handleAddDetail, handleEdit, handleDelete);
 
   // AdvancedFilters handlers
   const handleAddFilter = (filter: Filter) => {
@@ -682,96 +712,103 @@ const InventoryPage: React.FC = () => {
     }
   };
 
+  const detailColumns = [
+    { key: "detail_id", label: "ID" },
+    { key: "card_photos_count", label: "Số ảnh" },
+    {
+      key: "card_photos",
+      label: "Ảnh",
+      render: (row: any) => (
+        <div className="d-flex gap-2 flex-wrap">
+          {row.card_photos?.map((img: string, idx: number) => (
+            <img
+              key={idx}
+              src={`/detail_inventory_images/${img}`}
+              alt={`photo-${idx}`}
+              style={{
+                width: 36,
+                height: 36,
+                objectFit: "contain",
+                borderRadius: 6,
+                border: "1px solid #eee",
+                cursor: "pointer"
+              }}
+              onClick={() => setPreviewImg(`/detail_inventory_images/${img}`)}
+            />
+          ))}
+        </div>
+      ),
+    },
+    { key: "physical_condition_us", label: "Điều kiện US" },
+    { key: "physical_condition_jp", label: "Điều kiện JP" },
+    {
+      key: "is_graded",
+      label: "Đã chấm điểm",
+      render: (row: any) => row.is_graded ? "Đã chấm" : "Chưa chấm"
+    },
+    { key: "grade_company", label: "Hãng chấm" },
+    { key: "grade_score", label: "Điểm" },
+    {
+      key: "purchase_price",
+      label: "Giá mua",
+      render: (row: any) => row.purchase_price ? row.purchase_price.toLocaleString("vi-VN") : "-"
+    },
+    {
+      key: "selling_price",
+      label: "Giá bán",
+      render: (row: any) => row.selling_price ? row.selling_price.toLocaleString("vi-VN") : "-"
+    },
+    {
+      key: "date_added",
+      label: "Ngày thêm",
+      render: (row: any) => row.date_added ? row.date_added.substring(0, 10) : "-"
+    },
+    {
+      key: "last_updated",
+      label: "Cập nhật cuối",
+      render: (row: any) => row.last_updated ? row.last_updated.substring(0, 10) : "-"
+    },
+    {
+      key: "is_sold",
+      label: "Đã bán",
+      render: (row: any) => row.is_sold ? "Đã bán" : "Chưa bán"
+    },
+    { key: "notes", label: "Ghi chú" },
+    {
+      key: "action",
+      label: "Thao tác",
+      render: (row: any) => (
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-link p-0"
+            title="Sửa"
+            onClick={() => handleEditDetail(row)}
+          >
+            <i className="bi bi-pencil fs-6 text-warning"></i>
+          </button>
+          <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDeleteDetail(row)}>
+            <i className="bi bi-trash fs-6 text-danger"></i>
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   const renderDetailTable = (inventory_id: number) => {
-    const details = detailData[inventory_id] || [];
+    const details = (detailData[inventory_id] || []).map((row: any) => ({
+      ...row,
+      card_photos_count: row.card_photos?.length ?? 0,
+    }));
     return (
       <div style={{ background: "#F7F7FA", borderRadius: 12, padding: 16 }}>
         <h6 className="fw-bold mb-2">Chi tiết thẻ</h6>
-        <table className="table table-bordered table-sm mb-0">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ảnh</th>
-              <th>Điều kiện US</th>
-              <th>Điều kiện JP</th>
-              <th>Đã chấm điểm</th>
-              <th>Hãng chấm</th>
-              <th>Điểm</th>
-              <th>Giá mua</th>
-              <th>Giá bán</th>
-              <th>Ngày thêm</th>
-              <th>Cập nhật cuối</th>
-              <th>Đã bán</th>
-              <th>Ghi chú</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {details.length === 0 ? (
-              <tr>
-                <td colSpan={14} className="text-center text-muted">Không có dữ liệu</td>
-              </tr>
-            ) : details.map((row: any) => (
-              <tr key={row.detail_id}>
-                <td>{row.detail_id}</td>
-                <td>
-                  <div className="d-flex gap-2 flex-wrap">
-                    {row.card_photos?.map((img: string, idx: number) => (
-                      <img
-                        key={idx}
-                        src={`/detail_inventory_images/${img}`}
-                        alt={`photo-${idx}`}
-                        style={{
-                          width: 36,
-                          height: 36,
-                          objectFit: "contain",
-                          borderRadius: 6,
-                          border: "1px solid #eee",
-                          cursor: "pointer"
-                        }}
-                        onClick={() => handlePreviewImage(`/detail_inventory_images/${img}`)}
-                      />
-                    ))}
-                  </div>
-                </td>
-                <td>{row.physical_condition_us}</td>
-                <td>{row.physical_condition_jp}</td>
-                <td>{row.is_graded ? "Đã chấm" : "Chưa chấm"}</td>
-                <td>{row.grade_company || "-"}</td>
-                <td>{row.grade_score ?? "-"}</td>
-                <td>{row.purchase_price ? row.purchase_price.toLocaleString("vi-VN") : "-"}</td>
-                <td>{row.selling_price ? row.selling_price.toLocaleString("vi-VN") : "-"}</td>
-                <td>
-                  {row.date_added
-                  ? row.date_added.substring(0, 10)
-                  : (() => {
-                    const d = new Date();
-                    const day = String(d.getDate()).padStart(2, "0");
-                    const month = String(d.getMonth() + 1).padStart(2, "0");
-                    const year = d.getFullYear();
-                    return `${year}-${month}-${day}`;
-                    })()
-                  }
-                </td>
-                <td>{row.last_updated ? row.last_updated.substring(0, 10) : "-"}</td>
-                <td>{row.is_sold ? "Đã bán" : "Chưa bán"}</td>
-                <td>{row.notes}</td>
-                <td>
-                  <button
-                  className="btn btn-link p-0"
-                  title="Sửa"
-                  onClick={() => handleEditDetail(row)}
-                >
-                  <i className="bi bi-pencil fs-6 text-warning"></i>
-                </button>
-                <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDeleteDetail(row)}>
-                  <i className="bi bi-trash fs-6 text-danger"></i>
-                </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          columns={detailColumns}
+          data={details}
+          pageSizeOptions={[5, 10]}
+          totalRows={details.length}
+          loading={false}
+        />
       </div>
     );
   };
@@ -800,32 +837,38 @@ const InventoryPage: React.FC = () => {
   async function handleSaveDetail() {
     try {
       let savedDetail: DetailInventoryForm | null = null;
-      // Tạo payload loại bỏ photo_count nếu có
       const { photo_count, ...payload } = detailForm;
-      if (detailModalMode === "add") {
-        const resp = await axios.post<DetailInventoryForm>(
-          "http://localhost:8000/detail-inventory/",
-          payload // chỉ gửi payload không có photo_count
-        );
-        console.log("Thêm chi tiết response:", resp.data);
-        toast.success("Thêm chi tiết thành công!");
-        savedDetail = resp.data;
-      } else if (detailModalMode === "edit") {
-        const resp = await axios.put<DetailInventoryForm>(
-          `http://localhost:8000/detail-inventory/${detailForm.detail_id}`,
-          payload // chỉ gửi payload không có photo_count
-        );
-        toast.success("Cập nhật chi tiết thành công!");
-        savedDetail = resp.data;
-      }
-      console.log("Chi tiết đã lưu:", savedDetail);
+
+      // Đảm bảo luôn gửi đủ trường bắt buộc
+      const payloadFixed = {
+        ...payload,
+        detail_id: detailForm.detail_id,
+        inventory_id: detailForm.inventory_id,
+        grade_score: payload.grade_score === "" ? null : Number(payload.grade_score),
+        purchase_price: payload.purchase_price === "" ? null : Number(payload.purchase_price),
+        selling_price: payload.selling_price === "" ? null : Number(payload.selling_price),
+        card_photos: Array.isArray(payload.card_photos) ? payload.card_photos : [],
+        date_added: payload.date_added ? payload.date_added : new Date().toISOString().slice(0, 10),
+        last_updated: new Date().toISOString(),
+      };
+
+      const url = `http://localhost:8000/detail-inventory/${detailForm.detail_id}`;
+      const resp = await axios.put<DetailInventoryForm>(url, payloadFixed);
+      toast.success("Cập nhật chi tiết thành công!");
+      savedDetail = resp.data;
+
       // Nếu có ảnh thì upload
       if (detailImages.length > 0 && savedDetail) {
         const formData = new FormData();
         detailImages.forEach(img => formData.append("files", img.file, img.name));
-        // Tạo query string angles đúng kiểu ?angles=front&angles=back&...
+        // angles lấy từ detailImages hoặc detailAngles nếu muốn dùng biến
+        const angles = detailImages.map(img => img.name);
+        console.log("Uploading images with angles:", angles);
         const query = new URLSearchParams({ inventory_id: String(savedDetail.inventory_id) });
-        detailImages.forEach(img => query.append("angles", img.name));
+        console.log("Query params before appending angles:", query.toString());
+        angles.forEach(angle => query.append("angles", angle));
+        setDetailAngles(angles); // Sử dụng biến detailAngles để lưu lại các góc ảnh đã upload
+        console.log("FormData to be sent:", formData);
         await axios.post(
           `http://localhost:8000/detail-inventory/${savedDetail.detail_id}/upload-photos?${query.toString()}`,
           formData,
@@ -997,56 +1040,10 @@ const InventoryPage: React.FC = () => {
                 position: "relative"
               }}
             >
-              {/* Nút + để chọn ảnh, chỉ hiện nếu chưa đủ 10 ảnh */}
-              {detailImages.length < 10 && (
-                <label
-                  htmlFor="detail-image-upload"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#fff",
-                    border: "1px dashed #bbb",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    width: "100%",
-                    height: "100%",
-                    minHeight: 0,
-                    minWidth: 0,
-                    gridColumn: (detailImages.length % 5) + 1,
-                    gridRow: Math.floor(detailImages.length / 5) + 1,
-                  }}
-                  title="Thêm ảnh"
-                >
-                  <i className="bi bi-plus-lg" style={{ fontSize: 48, color: "#bbb" }}></i>
-                </label>
-              )}
-              <input
-                id="detail-image-upload"
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={e => {
-                  const files = Array.from(e.target.files || []);
-                  // Danh sách angle mặc định
-                  const ANGLES = ["front", "back", "corner1", "corner2", "corner3", "corner4", "corner5", "corner6", "corner7", "corner8"];
-                  setDetailImages(prev => {
-                    // Ghép ảnh cũ và mới, set tên theo ANGLES
-                    const allFiles = [...prev, ...files.map(f => ({ file: f, name: "" }))].slice(0, 10);
-                    return allFiles.map((item, idx) => ({
-                      ...item,
-                      name: ANGLES[idx] || `angle${idx + 1}`
-                    }));
-                  });
-                  e.target.value = "";
-                }}
-                style={{ display: "none" }}
-              />
-              {/* Hiển thị ảnh đã upload */}
-              {detailImages.map((img, idx) => (
+              {/* Hiển thị ảnh đã có trong detailForm.card_photos */}
+              {detailForm.card_photos && detailForm.card_photos.map((img: string, idx: number) => (
                 <div
-                  key={idx}
+                  key={`existing-${idx}`}
                   style={{
                     position: "relative",
                     display: "flex",
@@ -1056,39 +1053,99 @@ const InventoryPage: React.FC = () => {
                     height: "100%",
                   }}
                 >
-                  {/* Nút xóa ảnh */}
+                  {/* Nút xóa cho ảnh đã lưu */}
                   <button
-                      type="button"
-                      onClick={() => {
-                        const ANGLES = ["front", "back", "corner1", "corner2", "corner3", "corner4", "corner5", "corner6", "corner7", "corner8"];
-                        setDetailImages(prev => prev.filter((_, i) => i !== idx).map((item, i) => ({
-                          ...item,
-                          name: ANGLES[i] || `angle${i + 1}`
-                        })));
-                      }}
-                      style={{
-                        position: "absolute",
-                        top: 6,
-                        right: 10,
-                        zIndex: 2,
-                        background: "rgba(255,255,255,0.25)", // nền trong suốt
-                        border: "1px solid rgba(255,255,255,0.3)",
-                        borderRadius: "50%",
-                        width: 28,
-                        height: 38,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backdropFilter: "blur(6px)", // hiệu ứng blur
-                        WebkitBackdropFilter: "blur(6px)", // Safari support
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                      }}
-                      title="Xóa ảnh này"
-                    >
-                      <i className="bi bi-x-lg" style={{ fontSize: 18, color: "#fff" }}></i>
-                    </button>
+                    type="button"
+                    onClick={() => {
+                      setDetailForm(prev => ({
+                        ...prev,
+                        card_photos: prev.card_photos.filter((_, i) => i !== idx)
+                      }));
+                      setDetailFormTouched(true);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: 10,
+                      zIndex: 2,
+                      background: "rgba(255,255,255,0.25)",
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      borderRadius: "50%",
+                      width: 28,
+                      height: 38,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backdropFilter: "blur(6px)",
+                      WebkitBackdropFilter: "blur(6px)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    title="Xóa ảnh này"
+                  >
+                    <i className="bi bi-x-lg" style={{ fontSize: 18, color: "#fff" }}></i>
+                  </button>
+                  <img
+                    src={`/detail_inventory_images/${img}`}
+                    alt={`photo-${idx}`}
+                    style={{
+                      width: "100%",
+                      height: "80%",
+                      objectFit: "cover",
+                      borderRadius: 8,
+                      border: "1px solid #ddd",
+                    }}
+                    onClick={() => setPreviewImg(`/detail_inventory_images/${img}`)}
+                  />
+                  <span style={{ marginTop: 4, fontSize: 14, color: "#555" }}>{img}</span>
+                </div>
+              ))}
+              {/* Hiển thị ảnh vừa upload (chưa lưu) */}
+              {detailImages.map((img, idx) => (
+                <div
+                  key={`upload-${idx}`}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ANGLES = ["front", "back", "corner1", "corner2", "corner3", "corner4", "corner5", "corner6", "corner7", "corner8"];
+                      setDetailImages(prev => prev.filter((_, i) => i !== idx).map((item, i) => ({
+                        ...item,
+                        name: ANGLES[i] || `angle${i + 1}`
+                      })));
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: 10,
+                      zIndex: 2,
+                      background: "rgba(255,255,255,0.25)",
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      borderRadius: "50%",
+                      width: 28,
+                      height: 38,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backdropFilter: "blur(6px)",
+                      WebkitBackdropFilter: "blur(6px)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    title="Xóa ảnh này"
+                  >
+                    <i className="bi bi-x-lg" style={{ fontSize: 18, color: "#fff" }}></i>
+                  </button>
                   <img
                     src={URL.createObjectURL(img.file)}
                     alt={`preview-${idx}`}
@@ -1119,6 +1176,50 @@ const InventoryPage: React.FC = () => {
                   />
                 </div>
               ))}
+              {/* Nút + để chọn ảnh, chỉ hiện nếu chưa đủ 10 ảnh upload */}
+              {detailImages.length < 10 && (
+                <label
+                  htmlFor="detail-image-upload"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#fff",
+                    border: "1px dashed #bbb",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    width: "100%",
+                    height: "100%",
+                    minHeight: 0,
+                    minWidth: 0,
+                    gridColumn: ((detailForm.card_photos?.length ?? 0) + detailImages.length) % 5 + 1,
+                    gridRow: Math.floor(((detailForm.card_photos?.length ?? 0) + detailImages.length) / 5) + 1,
+                  }}
+                  title="Thêm ảnh"
+                >
+                  <i className="bi bi-plus-lg" style={{ fontSize: 48, color: "#bbb" }}></i>
+                </label>
+              )}
+              <input
+                id="detail-image-upload"
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={e => {
+                  const files = Array.from(e.target.files || []);
+                  const ANGLES = ["front", "back", "corner1", "corner2", "corner3", "corner4", "corner5", "corner6", "corner7", "corner8"];
+                  setDetailImages(prev => {
+                    const allFiles = [...prev, ...files.map(f => ({ file: f, name: "" }))].slice(0, 10);
+                    return allFiles.map((item, idx) => ({
+                      ...item,
+                      name: ANGLES[idx] || `angle${idx + 1}`
+                    }));
+                  });
+                  e.target.value = "";
+                }}
+                style={{ display: "none" }}
+              />
             </div>
             
           </div>
@@ -1186,7 +1287,7 @@ const InventoryPage: React.FC = () => {
                 <label className="mac-input-label">Điều kiện US</label>
                 <select
                   name="physical_condition_us"
-                  value={detailForm.physical_condition_us}
+                  value={US_OPTIONS.some(opt => opt.value === detailForm.physical_condition_us) ? detailForm.physical_condition_us : ""}
                   onChange={handleDetailSelectChange}
                   className="mac-input"
                   required
