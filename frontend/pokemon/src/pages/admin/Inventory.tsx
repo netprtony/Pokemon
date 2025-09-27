@@ -636,31 +636,18 @@ const InventoryPage: React.FC = () => {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>Ngày thêm</label>
           <input
-        className="mac-input"
-        name="date_added"
-        type="date"
-        value={
-          form.date_added
-            ? (() => {
-            // Nếu đã là yyyy-mm-dd thì giữ nguyên, nếu là dd-mm-yyyy thì chuyển đổi
-            if (/^\d{4}-\d{2}-\d{2}$/.test(form.date_added)) return form.date_added;
-            const parts = form.date_added.split(/[-\/]/);
-            if (parts.length === 3 && parts[2].length === 4) {
-              // dd-mm-yyyy hoặc dd/mm/yyyy
-              return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
-            }
-            return form.date_added;
-          })()
-            : (() => {
-            const d = new Date();
-            const day = String(d.getDate()).padStart(2, "0");
-            const month = String(d.getMonth() + 1).padStart(2, "0");
-            const year = d.getFullYear();
-            return `${year}-${month}-${day}`;
-          })()
-        }
-        onChange={handleFormChange}
-        required
+            className="mac-input"
+            name="date_added"
+            type="date"
+            value={formatDate(form.date_added || "") || (() => {
+              const d = new Date();
+              const day = String(d.getDate()).padStart(2, "0");
+              const month = String(d.getMonth() + 1).padStart(2, "0");
+              const year = d.getFullYear();
+              return `${year}-${month}-${day}`;
+            })()}
+            onChange={handleFormChange}
+            required
           />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -837,38 +824,69 @@ const InventoryPage: React.FC = () => {
   async function handleSaveDetail() {
     try {
       let savedDetail: DetailInventoryForm | null = null;
-      const { photo_count, ...payload } = detailForm;
+      // Loại bỏ các trường không thuộc schema update
+      const {
+        detail_id,
+        inventory_id,
+        date_added,
+        photo_count,
+        ...payload
+      } = detailForm;
 
-      // Đảm bảo luôn gửi đủ trường bắt buộc
+      // Đúng schema DetailInventoryUpdate
       const payloadFixed = {
-        ...payload,
-        detail_id: detailForm.detail_id,
-        inventory_id: detailForm.inventory_id,
-        grade_score: payload.grade_score === "" ? null : Number(payload.grade_score),
-        purchase_price: payload.purchase_price === "" ? null : Number(payload.purchase_price),
-        selling_price: payload.selling_price === "" ? null : Number(payload.selling_price),
-        card_photos: Array.isArray(payload.card_photos) ? payload.card_photos : [],
-        date_added: payload.date_added ? payload.date_added : new Date().toISOString().slice(0, 10),
-        last_updated: new Date().toISOString(),
-      };
+      physical_condition_us: payload.physical_condition_us || null,
+      physical_condition_jp: payload.physical_condition_jp || null,
+      is_graded: typeof payload.is_graded === "boolean" ? payload.is_graded : null,
+      grade_company: payload.grade_company || null,
+      grade_score:
+        payload.grade_score === "" || payload.grade_score === null
+          ? null
+          : Number(payload.grade_score),
+      purchase_price:
+        payload.purchase_price === "" || payload.purchase_price === null
+          ? null
+          : Number(payload.purchase_price),
+      selling_price:
+        payload.selling_price === "" || payload.selling_price === null
+          ? null
+          : Number(payload.selling_price),
+      card_photos: Array.isArray(payload.card_photos) ? payload.card_photos : [],
+      photo_count: Array.isArray(payload.card_photos) ? payload.card_photos.length : 0, // <-- luôn gửi
+      is_sold: typeof payload.is_sold === "boolean" ? payload.is_sold : null,
+      notes: payload.notes || null,
+      last_updated: new Date().toISOString(),
+    };
 
-      const url = `http://localhost:8000/detail-inventory/${detailForm.detail_id}`;
-      const resp = await axios.put<DetailInventoryForm>(url, payloadFixed);
-      toast.success("Cập nhật chi tiết thành công!");
+      
+
+      let url = `http://localhost:8000/detail-inventory/${detailForm.detail_id}`;
+      let resp;
+      if (detailForm.detail_id === 0) {
+        // Thêm mới: backend có thể yêu cầu inventory_id, date_added, ...
+        url = "http://localhost:8000/detail-inventory/";
+        resp = await axios.post<DetailInventoryForm>(url, {
+          ...payloadFixed,
+          inventory_id: detailForm.inventory_id,
+          date_added: detailForm.date_added,
+        });
+        toast.success("Thêm chi tiết thành công!");
+      } else {
+        // Update: chỉ gửi đúng schema update
+        resp = await axios.put<DetailInventoryForm>(url, payloadFixed);
+        toast.success("Cập nhật chi tiết thành công!");
+      }
       savedDetail = resp.data;
 
       // Nếu có ảnh thì upload
       if (detailImages.length > 0 && savedDetail) {
         const formData = new FormData();
-        detailImages.forEach(img => formData.append("files", img.file, img.name));
-        // angles lấy từ detailImages hoặc detailAngles nếu muốn dùng biến
-        const angles = detailImages.map(img => img.name);
-        console.log("Uploading images with angles:", angles);
-        const query = new URLSearchParams({ inventory_id: String(savedDetail.inventory_id) });
-        console.log("Query params before appending angles:", query.toString());
-        angles.forEach(angle => query.append("angles", angle));
-        setDetailAngles(angles); // Sử dụng biến detailAngles để lưu lại các góc ảnh đã upload
-        console.log("FormData to be sent:", formData);
+        detailImages.forEach((img) => formData.append("files", img.file, img.name));
+        const angles = detailImages.map((img) => img.name);
+        const query = new URLSearchParams({
+          inventory_id: String(savedDetail.inventory_id),
+        });
+        angles.forEach((angle) => query.append("angles", angle));
         await axios.post(
           `http://localhost:8000/detail-inventory/${savedDetail.detail_id}/upload-photos?${query.toString()}`,
           formData,
@@ -881,8 +899,17 @@ const InventoryPage: React.FC = () => {
       setDetailModalOpen(false);
       setDetailImages([]);
       setDetailAngles([]);
-    } catch {
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.detail) {
+      const detail = err.response.data.detail;
+      // Nếu detail là object, stringify để dễ debug
+      const msg = typeof detail === "string"
+        ? detail
+        : JSON.stringify(detail, null, 2);
+      toast.error("Lỗi: " + msg);
+    } else {
       toast.error("Lỗi khi lưu chi tiết hoặc upload ảnh!");
+    }
     }
   }
 
@@ -1287,7 +1314,11 @@ const InventoryPage: React.FC = () => {
                 <label className="mac-input-label">Điều kiện US</label>
                 <select
                   name="physical_condition_us"
-                  value={US_OPTIONS.some(opt => opt.value === detailForm.physical_condition_us) ? detailForm.physical_condition_us : ""}
+                  value={
+                      US_OPTIONS.some(opt => opt.value === detailForm.physical_condition_us)
+                        ? detailForm.physical_condition_us
+                        : ""
+                    }
                   onChange={handleDetailSelectChange}
                   className="mac-input"
                   required
