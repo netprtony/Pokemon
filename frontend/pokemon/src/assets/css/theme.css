@@ -1,30 +1,88 @@
+/* ========== THEME LIGHT ========== */
 .theme-light {
-  --sidebar-bg: #fff;
+  --app-bg: #f5f6fa;
+  --sidebar-bg: #ffffff;
   --sidebar-text: #222;
+  --sidebar-hover-bg: #f5f5f5;
   --sidebar-active-bg: #e3f2fd;
   --sidebar-active-text: #1976d2;
+
+  --header-bg: #fff;
+  --header-text: #222;
+
   --filter-bg: #f8f9fa;
   --filter-text: #222;
+
   --table-header-bg: #f7f7fa;
   --table-header-text: #22223b;
   --header-bg: #fff;
   --header-text: #22223b;
+
+  --advanced-filter-bg: #f8f9fa;
+  --advanced-filter-text: #222;
+  --advanced-filter-textbox: #fff;
 }
 
+/* ========== THEME DARK ========== */
 .theme-dark {
-  --sidebar-bg: #23272f;
-  --sidebar-text: #e0e0e0;
-  --sidebar-active-bg: #1976d2;
+  --app-bg: #181c23; /* Nền tổng thể dark */
+  --sidebar-bg: #232a36; /* Sidebar tối hơn */
+  --sidebar-text: #f3f6fa;
+  --sidebar-hover-bg: #757575;
+  --sidebar-active-bg: #454545;
   --sidebar-active-text: #fff;
-  --filter-bg: #23272f;
+
+  --filter-bg: #303030;
   --filter-text: #e0e0e0;
-  --table-header-bg: #23272f;
+
+  --table-header-bg: #181818;
   --table-header-text: #e0e0e0;
-  --header-bg: #23272f;
+
+  --header-bg: #303030;
   --header-text: #e0e0e0;
+
+  --advanced-filter-bg: #303030;
+  --advanced-filter-text: #e0e0e0;
+  --advanced-filter-textbox: #495057;
 }
 
-/* Sidebar sử dụng biến màu */
+/* ========== SIDEBAR BASE ========== */
+.sidebar-macos {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-radius: 24px;
+  min-height: 100vh;
+  box-shadow: 0 8px 32px 0 rgba(60,60,80,0.10);
+  padding: 18px 0 18px 0;
+  transition: background 0.3s, color 0.3s;
+}
+
+.sidebar-item-macos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  color: var(--sidebar-text);
+}
+
+.sidebar-item-macos:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+.sidebar-item-macos.active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+}
+
+.sidebar-dropdown-macos {
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+}
+
+/* ========== ADVANCED FILTER ========== */
 .sidebar-item-parent {
   background: var(--sidebar-bg) !important;
   color: var(--sidebar-text) !important;
@@ -41,87 +99,174 @@
   transition: background 0.2s, color 0.2s;
 }
 
-/* AdvancedFilters */
+/* AdvancedFilters container */
 .advanced-filters {
-  background: var(--filter-bg);
-  color: var(--filter-text);
+  background: var(--advanced-filter-bg);
+  color: var(--advanced-filter-text);
+  border-radius: 16px;
+  padding: 24px 20px 18px 20px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
   transition: background 0.2s, color 0.2s;
 }
 
-.sidebar-macos {
-  background: rgba(255,255,255,0.18);
-  backdrop-filter: blur(16px);
-  border-radius: 28px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
-  color: #fff;
-  min-height: 100vh;
+/* Input, select, textarea trong AdvancedFilters */
+.advanced-filters input,
+.advanced-filters select,
+.advanced-filters textarea {
+  background: var(--advanced-filter-textbox);
+  color: var(--advanced-filter-text);
+  border: 1px solid #444;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.theme-light .advanced-filters input,
+.theme-light .advanced-filters select,
+.theme-light .advanced-filters textarea {
+  border: 1px solid #ccc;
+}
+.advanced-filters input:focus,
+.advanced-filters select:focus,
+.advanced-filters textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px #1976d233;
 }
 
-.sidebar-item-macos {
+/* Button trong AdvancedFilters */
+.advanced-filters .btn,
+.advanced-filters button {
+  background: var(--sidebar-active-bg, #1976d2);
+  color: var(--sidebar-active-text, #fff);
+  border: none;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.advanced-filters .btn:hover,
+.advanced-filters button:hover {
+  background: #1565c0;
+  color: #fff;
+}
+
+/* Badge */
+.advanced-filters .badge {
+  background: #1976d2;
+  color: #fff;
+}
+.theme-dark .advanced-filters .badge {
+  background: #222a36;
+  color: #fff;
+}
+
+/* Dropdown Option */
+.advanced-filters .option-list,
+.advanced-filters .dropdown-menu {
+  background: var(--advanced-filter-bg);
+  color: var(--advanced-filter-text);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
+  border: 1px solid #333;
+}
+.theme-light .advanced-filters .option-list,
+.theme-light .advanced-filters .dropdown-menu {
+  border: 1px solid #ccc;
+}
+
+/* Close button */
+.advanced-filters .btn-close,
+.advanced-filters .btn-close-dark {
   background: transparent;
-  color: #222;
+  color: var(--advanced-filter-text);
+  opacity: 0.7;
+}
+.advanced-filters .btn-close:hover,
+.advanced-filters .btn-close-dark:hover {
+  color: #ff5252;
+  opacity: 1;
+}
+
+/* ========== TABLE ========== */
+.table,
+.table th,
+.table td {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  transition: background 0.2s, color 0.2s;
+}
+
+.theme-dark .table,
+.theme-dark .table th,
+.theme-dark .table td {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+}
+
+.table thead th {
+  background: var(--table-header-bg);
+  color: var(--table-header-text);
+  border-bottom: 1px solid #333;
+}
+
+.theme-light .table thead th {
+  border-bottom: 1px solid #ccc;
+}
+
+/* ========== PAGINATION ========== */
+.pagination {
+  background: transparent;
+}
+.pagination .page-link {
+  background: var(--advanced-filter-bg);
+  color: var(--advanced-filter-text);
+  border: 1px solid #444;
+  transition: background 0.2s, color 0.2s;
+}
+.theme-light .pagination .page-link {
+  border: 1px solid #ccc;
+}
+.pagination .page-link.active,
+.pagination .active > .page-link {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  border-color: var(--sidebar-active-bg);
+}
+
+/* ========== MODAL ========== */
+.modal-content {
+  background: var(--advanced-filter-bg);
+  color: var(--advanced-filter-text);
   border-radius: 16px;
   transition: background 0.2s, color 0.2s;
 }
-.sidebar-item-macos.active {
-  background: #e4e4e4;
-  color: #222;
-}
-.sidebar-item-macos:hover {
-  background: #f5f5f5;
-  color: #222;
+.modal-header,
+.modal-footer {
+  background: var(--advanced-filter-bg);
+  color: var(--advanced-filter-text);
+  border: none;
 }
 
-.sidebar-dropdown-macos {
-  animation: fadeIn 0.2s;
+/* ========== FORM CONTROL ========== */
+.form-control,
+input,
+select,
+textarea {
+  background: var(--advanced-filter-textbox, #fff);
+  color: var(--advanced-filter-text, #222);
+  border: 1px solid #444;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.theme-light .form-control,
+.theme-light input,
+.theme-light select,
+.theme-light textarea {
+  border: 1px solid #ccc;
+}
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px #1976d233;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-8px);}
-  to { opacity: 1; transform: translateY(0);}
-}
-
-/* Nút Add New Task */
-.sidebar-plus-btn {
-  background: #ffa500;
-  color: #fff;
-  border-radius: 16px;
-  font-weight: 600;
-  font-size: 16px;
-  padding: 14px 0;
-  margin-top: 24px;
-  box-shadow: 0 2px 8px rgba(255,165,0,0.15);
-  transition: background 0.2s;
-}
-.sidebar-plus-btn:hover {
-  background: #ff8800;
-}
-
-/* Sidebar MacOS Dark Theme */
-.theme-dark .sidebar-macos {
-  background: rgba(35,39,47,0.92);
-  color: #fff;
-}
-
-.theme-dark .sidebar-item-macos {
-  background: transparent;
-  color: #fff;
-}
-.theme-dark .sidebar-item-macos.active {
-  background: #313743;
-  color: #fff;
-}
-.theme-dark .sidebar-item-macos:hover {
-  background: #2e2f23;
-  color: #ffffff;
-}
-.theme-dark .sidebar-dropdown-macos {
-  background: transparent;
-}
-.theme-dark .sidebar-item-macos .sub-label,
-.theme-dark .sidebar-item-macos span {
-  color: #0066ff !important;
-}
-.theme-dark .sidebar-item-macos.active i {
-  color: #4287c9 !important;
-}

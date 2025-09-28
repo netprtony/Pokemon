@@ -22,6 +22,12 @@ html, body, #root {
   overflow-x: hidden;
   overflow-y: auto;
 }
+body, #root {
+  background: var(--app-bg, #242424) !important;
+  color: var(--bs-body-color, #f3f6fa);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
 @font-face {
   font-family: 'MuseoSansCyrl';
   src: url('./src/assets/fonts/MuseoSansCyrl-500.otf') format('opentype');

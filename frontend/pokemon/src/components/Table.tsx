@@ -107,7 +107,15 @@ export default function DataTable<T>({
   };
 
   return (
-    <div className="bg-white rounded-4 p-4 shadow-sm" style={{ fontFamily: "inherit" }}>
+    <div
+      className="rounded-4 p-4 shadow-sm"
+      style={{
+        fontFamily: "inherit",
+        background: "var(--app-bg)",
+        color: "var(--sidebar-text)",
+        transition: "background 0.2s, color 0.2s",
+      }}
+    >
       {/* Top controls */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div className="d-flex align-items-center gap-2">
@@ -327,7 +335,15 @@ export default function DataTable<T>({
                   total
                 )}`}
           </span>
-          <span className="text-muted ms-1">of {total} entries</span>
+          <span
+            className="ms-1"
+            style={{
+              color: "var(--filter-text, #949494)",
+              transition: "color 0.2s"
+            }}
+          >
+            of {total} entries
+          </span>
         </div>
         <div className="d-flex align-items-center gap-2">
           <Pagination className="mb-0">
