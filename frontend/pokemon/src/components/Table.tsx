@@ -225,7 +225,14 @@ export default function DataTable<T>({
                   background: "var(--table-header-bg)",
                   color: "var(--table-header-text)"
                 }}>
-                  Không có dữ liệu
+                  <div className="d-flex flex-column align-items-center gap-3">
+                    <img
+                      src="/images/DataNotAvailable.svg"
+                      alt="No data"
+                      style={{ width: 220, height: 220, objectFit: "contain", opacity: 0.5 }}
+                    />
+                    <div>Không có dữ liệu</div>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -256,8 +263,10 @@ export default function DataTable<T>({
                           }}
                         >
                           {/* Nếu là hình ảnh, cho phép click để xem lớn */}
-                          {col.key.toLowerCase().includes("img") || col.key.toLowerCase().includes("image") || col.key.toLowerCase().includes("symbol") ? (
-                            (row as Record<string, any>)[col.key]? (
+                          {col.key.toLowerCase().includes("img") ||
+                          col.key.toLowerCase().includes("image") ||
+                          col.key.toLowerCase().includes("symbol") ? (
+                            (row as Record<string, any>)[col.key] ? (
                               <img
                                 src={(row as Record<string, any>)[col.key]}
                                 alt="preview"
@@ -268,7 +277,12 @@ export default function DataTable<T>({
                                 }}
                               />
                             ) : (
-                              <i className="bi bi-image text-secondary fs-3" title="No image" />
+                              <img
+                                src="/images/NoResult.jpg" // Đường dẫn ảnh mặc định (bạn có thể thay bằng ảnh khác trong thư mục images)
+                                alt="No image"
+                                style={{ width: 100, height: 100, objectFit: "contain", opacity: 0.4, borderRadius: 6 }}
+                                title="No image"
+                              />
                             )
                           ) : col.render ? col.render(row, globalIdx) : (
                             typeof (row as any)[col.key] === "string" && (row as any)[col.key].length > 20

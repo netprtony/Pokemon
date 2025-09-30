@@ -196,14 +196,24 @@ def search_id_card(
 ):
     results = db.query(
         PokemonCardMaster.master_card_id,
-        PokemonCardMaster.reference_image_url
+        PokemonCardMaster.reference_image_url,
+        PokemonCardMaster.card_number,
+        PokemonCardMaster.name_en,
+        PokemonCardMaster.name_original,
+
     ).filter(
-        PokemonCardMaster.master_card_id.ilike(f"%{search}%")
+        PokemonCardMaster.master_card_id.ilike(f"%{search}%") |
+        PokemonCardMaster.card_number.ilike(f"%{search}%") |
+        PokemonCardMaster.name_en.ilike(f"%{search}%") |
+        PokemonCardMaster.name_original.ilike(f"%{search}%")
     ).all()
     return [
         {
             "master_card_id": r.master_card_id,
-            "reference_image_url": r.reference_image_url
+            "reference_image_url": r.reference_image_url,
+            "name_en": r.name_en,
+            "name_original": r.name_original,
+            "card_number": r.card_number,
         }
         for r in results
     ]

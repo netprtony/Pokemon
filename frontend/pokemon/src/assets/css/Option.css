@@ -67,3 +67,43 @@
   background: #f7f7fa;
   padding: 10px 0;
 }
+
+/* Light theme */
+.theme-light .mac-menu {
+  background: #fff;
+  color: #222;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 24px 0 rgba(60,60,80,0.10);
+}
+.theme-light .mac-menu-item {
+  background: transparent;
+  color: #222;
+}
+.theme-light .mac-menu-item:hover,
+.theme-light .mac-menu-item:focus {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+.theme-light .mac-menu-divider {
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Dark theme */
+.theme-dark .mac-menu {
+  background: #232a36;
+  color: #e0e0e0;
+  border: 1px solid #333a;
+  box-shadow: 0 4px 24px 0 rgba(24,28,35,0.22);
+}
+.theme-dark .mac-menu-item {
+  background: transparent;
+  color: #e0e0e0;
+}
+.theme-dark .mac-menu-item:hover,
+.theme-dark .mac-menu-item:focus {
+  background: #31394a;
+  color: #90caf9;
+}
+.theme-dark .mac-menu-divider {
+  border-top: 1px solid #333a;
+}

@@ -13,6 +13,27 @@
   margin-left: 10px;
 }
 
+.mac-input,
+.mac-stepper-input {
+  background: var(--advanced-filter-textbox, #fff);
+  color: var(--advanced-filter-text, #222);
+  border: 1px solid #444;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+.theme-light .mac-input,
+.theme-light .mac-stepper-input {
+  border: 1px solid #ccc;
+}
+
+.mac-input:focus,
+.mac-stepper-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px #1976d233;
+}
+
 .mac-input {
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;

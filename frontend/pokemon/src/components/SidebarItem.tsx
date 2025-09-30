@@ -102,7 +102,7 @@ export default function SidebarItem({
         <div
           className="sidebar-dropdown-macos"
           style={{
-            maxHeight: open ? `${children.length * 44}px` : "0",
+            maxHeight: open ? `${children.length * 55}px` : "0",
             opacity: open ? 1 : 0,
             overflow: "hidden",
             transition: "max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s",
@@ -122,7 +122,6 @@ export default function SidebarItem({
                 style={{
                   padding: "11px 18px",
                   borderRadius: 14,
-                  margin: "3px 0",
                   background: active
                     ? "var(--sidebar-active-bg)"
                     : "transparent",
@@ -134,6 +133,7 @@ export default function SidebarItem({
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "left",
+                  justifyContent: "flex-start",
                   gap: 10,
                   transition: "background 0.2s, color 0.2s",
                 }}

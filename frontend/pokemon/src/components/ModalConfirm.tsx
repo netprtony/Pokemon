@@ -19,6 +19,11 @@ export default function ModalConfirm({
   confirmText = "Yes",
   cancelText = "No",
 }: ModalConfirmProps) {
+  // Detect theme from body class
+  const isDark =
+    typeof document !== "undefined" &&
+    document.body.classList.contains("theme-dark");
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -30,7 +35,7 @@ export default function ModalConfirm({
           style={{
             position: "fixed",
             top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.12)",
+            backgroundColor: isDark ? "rgba(24,28,35,0.55)" : "rgba(0, 0, 0, 0.12)",
             zIndex: 1050,
             display: "flex",
             alignItems: "center",
@@ -47,39 +52,49 @@ export default function ModalConfirm({
             transition={{ duration: 0.3 }}
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: "#F7F7FA",
+              background: isDark ? "#232a36" : "#F7F7FA",
               padding: "24px 0 0 0",
               borderRadius: "14px",
               width: "90%",
               maxWidth: "320px",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+              boxShadow: isDark
+                ? "0 8px 24px rgba(0,0,0,0.32)"
+                : "0 8px 24px rgba(0,0,0,0.12)",
               textAlign: "center",
-              fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+              fontFamily:
+                "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+              color: isDark ? "#e0e0e0" : "#22223B",
             }}
           >
             <div style={{ padding: "0 20px" }}>
-              <h5 style={{
-                fontWeight: 700,
-                fontSize: "1.2rem",
-                marginBottom: "8px",
-                marginTop: "8px",
-                color: "#22223B"
-              }}>
+              <h5
+                style={{
+                  fontWeight: 700,
+                  fontSize: "1.2rem",
+                  marginBottom: "8px",
+                  marginTop: "8px",
+                  color: isDark ? "#fff" : "#22223B",
+                }}
+              >
                 {title}
               </h5>
-              <div style={{
-                fontSize: "1rem",
-                color: "#22223B",
-                marginBottom: "18px"
-              }}>
+              <div
+                style={{
+                  fontSize: "1rem",
+                  color: isDark ? "#e0e0e0" : "#22223B",
+                  marginBottom: "18px",
+                }}
+              >
                 {message}
               </div>
             </div>
-            <div style={{
-              borderTop: "1px solid #E5E5EA",
-              display: "flex",
-              marginTop: "12px"
-            }}>
+            <div
+              style={{
+                borderTop: isDark ? "1px solid #333a" : "1px solid #E5E5EA",
+                display: "flex",
+                marginTop: "12px",
+              }}
+            >
               <button
                 type="button"
                 style={{
@@ -87,13 +102,13 @@ export default function ModalConfirm({
                   padding: "14px 0",
                   background: "none",
                   border: "none",
-                  borderRight: "1px solid #E5E5EA",
-                  color: "#007AFF",
+                  borderRight: isDark ? "1px solid #333a" : "1px solid #E5E5EA",
+                  color: isDark ? "#90caf9" : "#007AFF",
                   fontWeight: 400,
                   fontSize: "1.05rem",
                   outline: "none",
                   transition: "background 0.2s",
-                  borderBottomLeftRadius: "14px"
+                  borderBottomLeftRadius: "14px",
                 }}
                 onClick={onClose}
               >
@@ -106,12 +121,12 @@ export default function ModalConfirm({
                   padding: "14px 0",
                   background: "none",
                   border: "none",
-                  color: "#007AFF",
+                  color: isDark ? "#90caf9" : "#007AFF",
                   fontWeight: 700,
                   fontSize: "1.05rem",
                   outline: "none",
                   transition: "background 0.2s",
-                  borderBottomRightRadius: "14px"
+                  borderBottomRightRadius: "14px",
                 }}
                 onClick={onConfirm}
               >

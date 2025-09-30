@@ -2,7 +2,7 @@
   {
     "master_card_id": "hgss4-43",
     "set_id": "hgss4",
-    "card_number": "43/103",
+    "card_number": "43/102",
     "name_en": "Magneton",
     "name_original": null,
     "version_en": "HS—Triumphant",
@@ -18,7 +18,7 @@
   {
     "master_card_id": "neo4-39",
     "set_id": "neo4",
-    "card_number": "39/113",
+    "card_number": "39/105",
     "name_en": "Dark Quilava",
     "name_original": null,
     "version_en": "Neo Destiny",
@@ -34,7 +34,7 @@
   {
     "master_card_id": "sm6-35",
     "set_id": "sm6",
-    "card_number": "35/150",
+    "card_number": "35/131",
     "name_en": "Magneton",
     "name_original": null,
     "version_en": "Forbidden Light",
@@ -50,7 +50,7 @@
   {
     "master_card_id": "xy7-40",
     "set_id": "xy7",
-    "card_number": "40/100",
+    "card_number": "40/98",
     "name_en": "Regirock",
     "name_original": null,
     "version_en": "Ancient Origins",
@@ -98,7 +98,7 @@
   {
     "master_card_id": "swsh35-42",
     "set_id": "swsh35",
-    "card_number": "42/80",
+    "card_number": "42/73",
     "name_en": "Scrafty",
     "name_original": null,
     "version_en": "Champion's Path",
@@ -114,7 +114,7 @@
   {
     "master_card_id": "smp-SM31",
     "set_id": "smp",
-    "card_number": "SM31/250",
+    "card_number": "SM31/248",
     "name_en": "Tapu Koko",
     "name_original": null,
     "version_en": "SM Black Star Promos",
@@ -130,7 +130,7 @@
   {
     "master_card_id": "ex10-38",
     "set_id": "ex10",
-    "card_number": "38/145",
+    "card_number": "38/115",
     "name_en": "Croconaw",
     "name_original": null,
     "version_en": "Unseen Forces",
@@ -178,7 +178,7 @@
   {
     "master_card_id": "ex5-33",
     "set_id": "ex5",
-    "card_number": "33/102",
+    "card_number": "33/101",
     "name_en": "Dodrio",
     "name_original": null,
     "version_en": "Hidden Legends",
@@ -194,7 +194,7 @@
   {
     "master_card_id": "bw10-44",
     "set_id": "bw10",
-    "card_number": "44/105",
+    "card_number": "44/101",
     "name_en": "Reuniclus",
     "name_original": null,
     "version_en": "Plasma Blast",
@@ -210,7 +210,7 @@
   {
     "master_card_id": "xy5-40",
     "set_id": "xy5",
-    "card_number": "40/164",
+    "card_number": "40/160",
     "name_en": "Whiscash",
     "name_original": null,
     "version_en": "Primal Clash",
@@ -226,7 +226,7 @@
   {
     "master_card_id": "xy8-34",
     "set_id": "xy8",
-    "card_number": "34/165",
+    "card_number": "34/162",
     "name_en": "Glalie-EX",
     "name_original": null,
     "version_en": "BREAKthrough",
@@ -274,7 +274,7 @@
   {
     "master_card_id": "g1-28",
     "set_id": "g1",
-    "card_number": "28/117",
+    "card_number": "28/83",
     "name_en": "Jolteon-EX",
     "name_original": null,
     "version_en": "Generations",
@@ -290,7 +290,7 @@
   {
     "master_card_id": "sm3-36",
     "set_id": "sm3",
-    "card_number": "36/177",
+    "card_number": "36/147",
     "name_en": "Panpour",
     "name_original": null,
     "version_en": "Burning Shadows",
@@ -306,7 +306,7 @@
   {
     "master_card_id": "bw7-42",
     "set_id": "bw7",
-    "card_number": "42/153",
+    "card_number": "42/149",
     "name_en": "Ducklett",
     "name_original": null,
     "version_en": "Boundaries Crossed",
@@ -322,7 +322,7 @@
   {
     "master_card_id": "xyp-XY30",
     "set_id": "xyp",
-    "card_number": "XY30/216",
+    "card_number": "XY30/211",
     "name_en": "Blastoise-EX",
     "name_original": null,
     "version_en": "XY Black Star Promos",
@@ -338,7 +338,7 @@
   {
     "master_card_id": "ecard2-13",
     "set_id": "ecard2",
-    "card_number": "13/182",
+    "card_number": "13/147",
     "name_en": "Exeggutor",
     "name_original": null,
     "version_en": "Aquapolis",
@@ -370,7 +370,7 @@
   {
     "master_card_id": "xy11-42",
     "set_id": "xy11",
-    "card_number": "42/116",
+    "card_number": "42/114",
     "name_en": "Galvantula",
     "name_original": null,
     "version_en": "Steam Siege",
@@ -402,7 +402,7 @@
   {
     "master_card_id": "hgss1-45",
     "set_id": "hgss1",
-    "card_number": "45/124",
+    "card_number": "45/123",
     "name_en": "Mantine",
     "name_original": null,
     "version_en": "HeartGold & SoulSilver",
@@ -418,7 +418,7 @@
   {
     "master_card_id": "ex4-41",
     "set_id": "ex4",
-    "card_number": "41/97",
+    "card_number": "41/95",
     "name_en": "Jigglypuff",
     "name_original": null,
     "version_en": "Team Magma vs Team Aqua",
@@ -434,7 +434,7 @@
   {
     "master_card_id": "bw8-40",
     "set_id": "bw8",
-    "card_number": "40/138",
+    "card_number": "40/135",
     "name_en": "Cubchoo",
     "name_original": null,
     "version_en": "Plasma Storm",
@@ -450,7 +450,7 @@
   {
     "master_card_id": "pl4-42",
     "set_id": "pl4",
-    "card_number": "42/111",
+    "card_number": "42/99",
     "name_en": "Haunter",
     "name_original": null,
     "version_en": "Arceus",
@@ -466,7 +466,7 @@
   {
     "master_card_id": "g1-28a",
     "set_id": "g1",
-    "card_number": "28a/117",
+    "card_number": "28a/83",
     "name_en": "Jolteon-EX",
     "name_original": null,
     "version_en": "Generations",
@@ -482,7 +482,7 @@
   {
     "master_card_id": "bw4-45",
     "set_id": "bw4",
-    "card_number": "45/103",
+    "card_number": "45/99",
     "name_en": "Luxio",
     "name_original": null,
     "version_en": "Next Destinies",
@@ -530,7 +530,7 @@
   {
     "master_card_id": "col1-41",
     "set_id": "col1",
-    "card_number": "41/106",
+    "card_number": "41/95",
     "name_en": "Croconaw",
     "name_original": null,
     "version_en": "Call of Legends",
@@ -546,7 +546,7 @@
   {
     "master_card_id": "sm11-35",
     "set_id": "sm11",
-    "card_number": "35/260",
+    "card_number": "35/236",
     "name_en": "Slowpoke & Psyduck-GX",
     "name_original": null,
     "version_en": "Unified Minds",
@@ -562,7 +562,7 @@
   {
     "master_card_id": "sm8-40",
     "set_id": "sm8",
-    "card_number": "40/240",
+    "card_number": "40/214",
     "name_en": "Cyndaquil",
     "name_original": null,
     "version_en": "Lost Thunder",
@@ -578,7 +578,7 @@
   {
     "master_card_id": "sm3-37",
     "set_id": "sm3",
-    "card_number": "37/177",
+    "card_number": "37/147",
     "name_en": "Simipour",
     "name_original": null,
     "version_en": "Burning Shadows",
@@ -594,7 +594,7 @@
   {
     "master_card_id": "bw1-38",
     "set_id": "bw1",
-    "card_number": "38/115",
+    "card_number": "38/114",
     "name_en": "Alomomola",
     "name_original": null,
     "version_en": "Black & White",
@@ -610,7 +610,7 @@
   {
     "master_card_id": "ex9-42",
     "set_id": "ex9",
-    "card_number": "42/107",
+    "card_number": "42/106",
     "name_en": "Volbeat",
     "name_original": null,
     "version_en": "Emerald",
@@ -626,7 +626,7 @@
   {
     "master_card_id": "ex3-40",
     "set_id": "ex3",
-    "card_number": "40/100",
+    "card_number": "40/97",
     "name_en": "Seadra",
     "name_original": null,
     "version_en": "Dragon",
@@ -642,7 +642,7 @@
   {
     "master_card_id": "ex11-39",
     "set_id": "ex11",
-    "card_number": "39/114",
+    "card_number": "39/113",
     "name_en": "Ditto",
     "name_original": null,
     "version_en": "Delta Species",
@@ -658,7 +658,7 @@
   {
     "master_card_id": "xy11-43",
     "set_id": "xy11",
-    "card_number": "43/116",
+    "card_number": "43/114",
     "name_en": "Nidoran ♂",
     "name_original": null,
     "version_en": "Steam Siege",
@@ -706,7 +706,7 @@
   {
     "master_card_id": "sm4-32",
     "set_id": "sm4",
-    "card_number": "32/126",
+    "card_number": "32/111",
     "name_en": "Alolan Geodude",
     "name_original": null,
     "version_en": "Crimson Invasion",
@@ -722,7 +722,7 @@
   {
     "master_card_id": "hgss4-44",
     "set_id": "hgss4",
-    "card_number": "44/103",
+    "card_number": "44/102",
     "name_en": "Marowak",
     "name_original": null,
     "version_en": "HS—Triumphant",
@@ -738,7 +738,7 @@
   {
     "master_card_id": "sm35-32",
     "set_id": "sm35",
-    "card_number": "32/81",
+    "card_number": "32/73",
     "name_en": "Raikou",
     "name_original": null,
     "version_en": "Shining Legends",
@@ -754,7 +754,7 @@
   {
     "master_card_id": "base5-38",
     "set_id": "base5",
-    "card_number": "38/83",
+    "card_number": "38/82",
     "name_en": "Dark Jolteon",
     "name_original": null,
     "version_en": "Team Rocket",
@@ -802,7 +802,7 @@
   {
     "master_card_id": "swshp-SWSH033",
     "set_id": "swshp",
-    "card_number": "SWSH033/304",
+    "card_number": "SWSH033/307",
     "name_en": "Zacian",
     "name_original": null,
     "version_en": "SWSH Black Star Promos",
@@ -818,7 +818,7 @@
   {
     "master_card_id": "pl4-43",
     "set_id": "pl4",
-    "card_number": "43/111",
+    "card_number": "43/99",
     "name_en": "Luxio",
     "name_original": null,
     "version_en": "Arceus",
@@ -834,7 +834,7 @@
   {
     "master_card_id": "xy2-47",
     "set_id": "xy2",
-    "card_number": "47/110",
+    "card_number": "47/106",
     "name_en": "Golem",
     "name_original": null,
     "version_en": "Flashfire",
@@ -850,7 +850,7 @@
   {
     "master_card_id": "sm1-38",
     "set_id": "sm1",
-    "card_number": "38/173",
+    "card_number": "38/149",
     "name_en": "Pelipper",
     "name_original": null,
     "version_en": "Sun & Moon",
@@ -866,7 +866,7 @@
   {
     "master_card_id": "bw6-43",
     "set_id": "bw6",
-    "card_number": "43/128",
+    "card_number": "43/124",
     "name_en": "Manectric",
     "name_original": null,
     "version_en": "Dragons Exalted",
@@ -930,7 +930,7 @@
   {
     "master_card_id": "hgss1-46",
     "set_id": "hgss1",
-    "card_number": "46/124",
+    "card_number": "46/123",
     "name_en": "Metapod",
     "name_original": null,
     "version_en": "HeartGold & SoulSilver",
@@ -946,7 +946,7 @@
   {
     "master_card_id": "xy4-36",
     "set_id": "xy4",
-    "card_number": "36/124",
+    "card_number": "36/119",
     "name_en": "Wobbuffet",
     "name_original": null,
     "version_en": "Phantom Forces",
@@ -962,7 +962,7 @@
   {
     "master_card_id": "bw8-41",
     "set_id": "bw8",
-    "card_number": "41/138",
+    "card_number": "41/135",
     "name_en": "Beartic",
     "name_original": null,
     "version_en": "Plasma Storm",
@@ -978,7 +978,7 @@
   {
     "master_card_id": "sm7-40",
     "set_id": "sm7",
-    "card_number": "40/187",
+    "card_number": "40/168",
     "name_en": "Wailord",
     "name_original": null,
     "version_en": "Celestial Storm",
@@ -994,7 +994,7 @@
   {
     "master_card_id": "ex5-34",
     "set_id": "ex5",
-    "card_number": "34/102",
+    "card_number": "34/101",
     "name_en": "Glalie",
     "name_original": null,
     "version_en": "Hidden Legends",
@@ -1026,7 +1026,7 @@
   {
     "master_card_id": "swsh35-43",
     "set_id": "swsh35",
-    "card_number": "43/80",
+    "card_number": "43/73",
     "name_en": "Trubbish",
     "name_original": null,
     "version_en": "Champion's Path",
@@ -1042,7 +1042,7 @@
   {
     "master_card_id": "pl1-41",
     "set_id": "pl1",
-    "card_number": "41/133",
+    "card_number": "41/127",
     "name_en": "Bronzong G",
     "name_original": null,
     "version_en": "Platinum",
@@ -1058,7 +1058,7 @@
   {
     "master_card_id": "ex6-37",
     "set_id": "ex6",
-    "card_number": "37/116",
+    "card_number": "37/112",
     "name_en": "Lickitung",
     "name_original": null,
     "version_en": "FireRed & LeafGreen",
@@ -1074,7 +1074,7 @@
   {
     "master_card_id": "xy3-30",
     "set_id": "xy3",
-    "card_number": "30/114",
+    "card_number": "30/111",
     "name_en": "Electivire",
     "name_original": null,
     "version_en": "Furious Fists",
@@ -1106,7 +1106,7 @@
   {
     "master_card_id": "xy5-41",
     "set_id": "xy5",
-    "card_number": "41/164",
+    "card_number": "41/160",
     "name_en": "Whiscash",
     "name_original": null,
     "version_en": "Primal Clash",
@@ -1122,7 +1122,7 @@
   {
     "master_card_id": "bw3-37",
     "set_id": "bw3",
-    "card_number": "37/102",
+    "card_number": "37/101",
     "name_en": "Emolga",
     "name_original": null,
     "version_en": "Noble Victories",
@@ -1138,7 +1138,7 @@
   {
     "master_card_id": "ex13-40",
     "set_id": "ex13",
-    "card_number": "40/111",
+    "card_number": "40/110",
     "name_en": "Donphan",
     "name_original": null,
     "version_en": "Holon Phantoms",
@@ -1154,7 +1154,7 @@
   {
     "master_card_id": "sm10-32",
     "set_id": "sm10",
-    "card_number": "32/234",
+    "card_number": "32/214",
     "name_en": "Blacephalon",
     "name_original": null,
     "version_en": "Unbroken Bonds",
@@ -1202,7 +1202,7 @@
   {
     "master_card_id": "sm75-39",
     "set_id": "sm75",
-    "card_number": "39/80",
+    "card_number": "39/70",
     "name_en": "Flygon",
     "name_original": null,
     "version_en": "Dragon Majesty",
@@ -1218,7 +1218,7 @@
   {
     "master_card_id": "sm6-36",
     "set_id": "sm6",
-    "card_number": "36/150",
+    "card_number": "36/131",
     "name_en": "Magnezone",
     "name_original": null,
     "version_en": "Forbidden Light",
@@ -1234,7 +1234,7 @@
   {
     "master_card_id": "hgss3-39",
     "set_id": "hgss3",
-    "card_number": "39/91",
+    "card_number": "39/90",
     "name_en": "Togetic",
     "name_original": null,
     "version_en": "HS—Undaunted",
@@ -1250,7 +1250,7 @@
   {
     "master_card_id": "ex4-42",
     "set_id": "ex4",
-    "card_number": "42/97",
+    "card_number": "42/95",
     "name_en": "Meowth",
     "name_original": null,
     "version_en": "Team Magma vs Team Aqua",
@@ -1314,7 +1314,7 @@
   {
     "master_card_id": "sm9-42",
     "set_id": "sm9",
-    "card_number": "42/198",
+    "card_number": "42/181",
     "name_en": "Flaaffy",
     "name_original": null,
     "version_en": "Team Up",
@@ -1330,7 +1330,7 @@
   {
     "master_card_id": "bw11-44",
     "set_id": "bw11",
-    "card_number": "44/140",
+    "card_number": "44/113",
     "name_en": "Kyurem-EX",
     "name_original": null,
     "version_en": "Legendary Treasures",
@@ -1346,7 +1346,7 @@
   {
     "master_card_id": "ex7-39",
     "set_id": "ex7",
-    "card_number": "39/111",
+    "card_number": "39/109",
     "name_en": "Dark Magneton",
     "name_original": null,
     "version_en": "Team Rocket Returns",
@@ -1362,7 +1362,7 @@
   {
     "master_card_id": "swsh2-35",
     "set_id": "swsh2",
-    "card_number": "35/209",
+    "card_number": "35/192",
     "name_en": "Cinderace V",
     "name_original": null,
     "version_en": "Rebel Clash",
@@ -1378,7 +1378,7 @@
   {
     "master_card_id": "bw9-40",
     "set_id": "bw9",
-    "card_number": "40/122",
+    "card_number": "40/116",
     "name_en": "Nidoran ♀",
     "name_original": null,
     "version_en": "Plasma Freeze",
@@ -1410,7 +1410,7 @@
   {
     "master_card_id": "ex8-40",
     "set_id": "ex8",
-    "card_number": "40/108",
+    "card_number": "40/107",
     "name_en": "Metang",
     "name_original": null,
     "version_en": "Deoxys",
@@ -1426,7 +1426,7 @@
   {
     "master_card_id": "ex12-44",
     "set_id": "ex12",
-    "card_number": "44/93",
+    "card_number": "44/92",
     "name_en": "Tangela",
     "name_original": null,
     "version_en": "Legend Maker",
@@ -1442,7 +1442,7 @@
   {
     "master_card_id": "sm115-42",
     "set_id": "sm115",
-    "card_number": "42/69",
+    "card_number": "42/68",
     "name_en": "Wigglytuff-GX",
     "name_original": null,
     "version_en": "Hidden Fates",
@@ -1458,7 +1458,7 @@
   {
     "master_card_id": "sm2-40",
     "set_id": "sm2",
-    "card_number": "40/180",
+    "card_number": "40/145",
     "name_en": "Alolan Geodude",
     "name_original": null,
     "version_en": "Guardians Rising",
@@ -1474,7 +1474,7 @@
   {
     "master_card_id": "xy7-41",
     "set_id": "xy7",
-    "card_number": "41/100",
+    "card_number": "41/98",
     "name_en": "Golurk",
     "name_original": null,
     "version_en": "Ancient Origins",
@@ -1490,7 +1490,7 @@
   {
     "master_card_id": "xy8-35",
     "set_id": "xy8",
-    "card_number": "35/165",
+    "card_number": "35/162",
     "name_en": "M Glalie-EX",
     "name_original": null,
     "version_en": "BREAKthrough",
@@ -1522,7 +1522,7 @@
   {
     "master_card_id": "bw10-45",
     "set_id": "bw10",
-    "card_number": "45/105",
+    "card_number": "45/101",
     "name_en": "Golett",
     "name_original": null,
     "version_en": "Plasma Blast",
@@ -1538,7 +1538,7 @@
   {
     "master_card_id": "sm12-43",
     "set_id": "sm12",
-    "card_number": "43/272",
+    "card_number": "43/236",
     "name_en": "Sneasel",
     "name_original": null,
     "version_en": "Cosmic Eclipse",
@@ -1554,7 +1554,7 @@
   {
     "master_card_id": "swsh1-42",
     "set_id": "swsh1",
-    "card_number": "42/216",
+    "card_number": "42/202",
     "name_en": "Krabby",
     "name_original": null,
     "version_en": "Sword & Shield",
@@ -1570,7 +1570,7 @@
   {
     "master_card_id": "bw5-34",
     "set_id": "bw5",
-    "card_number": "34/111",
+    "card_number": "34/108",
     "name_en": "Vanillish",
     "name_original": null,
     "version_en": "Dark Explorers",
@@ -1602,7 +1602,7 @@
   {
     "master_card_id": "ecard3-7",
     "set_id": "ecard3",
-    "card_number": "7/182",
+    "card_number": "7/144",
     "name_en": "Dewgong",
     "name_original": null,
     "version_en": "Skyridge",
@@ -1618,7 +1618,7 @@
   {
     "master_card_id": "xy6-38",
     "set_id": "xy6",
-    "card_number": "38/112",
+    "card_number": "38/108",
     "name_en": "Binacle",
     "name_original": null,
     "version_en": "Roaring Skies",
@@ -1634,7 +1634,7 @@
   {
     "master_card_id": "pl2-36",
     "set_id": "pl2",
-    "card_number": "36/120",
+    "card_number": "36/111",
     "name_en": "Walrein",
     "name_original": null,
     "version_en": "Rising Rivals",
@@ -1666,7 +1666,7 @@
   {
     "master_card_id": "dp7-33",
     "set_id": "dp7",
-    "card_number": "33/106",
+    "card_number": "33/100",
     "name_en": "Budew",
     "name_original": null,
     "version_en": "Stormfront",
@@ -1698,7 +1698,7 @@
   {
     "master_card_id": "xy10-40",
     "set_id": "xy10",
-    "card_number": "40/129",
+    "card_number": "40/124",
     "name_en": "Larvitar",
     "name_original": null,
     "version_en": "Fates Collide",
@@ -1714,7 +1714,7 @@
   {
     "master_card_id": "pl3-38",
     "set_id": "pl3",
-    "card_number": "38/153",
+    "card_number": "38/147",
     "name_en": "Parasect",
     "name_original": null,
     "version_en": "Supreme Victors",
@@ -1730,7 +1730,7 @@
   {
     "master_card_id": "hgss2-40",
     "set_id": "hgss2",
-    "card_number": "40/96",
+    "card_number": "40/95",
     "name_en": "Seadra",
     "name_original": null,
     "version_en": "HS—Unleashed",
@@ -1762,7 +1762,7 @@
   {
     "master_card_id": "xy12-34",
     "set_id": "xy12",
-    "card_number": "34/113",
+    "card_number": "34/108",
     "name_en": "Gyarados",
     "name_original": null,
     "version_en": "Evolutions",
@@ -1810,7 +1810,7 @@
   {
     "master_card_id": "neo4-40",
     "set_id": "neo4",
-    "card_number": "40/113",
+    "card_number": "40/105",
     "name_en": "Dark Wigglytuff",
     "name_original": null,
     "version_en": "Neo Destiny",
@@ -1874,7 +1874,7 @@
   {
     "master_card_id": "ecard2-14",
     "set_id": "ecard2",
-    "card_number": "14/182",
+    "card_number": "14/147",
     "name_en": "Houndoom",
     "name_original": null,
     "version_en": "Aquapolis",
@@ -1890,7 +1890,7 @@
   {
     "master_card_id": "dp2-35",
     "set_id": "dp2",
-    "card_number": "35/124",
+    "card_number": "35/123",
     "name_en": "Sudowoodo",
     "name_original": null,
     "version_en": "Mysterious Treasures",
@@ -1906,7 +1906,7 @@
   {
     "master_card_id": "xy9-33",
     "set_id": "xy9",
-    "card_number": "33/126",
+    "card_number": "33/122",
     "name_en": "Tympole",
     "name_original": null,
     "version_en": "BREAKpoint",
@@ -1938,7 +1938,7 @@
   {
     "master_card_id": "xyp-XY31",
     "set_id": "xyp",
-    "card_number": "XY31/216",
+    "card_number": "XY31/211",
     "name_en": "Xerneas",
     "name_original": null,
     "version_en": "XY Black Star Promos",
@@ -1954,7 +1954,7 @@
   {
     "master_card_id": "bw7-43",
     "set_id": "bw7",
-    "card_number": "43/153",
+    "card_number": "43/149",
     "name_en": "Swanna",
     "name_original": null,
     "version_en": "Boundaries Crossed",
@@ -1970,7 +1970,7 @@
   {
     "master_card_id": "swsh3-36",
     "set_id": "swsh3",
-    "card_number": "36/201",
+    "card_number": "36/189",
     "name_en": "Galarian Mr. Rime",
     "name_original": null,
     "version_en": "Darkness Ablaze",
@@ -1986,7 +1986,7 @@
   {
     "master_card_id": "ex10-39",
     "set_id": "ex10",
-    "card_number": "39/145",
+    "card_number": "39/115",
     "name_en": "Granbull",
     "name_original": null,
     "version_en": "Unseen Forces",
@@ -2034,7 +2034,7 @@
   {
     "master_card_id": "neo3-36",
     "set_id": "neo3",
-    "card_number": "36/66",
+    "card_number": "36/64",
     "name_en": "Piloswine",
     "name_original": null,
     "version_en": "Neo Revelation",
@@ -2066,7 +2066,7 @@
   {
     "master_card_id": "bw3-38",
     "set_id": "bw3",
-    "card_number": "38/102",
+    "card_number": "38/101",
     "name_en": "Tynamo",
     "name_original": null,
     "version_en": "Noble Victories",
@@ -2082,7 +2082,7 @@
   {
     "master_card_id": "sm9-43",
     "set_id": "sm9",
-    "card_number": "43/198",
+    "card_number": "43/181",
     "name_en": "Ampharos-GX",
     "name_original": null,
     "version_en": "Team Up",
@@ -2114,7 +2114,7 @@
   {
     "master_card_id": "sm8-41",
     "set_id": "sm8",
-    "card_number": "41/240",
+    "card_number": "41/214",
     "name_en": "Quilava",
     "name_original": null,
     "version_en": "Lost Thunder",
@@ -2130,7 +2130,7 @@
   {
     "master_card_id": "sm7-41",
     "set_id": "sm7",
-    "card_number": "41/187",
+    "card_number": "41/168",
     "name_en": "Clamperl",
     "name_original": null,
     "version_en": "Celestial Storm",
@@ -2146,7 +2146,7 @@
   {
     "master_card_id": "neo4-41",
     "set_id": "neo4",
-    "card_number": "41/113",
+    "card_number": "41/105",
     "name_en": "Heracross",
     "name_original": null,
     "version_en": "Neo Destiny",
@@ -2162,7 +2162,7 @@
   {
     "master_card_id": "bw10-46",
     "set_id": "bw10",
-    "card_number": "46/105",
+    "card_number": "46/101",
     "name_en": "Golurk",
     "name_original": null,
     "version_en": "Plasma Blast",
@@ -2226,7 +2226,7 @@
   {
     "master_card_id": "sm3-38",
     "set_id": "sm3",
-    "card_number": "38/177",
+    "card_number": "38/147",
     "name_en": "Bruxish",
     "name_original": null,
     "version_en": "Burning Shadows",
@@ -2242,7 +2242,7 @@
   {
     "master_card_id": "sm2-41",
     "set_id": "sm2",
-    "card_number": "41/180",
+    "card_number": "41/145",
     "name_en": "Alolan Graveler",
     "name_original": null,
     "version_en": "Guardians Rising",
@@ -2274,7 +2274,7 @@
   {
     "master_card_id": "base5-39",
     "set_id": "base5",
-    "card_number": "39/83",
+    "card_number": "39/82",
     "name_en": "Dark Kadabra",
     "name_original": null,
     "version_en": "Team Rocket",
@@ -2290,7 +2290,7 @@
   {
     "master_card_id": "ex4-43",
     "set_id": "ex4",
-    "card_number": "43/97",
+    "card_number": "43/95",
     "name_en": "Pikachu",
     "name_original": null,
     "version_en": "Team Magma vs Team Aqua",
@@ -2322,7 +2322,7 @@
   {
     "master_card_id": "bw11-45",
     "set_id": "bw11",
-    "card_number": "45/140",
+    "card_number": "45/113",
     "name_en": "Keldeo-EX",
     "name_original": null,
     "version_en": "Legendary Treasures",
@@ -2338,7 +2338,7 @@
   {
     "master_card_id": "sm1-39",
     "set_id": "sm1",
-    "card_number": "39/173",
+    "card_number": "39/149",
     "name_en": "Popplio",
     "name_original": null,
     "version_en": "Sun & Moon",
@@ -2354,7 +2354,7 @@
   {
     "master_card_id": "sm10-33",
     "set_id": "sm10",
-    "card_number": "33/234",
+    "card_number": "33/214",
     "name_en": "Squirtle",
     "name_original": null,
     "version_en": "Unbroken Bonds",
@@ -2370,7 +2370,7 @@
   {
     "master_card_id": "bw1-39",
     "set_id": "bw1",
-    "card_number": "39/115",
+    "card_number": "39/114",
     "name_en": "Alomomola",
     "name_original": null,
     "version_en": "Black & White",
@@ -2386,7 +2386,7 @@
   {
     "master_card_id": "sm35-33",
     "set_id": "sm35",
-    "card_number": "33/81",
+    "card_number": "33/73",
     "name_en": "Plusle",
     "name_original": null,
     "version_en": "Shining Legends",
@@ -2402,7 +2402,7 @@
   {
     "master_card_id": "smp-SM32",
     "set_id": "smp",
-    "card_number": "SM32/250",
+    "card_number": "SM32/248",
     "name_en": "Tapu Bulu-GX",
     "name_original": null,
     "version_en": "SM Black Star Promos",
@@ -2450,7 +2450,7 @@
   {
     "master_card_id": "xy11-44",
     "set_id": "xy11",
-    "card_number": "44/116",
+    "card_number": "44/114",
     "name_en": "Nidorino",
     "name_original": null,
     "version_en": "Steam Siege",
@@ -2466,7 +2466,7 @@
   {
     "master_card_id": "sm4-33",
     "set_id": "sm4",
-    "card_number": "33/126",
+    "card_number": "33/111",
     "name_en": "Alolan Graveler",
     "name_original": null,
     "version_en": "Crimson Invasion",
@@ -2482,7 +2482,7 @@
   {
     "master_card_id": "sm115-43",
     "set_id": "sm115",
-    "card_number": "43/69",
+    "card_number": "43/68",
     "name_en": "Mr. Mime",
     "name_original": null,
     "version_en": "Hidden Fates",
@@ -2514,7 +2514,7 @@
   {
     "master_card_id": "col1-42",
     "set_id": "col1",
-    "card_number": "42/106",
+    "card_number": "42/95",
     "name_en": "Donphan",
     "name_original": null,
     "version_en": "Call of Legends",
@@ -2530,7 +2530,7 @@
   {
     "master_card_id": "ex10-40",
     "set_id": "ex10",
-    "card_number": "40/145",
+    "card_number": "40/115",
     "name_en": "Lanturn",
     "name_original": null,
     "version_en": "Unseen Forces",
@@ -2546,7 +2546,7 @@
   {
     "master_card_id": "xy10-41",
     "set_id": "xy10",
-    "card_number": "41/129",
+    "card_number": "41/124",
     "name_en": "Larvitar",
     "name_original": null,
     "version_en": "Fates Collide",
@@ -2562,7 +2562,7 @@
   {
     "master_card_id": "xy7-42",
     "set_id": "xy7",
-    "card_number": "42/100",
+    "card_number": "42/98",
     "name_en": "Tyranitar-EX",
     "name_original": null,
     "version_en": "Ancient Origins",
@@ -2578,7 +2578,7 @@
   {
     "master_card_id": "swsh2-36",
     "set_id": "swsh2",
-    "card_number": "36/209",
+    "card_number": "36/192",
     "name_en": "Cinderace VMAX",
     "name_original": null,
     "version_en": "Rebel Clash",
@@ -2594,7 +2594,7 @@
   {
     "master_card_id": "bw8-42",
     "set_id": "bw8",
-    "card_number": "42/138",
+    "card_number": "42/135",
     "name_en": "Magnemite",
     "name_original": null,
     "version_en": "Plasma Storm",
@@ -2626,7 +2626,7 @@
   {
     "master_card_id": "xy8-36",
     "set_id": "xy8",
-    "card_number": "36/165",
+    "card_number": "36/162",
     "name_en": "Piplup",
     "name_original": null,
     "version_en": "BREAKthrough",
@@ -2642,7 +2642,7 @@
   {
     "master_card_id": "bw4-46",
     "set_id": "bw4",
-    "card_number": "46/103",
+    "card_number": "46/99",
     "name_en": "Luxray",
     "name_original": null,
     "version_en": "Next Destinies",
@@ -2658,7 +2658,7 @@
   {
     "master_card_id": "xy2-48",
     "set_id": "xy2",
-    "card_number": "48/110",
+    "card_number": "48/106",
     "name_en": "Binacle",
     "name_original": null,
     "version_en": "Flashfire",
@@ -2674,7 +2674,7 @@
   {
     "master_card_id": "g1-29",
     "set_id": "g1",
-    "card_number": "29/117",
+    "card_number": "29/83",
     "name_en": "Zapdos",
     "name_original": null,
     "version_en": "Generations",
@@ -2706,7 +2706,7 @@
   {
     "master_card_id": "ex5-35",
     "set_id": "ex5",
-    "card_number": "35/102",
+    "card_number": "35/101",
     "name_en": "Gloom",
     "name_original": null,
     "version_en": "Hidden Legends",
@@ -2754,7 +2754,7 @@
   {
     "master_card_id": "dp2-36",
     "set_id": "dp2",
-    "card_number": "36/124",
+    "card_number": "36/123",
     "name_en": "Toxicroak",
     "name_original": null,
     "version_en": "Mysterious Treasures",
@@ -2786,7 +2786,7 @@
   {
     "master_card_id": "xy12-35",
     "set_id": "xy12",
-    "card_number": "35/113",
+    "card_number": "35/108",
     "name_en": "Pikachu",
     "name_original": null,
     "version_en": "Evolutions",
@@ -2802,7 +2802,7 @@
   {
     "master_card_id": "ecard2-15",
     "set_id": "ecard2",
-    "card_number": "15/182",
+    "card_number": "15/147",
     "name_en": "Houndoom",
     "name_original": null,
     "version_en": "Aquapolis",
@@ -2818,7 +2818,7 @@
   {
     "master_card_id": "pl2-37",
     "set_id": "pl2",
-    "card_number": "37/120",
+    "card_number": "37/111",
     "name_en": "Yanmega E4",
     "name_original": null,
     "version_en": "Rising Rivals",
@@ -2834,7 +2834,7 @@
   {
     "master_card_id": "xy6-39",
     "set_id": "xy6",
-    "card_number": "39/112",
+    "card_number": "39/108",
     "name_en": "Hawlucha",
     "name_original": null,
     "version_en": "Roaring Skies",
@@ -2850,7 +2850,7 @@
   {
     "master_card_id": "ecard3-8",
     "set_id": "ecard3",
-    "card_number": "8/182",
+    "card_number": "8/144",
     "name_en": "Flareon",
     "name_original": null,
     "version_en": "Skyridge",
@@ -2866,7 +2866,7 @@
   {
     "master_card_id": "sm11-36",
     "set_id": "sm11",
-    "card_number": "36/260",
+    "card_number": "36/236",
     "name_en": "Lapras",
     "name_original": null,
     "version_en": "Unified Minds",
@@ -2914,7 +2914,7 @@
   {
     "master_card_id": "swshp-SWSH034",
     "set_id": "swshp",
-    "card_number": "SWSH034/304",
+    "card_number": "SWSH034/307",
     "name_en": "Zamazenta",
     "name_original": null,
     "version_en": "SWSH Black Star Promos",
@@ -2930,7 +2930,7 @@
   {
     "master_card_id": "pl1-42",
     "set_id": "pl1",
-    "card_number": "42/133",
+    "card_number": "42/127",
     "name_en": "Cacturne",
     "name_original": null,
     "version_en": "Platinum",
@@ -2946,7 +2946,7 @@
   {
     "master_card_id": "sm75-40",
     "set_id": "sm75",
-    "card_number": "40/80",
+    "card_number": "40/70",
     "name_en": "Altaria",
     "name_original": null,
     "version_en": "Dragon Majesty",
@@ -2962,7 +2962,7 @@
   {
     "master_card_id": "ex11-40",
     "set_id": "ex11",
-    "card_number": "40/114",
+    "card_number": "40/113",
     "name_en": "Ditto",
     "name_original": null,
     "version_en": "Delta Species",
@@ -2978,7 +2978,7 @@
   {
     "master_card_id": "hgss2-41",
     "set_id": "hgss2",
-    "card_number": "41/96",
+    "card_number": "41/95",
     "name_en": "Tauros",
     "name_original": null,
     "version_en": "HS—Unleashed",
@@ -2994,7 +2994,7 @@
   {
     "master_card_id": "bw7-44",
     "set_id": "bw7",
-    "card_number": "44/153",
+    "card_number": "44/149",
     "name_en": "Frillish",
     "name_original": null,
     "version_en": "Boundaries Crossed",
@@ -3042,7 +3042,7 @@
   {
     "master_card_id": "swsh4-38",
     "set_id": "swsh4",
-    "card_number": "38/203",
+    "card_number": "38/185",
     "name_en": "Chewtle",
     "name_original": null,
     "version_en": "Vivid Voltage",
@@ -3058,7 +3058,7 @@
   {
     "master_card_id": "sm5-40",
     "set_id": "sm5",
-    "card_number": "40/178",
+    "card_number": "40/156",
     "name_en": "Wash Rotom",
     "name_original": null,
     "version_en": "Ultra Prism",
@@ -3074,7 +3074,7 @@
   {
     "master_card_id": "hgss3-40",
     "set_id": "hgss3",
-    "card_number": "40/91",
+    "card_number": "40/90",
     "name_en": "Unown",
     "name_original": null,
     "version_en": "HS—Undaunted",
@@ -3090,7 +3090,7 @@
   {
     "master_card_id": "ex3-41",
     "set_id": "ex3",
-    "card_number": "41/100",
+    "card_number": "41/97",
     "name_en": "Shelgon",
     "name_original": null,
     "version_en": "Dragon",
@@ -3106,7 +3106,7 @@
   {
     "master_card_id": "hgss1-47",
     "set_id": "hgss1",
-    "card_number": "47/124",
+    "card_number": "47/123",
     "name_en": "Miltank",
     "name_original": null,
     "version_en": "HeartGold & SoulSilver",
@@ -3122,7 +3122,7 @@
   {
     "master_card_id": "ex9-43",
     "set_id": "ex9",
-    "card_number": "43/107",
+    "card_number": "43/106",
     "name_en": "Baltoy",
     "name_original": null,
     "version_en": "Emerald",
@@ -3138,7 +3138,7 @@
   {
     "master_card_id": "swsh3-37",
     "set_id": "swsh3",
-    "card_number": "37/201",
+    "card_number": "37/189",
     "name_en": "Suicune",
     "name_original": null,
     "version_en": "Darkness Ablaze",
@@ -3154,7 +3154,7 @@
   {
     "master_card_id": "sm12-44",
     "set_id": "sm12",
-    "card_number": "44/272",
+    "card_number": "44/236",
     "name_en": "Weavile",
     "name_original": null,
     "version_en": "Cosmic Eclipse",
@@ -3170,7 +3170,7 @@
   {
     "master_card_id": "xy4-37",
     "set_id": "xy4",
-    "card_number": "37/124",
+    "card_number": "37/119",
     "name_en": "Gulpin",
     "name_original": null,
     "version_en": "Phantom Forces",
@@ -3186,7 +3186,7 @@
   {
     "master_card_id": "sm6-37",
     "set_id": "sm6",
-    "card_number": "37/150",
+    "card_number": "37/131",
     "name_en": "Helioptile",
     "name_original": null,
     "version_en": "Forbidden Light",
@@ -3202,7 +3202,7 @@
   {
     "master_card_id": "swsh1-43",
     "set_id": "swsh1",
-    "card_number": "43/216",
+    "card_number": "43/202",
     "name_en": "Krabby",
     "name_original": null,
     "version_en": "Sword & Shield",
@@ -3250,7 +3250,7 @@
   {
     "master_card_id": "xy5-42",
     "set_id": "xy5",
-    "card_number": "42/164",
+    "card_number": "42/160",
     "name_en": "Corphish",
     "name_original": null,
     "version_en": "Primal Clash",
@@ -3266,7 +3266,7 @@
   {
     "master_card_id": "bw9-41",
     "set_id": "bw9",
-    "card_number": "41/122",
+    "card_number": "41/116",
     "name_en": "Nidorina",
     "name_original": null,
     "version_en": "Plasma Freeze",
@@ -3298,7 +3298,7 @@
   {
     "master_card_id": "ex13-41",
     "set_id": "ex13",
-    "card_number": "41/111",
+    "card_number": "41/110",
     "name_en": "Exeggutor δ",
     "name_original": null,
     "version_en": "Holon Phantoms",
@@ -3314,7 +3314,7 @@
   {
     "master_card_id": "swsh35-44",
     "set_id": "swsh35",
-    "card_number": "44/80",
+    "card_number": "44/73",
     "name_en": "Inkay",
     "name_original": null,
     "version_en": "Champion's Path",
@@ -3346,7 +3346,7 @@
   {
     "master_card_id": "neo3-37",
     "set_id": "neo3",
-    "card_number": "37/66",
+    "card_number": "37/64",
     "name_en": "Seaking",
     "name_original": null,
     "version_en": "Neo Revelation",
@@ -3378,7 +3378,7 @@
   {
     "master_card_id": "xy3-31",
     "set_id": "xy3",
-    "card_number": "31/114",
+    "card_number": "31/111",
     "name_en": "Plusle",
     "name_original": null,
     "version_en": "Furious Fists",
@@ -3394,7 +3394,7 @@
   {
     "master_card_id": "dp7-34",
     "set_id": "dp7",
-    "card_number": "34/106",
+    "card_number": "34/100",
     "name_en": "Dusclops",
     "name_original": null,
     "version_en": "Stormfront",
@@ -3410,7 +3410,7 @@
   {
     "master_card_id": "bw5-35",
     "set_id": "bw5",
-    "card_number": "35/111",
+    "card_number": "35/108",
     "name_en": "Ducklett",
     "name_original": null,
     "version_en": "Dark Explorers",
@@ -3442,7 +3442,7 @@
   {
     "master_card_id": "ex12-45",
     "set_id": "ex12",
-    "card_number": "45/93",
+    "card_number": "45/92",
     "name_en": "Tentacruel",
     "name_original": null,
     "version_en": "Legend Maker",
@@ -3474,7 +3474,7 @@
   {
     "master_card_id": "ex6-38",
     "set_id": "ex6",
-    "card_number": "38/116",
+    "card_number": "38/112",
     "name_en": "Mankey",
     "name_original": null,
     "version_en": "FireRed & LeafGreen",
@@ -3490,7 +3490,7 @@
   {
     "master_card_id": "pl3-39",
     "set_id": "pl3",
-    "card_number": "39/153",
+    "card_number": "39/147",
     "name_en": "Primeape",
     "name_original": null,
     "version_en": "Supreme Victors",
@@ -3506,7 +3506,7 @@
   {
     "master_card_id": "ex7-40",
     "set_id": "ex7",
-    "card_number": "40/111",
+    "card_number": "40/109",
     "name_en": "Dark Pupitar",
     "name_original": null,
     "version_en": "Team Rocket Returns",
@@ -3522,7 +3522,7 @@
   {
     "master_card_id": "ex8-41",
     "set_id": "ex8",
-    "card_number": "41/108",
+    "card_number": "41/107",
     "name_en": "Minun",
     "name_original": null,
     "version_en": "Deoxys",
@@ -3570,7 +3570,7 @@
   {
     "master_card_id": "xy9-34",
     "set_id": "xy9",
-    "card_number": "34/126",
+    "card_number": "34/122",
     "name_en": "Palpitoad",
     "name_original": null,
     "version_en": "BREAKpoint",
@@ -3602,7 +3602,7 @@
   {
     "master_card_id": "ex9-44",
     "set_id": "ex9",
-    "card_number": "44/107",
+    "card_number": "44/106",
     "name_en": "Cacnea",
     "name_original": null,
     "version_en": "Emerald",
@@ -3618,7 +3618,7 @@
   {
     "master_card_id": "hgss3-41",
     "set_id": "hgss3",
-    "card_number": "41/91",
+    "card_number": "41/90",
     "name_en": "Vaporeon",
     "name_original": null,
     "version_en": "HS—Undaunted",
@@ -3634,7 +3634,7 @@
   {
     "master_card_id": "swsh3-38",
     "set_id": "swsh3",
-    "card_number": "38/201",
+    "card_number": "38/189",
     "name_en": "Feebas",
     "name_original": null,
     "version_en": "Darkness Ablaze",
@@ -3666,7 +3666,7 @@
   {
     "master_card_id": "bw7-45",
     "set_id": "bw7",
-    "card_number": "45/153",
+    "card_number": "45/149",
     "name_en": "Jellicent",
     "name_original": null,
     "version_en": "Boundaries Crossed",
@@ -3682,7 +3682,7 @@
   {
     "master_card_id": "sm8-42",
     "set_id": "sm8",
-    "card_number": "42/240",
+    "card_number": "42/214",
     "name_en": "Typhlosion",
     "name_original": null,
     "version_en": "Lost Thunder",
@@ -3698,7 +3698,7 @@
   {
     "master_card_id": "xy3-32",
     "set_id": "xy3",
-    "card_number": "32/114",
+    "card_number": "32/111",
     "name_en": "Minun",
     "name_original": null,
     "version_en": "Furious Fists",
@@ -3714,7 +3714,7 @@
   {
     "master_card_id": "sm115-44",
     "set_id": "sm115",
-    "card_number": "44/69",
+    "card_number": "44/68",
     "name_en": "Moltres & Zapdos & Articuno-GX",
     "name_original": null,
     "version_en": "Hidden Fates",
@@ -3730,7 +3730,7 @@
   {
     "master_card_id": "ex8-42",
     "set_id": "ex8",
-    "card_number": "42/108",
+    "card_number": "42/107",
     "name_en": "Nosepass",
     "name_original": null,
     "version_en": "Deoxys",
@@ -3746,7 +3746,7 @@
   {
     "master_card_id": "xy5-43",
     "set_id": "xy5",
-    "card_number": "43/164",
+    "card_number": "43/160",
     "name_en": "Feebas",
     "name_original": null,
     "version_en": "Primal Clash",
@@ -3794,7 +3794,7 @@
   {
     "master_card_id": "bw8-43",
     "set_id": "bw8",
-    "card_number": "43/138",
+    "card_number": "43/135",
     "name_en": "Magnemite",
     "name_original": null,
     "version_en": "Plasma Storm",
@@ -3810,7 +3810,7 @@
   {
     "master_card_id": "pl4-44",
     "set_id": "pl4",
-    "card_number": "44/111",
+    "card_number": "44/99",
     "name_en": "Manectric",
     "name_original": null,
     "version_en": "Arceus",
@@ -3826,7 +3826,7 @@
   {
     "master_card_id": "xy12-36",
     "set_id": "xy12",
-    "card_number": "36/113",
+    "card_number": "36/108",
     "name_en": "Raichu",
     "name_original": null,
     "version_en": "Evolutions",
@@ -3842,7 +3842,7 @@
   {
     "master_card_id": "ex5-36",
     "set_id": "ex5",
-    "card_number": "36/102",
+    "card_number": "36/101",
     "name_en": "Golbat",
     "name_original": null,
     "version_en": "Hidden Legends",
@@ -3874,7 +3874,7 @@
   {
     "master_card_id": "pl2-38",
     "set_id": "pl2",
-    "card_number": "38/120",
+    "card_number": "38/111",
     "name_en": "Alakazam E4",
     "name_original": null,
     "version_en": "Rising Rivals",
@@ -3890,7 +3890,7 @@
   {
     "master_card_id": "ecard3-9",
     "set_id": "ecard3",
-    "card_number": "9/182",
+    "card_number": "9/144",
     "name_en": "Forretress",
     "name_original": null,
     "version_en": "Skyridge",
@@ -3906,7 +3906,7 @@
   {
     "master_card_id": "hgss4-45",
     "set_id": "hgss4",
-    "card_number": "45/103",
+    "card_number": "45/102",
     "name_en": "Nidorina",
     "name_original": null,
     "version_en": "HS—Triumphant",
@@ -3922,7 +3922,7 @@
   {
     "master_card_id": "xy9-35",
     "set_id": "xy9",
-    "card_number": "35/126",
+    "card_number": "35/122",
     "name_en": "Seismitoad",
     "name_original": null,
     "version_en": "BREAKpoint",
@@ -3938,7 +3938,7 @@
   {
     "master_card_id": "ex12-46",
     "set_id": "ex12",
-    "card_number": "46/93",
+    "card_number": "46/92",
     "name_en": "Vibrava",
     "name_original": null,
     "version_en": "Legend Maker",
@@ -3954,7 +3954,7 @@
   {
     "master_card_id": "col1-43",
     "set_id": "col1",
-    "card_number": "43/106",
+    "card_number": "43/95",
     "name_en": "Flaaffy",
     "name_original": null,
     "version_en": "Call of Legends",
@@ -3970,7 +3970,7 @@
   {
     "master_card_id": "xyp-XY32",
     "set_id": "xyp",
-    "card_number": "XY32/216",
+    "card_number": "XY32/211",
     "name_en": "Yveltal",
     "name_original": null,
     "version_en": "XY Black Star Promos",

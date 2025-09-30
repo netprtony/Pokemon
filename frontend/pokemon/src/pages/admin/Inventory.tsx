@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import DataTable from "../../components/Table";
 import AdvancedFilters from "../../components/AdvancedFilters";
@@ -10,7 +10,6 @@ import "../../assets/css/Inventory.css";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 import Toggle from "../../components/Toggle";
-import AsyncSelect from "react-select/async";
 
 // --- Constants & Mapping ---
 const API_URL = "http://localhost:8000/inventory/";
@@ -301,6 +300,14 @@ const InventoryPage: React.FC = () => {
   const [detailImages, setDetailImages] = React.useState<{file: File, name: string}[]>([]);
   const [detailAngles, setDetailAngles] = React.useState<string[]>([]);
 
+  const [cardSearch, setCardSearch] = useState("");
+  const [cardOptions, setCardOptions] = useState<{ value: string; label: string; image?: string; name_en?: string; name_original?: string; card_number?: string }[]>([]);
+  const [cardDropdown, setCardDropdown] = useState(false);
+  const cardInputRef = useRef<HTMLInputElement>(null);
+
+  // Thêm state:
+  const [loadingDetailIds, setLoadingDetailIds] = useState<number[]>([]);
+
   // --- Handlers ---
   const handleAdd = () => {
     setForm(defaultForm);
@@ -419,21 +426,29 @@ const InventoryPage: React.FC = () => {
   const handleExportCSV = () => toast.info("Export CSV (dummy)");
   const handleExportJSON = () => toast.info("Export JSON (dummy)");
 
-  // Thêm hàm fetch options
-  const fetchCardOptions = async (inputValue: string) => {
-    if (!inputValue) return [];
+  // Sửa lại hàm fetchCardOptions chỉ chạy khi bấm nút
+  const fetchCardOptions = async () => {
+    if (!cardSearch) return;
     try {
       const resp = await axios.get("http://localhost:8000/pokemon-cards/search-id-card", {
-        params: { search: inputValue }
+        params: { search: cardSearch }
       });
       const data = resp.data as any[];
-      return data.map((item: any) => ({
-        value: item.master_card_id,
-        label: item.master_card_id,
-        image: item.reference_image_url
-      }));
+      setCardOptions(
+        data.map((item: any) => ({
+          value: item.master_card_id,
+          label: item.master_card_id,
+          image: item.reference_image_url,
+          name_en: item.name_en,
+          name_original: item.name_original,
+          card_number: item.card_number,
+          // Thêm các trường khác nếu cần
+        }))
+      );
+      setCardDropdown(true);
     } catch {
-      return [];
+      setCardOptions([]);
+      setCardDropdown(true);
     }
   };
 
@@ -497,78 +512,100 @@ const InventoryPage: React.FC = () => {
       <div style={{ gridColumn: "2/3", display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>Mã thẻ</label>
-          <div
-            style={{
-              position: "relative",
-              width: "100%",
-              marginTop: 2,
-            }}
-            className={form.master_card_id ? "mac-combobox mac-combobox--focused" : "mac-combobox"}
-          >
-            <AsyncSelect
-              cacheOptions
-              defaultOptions
-              loadOptions={fetchCardOptions}
-              value={
-                form.master_card_id
-                  ? { value: form.master_card_id, label: form.master_card_id, image: form.reference_image_url }
-                  : null
-              }
-              onChange={(option: { value: string; label: string; image?: string } | null) => {
-                setForm(prev => ({
-                  ...prev,
-                  master_card_id: option?.value ?? "",
-                  reference_image_url: option?.image ?? "",
-                }));
-                setFormTouched(true);
+          <div style={{ display: "flex", gap: 8, alignItems: "center", position: "relative" }}>
+            <input
+              ref={cardInputRef}
+              className="mac-input"
+              style={{ minWidth: 500, fontSize: 18 }}
+              value={cardSearch}
+              onChange={e => {
+                setCardSearch(e.target.value);
+                setCardDropdown(false);
               }}
               placeholder="Nhập mã thẻ để tìm..."
-              isClearable
-              styles={{
-                control: (base, state) => ({
-                  ...base,
-                  minHeight: 40,
-                  borderRadius: 10,
-                  borderColor: state.isFocused ? "#90c2ff" : "#e0e0e0",
-                  boxShadow: state.isFocused ? "0 0 0 3px #90c2ff44" : "none",
-                  background: "#f7f7fa",
-                  fontSize: 18,
-                }),
-                option: (base) => ({
-                  ...base,
-                  display: "flex",
-                  alignItems: "center",
-                  fontSize: 16,
-                }),
-                singleValue: (base) => ({
-                  ...base,
-                  display: "flex",
-                  alignItems: "center",
-                  fontSize: 18,
-                }),
-                dropdownIndicator: (base) => ({
-                  ...base,
-                  color: "#888",
-                }),
-                indicatorSeparator: () => ({
-                  display: "none",
-                }),
-                menu: (base) => ({
-                  ...base,
-                  borderRadius: 10,
-                  boxShadow: "0 4px 16px #0001",
-                  fontSize: 16,
-                }),
+              autoComplete="off"
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  fetchCardOptions();
+                }
               }}
-              formatOptionLabel={(option: { value: string; label: string; image?: string }) => (
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {option.image && (
-                    <img src={option.image} alt="" style={{ width: 32, height: 32, objectFit: "contain", borderRadius: 4 }} />
-                  )}
-                  <span>{option.label}</span>
-                </div>
-              )}
             />
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ padding: "6px 16px", fontSize: 16 }}
+              onClick={fetchCardOptions}
+              tabIndex={-1}
+            >
+              <i className="bi bi-search"></i>
+            </button>
+            {/* Dropdown kết quả */}
+            {cardDropdown && cardOptions.length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 38,
+                  left: 0,
+                  zIndex: 10,
+                  background: "#fff",
+                  border: "1px solid #eee",
+                  borderRadius: 8,
+                  boxShadow: "0 4px 16px #0001",
+                  minWidth: 500,
+                  maxHeight: 650,
+                  overflowY: "auto"
+                }}
+              >
+                {cardOptions.map(opt => (
+                  <div
+                    key={opt.value}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 14px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid #f2f2f2"
+                    }}
+                    onClick={() => {
+                      setForm(prev => ({
+                        ...prev,
+                        master_card_id: opt.value,
+                        reference_image_url: opt.image ?? "",
+                      }));
+                      setCardSearch(opt.value);
+                      setCardDropdown(false);
+                      setFormTouched(true);
+                    }}
+                  >
+                    {opt.image && (
+                      <img
+                        src={opt.image}
+                        alt=""
+                        style={{
+                          width: 68,
+                          height: 68,
+                          objectFit: "contain",
+                          borderRadius: 6,
+                          background: "#fafbfc",
+                          border: "1px solid #eee"
+                        }}
+                      />
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontWeight: 600, fontSize: 17 }}>{opt.value}</span>
+                      {opt.name_en && (
+                        <span style={{ color: "#1976d2", fontSize: 15 }}>{opt.name_en}</span>
+                      )}
+                      {opt.card_number && (
+                        <span style={{ color: "#888", fontSize: 14 }}>#{opt.card_number}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <Input
@@ -707,22 +744,26 @@ const InventoryPage: React.FC = () => {
       label: "Ảnh",
       render: (row: any) => (
         <div className="d-flex gap-2 flex-wrap">
-          {row.card_photos?.map((img: string, idx: number) => (
-            <img
-              key={idx}
-              src={`/detail_inventory_images/${img}`}
-              alt={`photo-${idx}`}
-              style={{
-                width: 36,
-                height: 36,
-                objectFit: "contain",
-                borderRadius: 6,
-                border: "1px solid #eee",
-                cursor: "pointer"
-              }}
-              onClick={() => setPreviewImg(`/detail_inventory_images/${img}`)}
-            />
-          ))}
+          {Array.isArray(row.card_photos) && row.card_photos.length > 0 ? (
+            row.card_photos.map((img: string, idx: number) => (
+              <img
+                key={idx}
+                src={`/detail_inventory_images/${img}`}
+                alt={`photo-${idx}`}
+                style={{
+                  width: 36,
+                  height: 36,
+                  objectFit: "contain",
+                  borderRadius: 6,
+                  border: "1px solid #eee",
+                  cursor: "pointer"
+                }}
+                onClick={() => setPreviewImg(`/detail_inventory_images/${img}`)}
+              />
+            ))
+          ) : (
+            <span className="text-muted" style={{ fontSize: 13 }}>Không có ảnh</span>
+          )}
         </div>
       ),
     },
@@ -802,8 +843,11 @@ const InventoryPage: React.FC = () => {
 
   const renderCollapse = (row: InventoryRow) => {
     // Nếu chưa có detail, fetch
-    if (!detailData[row.inventory_id]) {
-      fetchDetailInventory(row.inventory_id);
+    if (!detailData[row.inventory_id] && !loadingDetailIds.includes(row.inventory_id)) {
+      setLoadingDetailIds(ids => [...ids, row.inventory_id]);
+      fetchDetailInventory(row.inventory_id).finally(() => {
+        setLoadingDetailIds(ids => ids.filter(id => id !== row.inventory_id));
+      });
       return <div className="text-muted py-3">Đang tải chi tiết...</div>;
     }
     return renderDetailTable(row.inventory_id);
@@ -1044,6 +1088,7 @@ const InventoryPage: React.FC = () => {
         title={detailModalMode === "add" ? "Thêm chi tiết thẻ" : "Sửa chi tiết thẻ"}
       >
         <form
+          className="detail-modal-form"
           autoComplete="off"
           onSubmit={(e) => { e.preventDefault(); handleSaveDetail(); }}
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, minWidth: 600 }}
@@ -1056,7 +1101,7 @@ const InventoryPage: React.FC = () => {
               style={{
                 width: 900,
                 height: 600,
-                background: "#f7f7fa",
+                background: "#222",
                 borderRadius: 12,
                 border: "1px solid #eee",
                 display: "grid",
@@ -1212,7 +1257,7 @@ const InventoryPage: React.FC = () => {
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "#fff",
+                    background: "#495057",
                     border: "1px dashed #bbb",
                     borderRadius: 8,
                     cursor: "pointer",

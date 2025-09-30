@@ -92,7 +92,6 @@ export default function Sidebar() {
           path={item.path}
           dropdown={item.dropdown}
           children={item.children}
-          subLabel={item.subLabel}
         />
       ))}
     </div>

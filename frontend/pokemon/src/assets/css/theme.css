@@ -68,8 +68,33 @@
   color: var(--sidebar-text);
 }
 
+/* Sidebar item hover (parent & child) */
 .sidebar-item-macos:hover {
   background: var(--sidebar-hover-bg);
+  color: var(--sidebar-active-text);
+  transition: background 0.2s, color 0.2s;
+}
+.theme-dark .sidebar-item-macos:hover {
+  background: #31394a;
+  color: #fff;
+}
+.theme-light .sidebar-item-macos:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+/* Đảm bảo con cũng có hiệu ứng hover */
+.sidebar-dropdown-macos .sidebar-item-macos:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-active-text);
+}
+.theme-dark .sidebar-dropdown-macos .sidebar-item-macos:hover {
+  background: #31394a;
+  color: #fff;
+}
+.theme-light .sidebar-dropdown-macos .sidebar-item-macos:hover {
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
 .sidebar-item-macos.active {
@@ -268,5 +293,115 @@ textarea:focus {
   outline: none;
   border-color: #1976d2;
   box-shadow: 0 0 0 2px #1976d233;
+}
+
+/* ========== INVENTORY MODAL FORM ========== */
+.inventory-modal-form {
+  background: var(--advanced-filter-bg);
+  color: var(--advanced-filter-text);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(60,60,80,0.10);
+  padding: 32px 28px 24px 28px;
+  transition: background 0.2s, color 0.2s;
+}
+.theme-dark .inventory-modal-form {
+  background: #232a36;
+  color: #e0e0e0;
+  box-shadow: 0 8px 32px 0 rgba(24,28,35,0.22);
+}
+.theme-light .inventory-modal-form {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 8px 32px 0 rgba(60,60,80,0.10);
+}
+
+/* Đảm bảo input, select, label trong modal cũng đồng bộ */
+.inventory-modal-form .mac-input,
+.inventory-modal-form select,
+.inventory-modal-form input,
+.inventory-modal-form textarea {
+  background: var(--advanced-filter-textbox, #fff);
+  color: var(--advanced-filter-text, #222);
+  border: 1px solid #444;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.theme-dark .inventory-modal-form .mac-input,
+.theme-dark .inventory-modal-form select,
+.theme-dark .inventory-modal-form input,
+.theme-dark .inventory-modal-form textarea {
+  background: #495057;
+  color: #e0e0e0;
+  border: 1px solid #333a;
+}
+.theme-light .inventory-modal-form .mac-input,
+.theme-light .inventory-modal-form select,
+.theme-light .inventory-modal-form input,
+.theme-light .inventory-modal-form textarea {
+  background: #fff;
+  color: #222;
+  border: 1px solid #ccc;
+}
+
+/* Label */
+.inventory-modal-form .mac-input-label {
+  color: var(--advanced-filter-text);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* ========== DETAIL MODAL FORM ========== */
+.detail-modal-form {
+  background: var(--advanced-filter-bg);
+  color: var(--advanced-filter-text);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(60,60,80,0.10);
+  padding: 32px 28px 24px 28px;
+  transition: background 0.2s, color 0.2s;
+}
+.theme-dark .detail-modal-form {
+  background: #232a36;
+  color: #e0e0e0;
+  box-shadow: 0 8px 32px 0 rgba(24,28,35,0.22);
+}
+.theme-light .detail-modal-form {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 8px 32px 0 rgba(60,60,80,0.10);
+}
+
+/* Đảm bảo input, select, label trong modal cũng đồng bộ */
+.detail-modal-form .mac-input,
+.detail-modal-form select,
+.detail-modal-form input,
+.detail-modal-form textarea {
+  background: var(--advanced-filter-textbox, #fff);
+  color: var(--advanced-filter-text, #222);
+  border: 1px solid #444;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.theme-dark .detail-modal-form .mac-input,
+.theme-dark .detail-modal-form select,
+.theme-dark .detail-modal-form input,
+.theme-dark .detail-modal-form textarea {
+  background: #495057;
+  color: #e0e0e0;
+  border: 1px solid #333a;
+}
+.theme-light .detail-modal-form .mac-input,
+.theme-light .detail-modal-form select,
+.theme-light .detail-modal-form input,
+.theme-light .detail-modal-form textarea {
+  background: #fff;
+  color: #222;
+  border: 1px solid #ccc;
+}
+
+/* Label */
+.detail-modal-form .mac-input-label {
+  color: var(--advanced-filter-text);
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
