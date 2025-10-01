@@ -11,6 +11,7 @@ interface ModalIOSProps {
   cancelText?: string;
   onConfirm?: () => void;
   children?: React.ReactNode;
+  zIndex?: number; // Thêm dòng này
 }
 
 const backdropVariants = {
@@ -31,6 +32,7 @@ const ModalIOS: React.FC<ModalIOSProps> = ({
   title = "Thao tác",
   message = "",
   children,
+  zIndex = 1050, // Thêm dòng này, mặc định 1050
 }) => {
   // Detect theme
   const isDark =
@@ -49,7 +51,7 @@ const ModalIOS: React.FC<ModalIOSProps> = ({
             right: 0,
             bottom: 0,
             backgroundColor: isDark ? "rgba(24,28,35,0.55)" : "rgba(0, 0, 0, 0.15)",
-            zIndex: 1050,
+            zIndex, // Sử dụng prop zIndex
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

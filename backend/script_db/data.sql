@@ -106,7 +106,7 @@ CREATE TABLE detail_inventory (
     
     -- Quản lý ảnh
     card_photos JSON,   -- Lưu mảng ["front.jpg", "back.jpg", ...]
-    photo_count INT GENERATED ALWAYS AS (JSON_LENGTH(card_photos)) STORED,
+    photo_count INT DEFAULT 0, -- CHUYỂN THÀNH CỘT THƯỜNG
     
     -- Metadata
     date_added DATE NOT NULL,

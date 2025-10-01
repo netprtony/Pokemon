@@ -729,7 +729,23 @@ const InventoryPage: React.FC = () => {
   const fetchDetailInventory = async (inventory_id: number) => {
     try {
       const resp = await axios.get(`http://localhost:8000/detail-inventory/by-inventory/${inventory_id}`);
-      setDetailData(prev => ({ ...prev, [inventory_id]: resp.data as any[] }));
+      // Parse card_photos nếu là string JSON
+      const fixedData = (resp.data as any[]).map(row => ({
+        ...row,
+        card_photos: typeof row.card_photos === "string"
+          ? (() => {
+              try {
+                const arr = JSON.parse(row.card_photos);
+                return Array.isArray(arr) ? arr : [];
+              } catch {
+                return [];
+              }
+            })()
+          : Array.isArray(row.card_photos)
+          ? row.card_photos
+          : [],
+      }));
+      setDetailData(prev => ({ ...prev, [inventory_id]: fixedData }));
     } catch {
       toast.error("Không thể tải chi tiết inventory!");
       setDetailData(prev => ({ ...prev, [inventory_id]: [] }));
@@ -829,7 +845,6 @@ const InventoryPage: React.FC = () => {
     }));
     return (
       <div style={{ background: "#F7F7FA", borderRadius: 12, padding: 16 }}>
-        <h6 className="fw-bold mb-2">Chi tiết thẻ</h6>
         <DataTable
           columns={detailColumns}
           data={details}
@@ -868,7 +883,6 @@ const InventoryPage: React.FC = () => {
   async function handleSaveDetail() {
     try {
       let savedDetail: DetailInventoryForm | null = null;
-      // Loại bỏ các trường không thuộc schema update
       const {
         detail_id,
         inventory_id,
@@ -877,37 +891,38 @@ const InventoryPage: React.FC = () => {
         ...payload
       } = detailForm;
 
-      // Đúng schema DetailInventoryUpdate
-      const payloadFixed = {
-      physical_condition_us: payload.physical_condition_us || null,
-      physical_condition_jp: payload.physical_condition_jp || null,
-      is_graded: typeof payload.is_graded === "boolean" ? payload.is_graded : null,
-      grade_company: payload.grade_company || null,
-      grade_score:
+      // Tính số lượng ảnh giống như renderDetailTable
+      const card_photos_count = Array.isArray(payload.card_photos) ? payload.card_photos.length : 0;
+
+      // Xử lý các trường số: nếu rỗng thì set null, nếu có thì ép kiểu số
+      const grade_score =
         payload.grade_score === "" || payload.grade_score === null
           ? null
-          : Number(payload.grade_score),
-      purchase_price:
+          : Number(payload.grade_score);
+      const purchase_price =
         payload.purchase_price === "" || payload.purchase_price === null
           ? null
-          : Number(payload.purchase_price),
-      selling_price:
+          : Number(payload.purchase_price);
+      const selling_price =
         payload.selling_price === "" || payload.selling_price === null
           ? null
-          : Number(payload.selling_price),
-      card_photos: Array.isArray(payload.card_photos) ? payload.card_photos : [],
-      photo_count: Array.isArray(payload.card_photos) ? payload.card_photos.length : 0, // <-- luôn gửi
-      is_sold: typeof payload.is_sold === "boolean" ? payload.is_sold : null,
-      notes: payload.notes || null,
-      last_updated: new Date().toISOString(),
-    };
+          : Number(payload.selling_price);
 
-      
+      // Payload gửi lên BE
+      const payloadFixed = {
+        ...payload,
+        card_photos: payload.card_photos,
+        card_photos_count, // gửi lên backend
+        photo_count: card_photos_count, // nếu backend dùng trường này
+        grade_score,
+        purchase_price,
+        selling_price,
+        last_updated: new Date().toISOString(),
+      };
 
       let url = `http://localhost:8000/detail-inventory/${detailForm.detail_id}`;
       let resp;
       if (detailForm.detail_id === 0) {
-        // Thêm mới: backend có thể yêu cầu inventory_id, date_added, ...
         url = "http://localhost:8000/detail-inventory/";
         resp = await axios.post<DetailInventoryForm>(url, {
           ...payloadFixed,
@@ -916,7 +931,6 @@ const InventoryPage: React.FC = () => {
         });
         toast.success("Thêm chi tiết thành công!");
       } else {
-        // Update: chỉ gửi đúng schema update
         resp = await axios.put<DetailInventoryForm>(url, payloadFixed);
         toast.success("Cập nhật chi tiết thành công!");
       }
@@ -1055,6 +1069,7 @@ const InventoryPage: React.FC = () => {
         isOpen={!!previewImg}
         onClose={() => setPreviewImg(null)}
         title="Xem ảnh"
+        zIndex={9999}
       >
         {previewImg && (
           <img
@@ -1075,6 +1090,7 @@ const InventoryPage: React.FC = () => {
         isOpen={previewImgs.length > 0}
         onClose={() => setPreviewImgs([])}
         title="Xem tất cả ảnh"
+        zIndex={9999}
       >
         <div className="d-flex flex-wrap gap-3">
           {previewImgs.map((url, idx) => (

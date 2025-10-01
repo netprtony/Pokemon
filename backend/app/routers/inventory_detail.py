@@ -14,17 +14,36 @@ from app.database import get_db
 router = APIRouter(prefix="/detail-inventory", tags=["DetailInventory"])
 DETAIL_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/detail_inventory_images")
 
+def parse_card_photos(row):
+    photos = row.get("card_photos")
+    if isinstance(photos, str):
+        try:
+            row["card_photos"] = json.loads(photos)
+        except Exception:
+            row["card_photos"] = []
+    return row
+
 # Thêm mới
 @router.post("/", response_model=DetailInventoryOut, status_code=status.HTTP_201_CREATED)
 def create_detail_inventory(data: DetailInventoryCreate, db: Session = Depends(get_db)):
     filtered_data = data.dict(exclude_unset=True)
-    # Xóa photo_count nếu có trong dict (đề phòng trường hợp model SQLAlchemy nhận vào)
-    filtered_data.pop("photo_count", None)  # Sửa lại cho chắc chắn
+    # Cho phép nhận photo_count từ client
     db_item = DetailInventory(**filtered_data)
+    photos = db_item.card_photos or []
+    if isinstance(photos, str):
+        try:
+            photos = json.loads(photos)
+        except Exception:
+            photos = []
+    # Nếu client gửi photo_count thì dùng, nếu không thì tự tính
+    db_item.photo_count = filtered_data.get("photo_count", len(photos) if photos else 0)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    return db_item
+    result = db_item.__dict__.copy()
+    result = parse_card_photos(result)
+    result["photo_count"] = db_item.photo_count
+    return result
 
 # Sửa
 @router.put("/{detail_id}", response_model=DetailInventoryOut)
@@ -33,29 +52,21 @@ def update_detail_inventory(detail_id: int, data: DetailInventoryUpdate, db: Ses
     if not db_item:
         raise HTTPException(status_code=404, detail="DetailInventory not found")
     update_data = data.dict(exclude_unset=True)
-    # Loại bỏ photo_count nếu có
-    update_data.pop("photo_count", None)
-    # Nếu có card_photos thì cập nhật lại (ghi đè, không nối thêm)
-    if "card_photos" in update_data:
-        photos = update_data["card_photos"]
-        if photos is not None:
-            # Nếu cột là ARRAY thì gán trực tiếp, nếu là TEXT thì lưu json.dumps
-            if hasattr(DetailInventory, "card_photos") and str(DetailInventory.card_photos.type).lower().find("array") >= 0:
-                db_item.card_photos = photos
-            else:
-                db_item.card_photos = json.dumps(photos)
-        del update_data["card_photos"]
     for key, value in update_data.items():
         setattr(db_item, key, value)
+    photos = db_item.card_photos or []
+    if isinstance(photos, str):
+        try:
+            photos = json.loads(photos)
+        except Exception:
+            photos = []
+    # Nếu client gửi photo_count thì dùng, nếu không thì tự tính
+    db_item.photo_count = update_data.get("photo_count", len(photos) if photos else 0)
     db.commit()
     db.refresh(db_item)
-    # Trả về card_photos là mảng
     result = db_item.__dict__.copy()
-    if isinstance(result.get("card_photos"), str):
-        try:
-            result["card_photos"] = json.loads(result["card_photos"])
-        except Exception:
-            result["card_photos"] = []
+    result = parse_card_photos(result)
+    result["photo_count"] = db_item.photo_count
     return result
 
 # Xóa
@@ -91,7 +102,13 @@ def get_all_detail_inventory(
         query = query.filter(
             (DetailInventory.notes.ilike(f"%{search}%"))
         )
-    return query.order_by(DetailInventory.date_added.desc()).all()
+    details = query.order_by(DetailInventory.date_added.desc()).all()
+    results = []
+    for item in details:
+        row = item.__dict__.copy()
+        row = parse_card_photos(row)
+        results.append(row)
+    return results
 
 @router.post("/{detail_id}/upload-photos", response_model=DetailInventoryOut)
 async def upload_detail_photos(
@@ -125,7 +142,6 @@ async def upload_detail_photos(
             f.write(content)
         saved_files.append(f"{base_name}")
 
-    # Cập nhật card_photos
     photos = db_item.card_photos or []
     if isinstance(photos, str):
         try:
@@ -142,15 +158,9 @@ async def upload_detail_photos(
     db.commit()
     db.refresh(db_item)
 
-    # Trả về card_photos là mảng
     result = db_item.__dict__.copy()
-    if isinstance(result["card_photos"], str):
-        try:
-            result["card_photos"] = json.loads(result["card_photos"])
-        except Exception:
-            result["card_photos"] = []
+    result = parse_card_photos(result)
     return result
-
 
 @router.get("/by-inventory/{inventory_id}", response_model=List[DetailInventoryOut])
 def get_details_by_inventory_id(
@@ -158,10 +168,11 @@ def get_details_by_inventory_id(
     db: Session = Depends(get_db)
 ):
     details = db.query(DetailInventory).filter(DetailInventory.inventory_id == inventory_id).order_by(DetailInventory.date_added.desc()).all()
-    # Chuyển card_photos thành list nếu là string
+    results = []
     for item in details:
-        if isinstance(item.card_photos, str):
-            item.card_photos = json.loads(item.card_photos)
-    return details
+        row = item.__dict__.copy()
+        row = parse_card_photos(row)
+        results.append(row)
+    return results
 
 

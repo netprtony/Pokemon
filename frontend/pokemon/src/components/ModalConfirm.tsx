@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 
 interface ModalConfirmProps {
   isOpen: boolean;
@@ -23,6 +24,21 @@ export default function ModalConfirm({
   const isDark =
     typeof document !== "undefined" &&
     document.body.classList.contains("theme-dark");
+
+  // Thêm xử lý phím tắt Enter/Esc
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        onConfirm();
+      }
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onConfirm, onClose]);
 
   return (
     <AnimatePresence>
