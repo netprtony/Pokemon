@@ -875,7 +875,12 @@ const InventoryPage: React.FC = () => {
     setDetailFormTouched(false);
   }
   function handleEditDetail(row: any) {
-    setDetailForm({ ...row });
+    // Nếu giá trị không hợp lệ, set về giá trị đầu tiên trong US_OPTIONS
+    const validUS = US_OPTIONS.map(opt => opt.value);
+    const usValue = validUS.includes(row.physical_condition_us)
+      ? row.physical_condition_us
+      : validUS[0];
+    setDetailForm({ ...row, physical_condition_us: usValue });
     setDetailModalMode("edit");
     setDetailModalOpen(true);
     setDetailFormTouched(false);
@@ -891,8 +896,20 @@ const InventoryPage: React.FC = () => {
         ...payload
       } = detailForm;
 
-      // Tính số lượng ảnh giống như renderDetailTable
-      const card_photos_count = Array.isArray(payload.card_photos) ? payload.card_photos.length : 0;
+      // Đảm bảo card_photos luôn là mảng chuỗi
+      let card_photos: string[] = [];
+      if (Array.isArray(payload.card_photos)) {
+        card_photos = payload.card_photos.map(String);
+      } else if (typeof payload.card_photos === "string" && payload.card_photos) {
+        try {
+          const arr = JSON.parse(payload.card_photos);
+          card_photos = Array.isArray(arr) ? arr.map(String) : [];
+        } catch {
+          card_photos = [];
+        }
+      }
+
+      const card_photos_count = card_photos.length;
 
       // Xử lý các trường số: nếu rỗng thì set null, nếu có thì ép kiểu số
       const grade_score =
@@ -911,9 +928,9 @@ const InventoryPage: React.FC = () => {
       // Payload gửi lên BE
       const payloadFixed = {
         ...payload,
-        card_photos: payload.card_photos,
-        card_photos_count, // gửi lên backend
-        photo_count: card_photos_count, // nếu backend dùng trường này
+        card_photos, // luôn là mảng chuỗi
+        card_photos_count,
+        photo_count: card_photos_count,
         grade_score,
         purchase_price,
         selling_price,
@@ -1115,7 +1132,7 @@ const InventoryPage: React.FC = () => {
             {/* Khu vực hình vuông hiển thị ảnh đã upload + nút "+" */}
             <div
               style={{
-                width: 900,
+                width: 800,
                 height: 600,
                 background: "#222",
                 borderRadius: 12,
@@ -1375,11 +1392,7 @@ const InventoryPage: React.FC = () => {
                 <label className="mac-input-label">Điều kiện US</label>
                 <select
                   name="physical_condition_us"
-                  value={
-                      US_OPTIONS.some(opt => opt.value === detailForm.physical_condition_us)
-                        ? detailForm.physical_condition_us
-                        : ""
-                    }
+                  value={detailForm.physical_condition_us} // SỬA: set trực tiếp giá trị
                   onChange={handleDetailSelectChange}
                   className="mac-input"
                   required

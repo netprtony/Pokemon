@@ -29,8 +29,8 @@ class DetailInventoryCreate(BaseModel):
     purchase_price: Optional[float] = None
     selling_price: Optional[float] = None
     is_sold: bool = False
-    card_photos: Optional[List[str]] = []
-    photo_count: Optional[int] = 0
+    card_photos: Optional[List[str]]
+    photo_count: Optional[int]
     date_added: date
     notes: Optional[str] = None
 
