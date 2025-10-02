@@ -182,27 +182,30 @@ CREATE TABLE price_alerts (
 -- MODULE 4: ORDER MANAGEMENT (Prepared for future)
 -- ================================================
 
--- Bảng Orders (Chuẩn bị cho tương lai)
 CREATE TABLE orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
-    order_date DATE NOT NULL,
-    customer_name VARCHAR(100),
-    customer_contact TEXT,
+    customer_id INT NOT NULL,                         -- 🔗 liên kết đến bảng customers
+    order_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    -- snapshot thông tin tại thời điểm đặt hàng
+    shipping_address TEXT,
     
     order_status ENUM('PENDING', 'COMPLETED', 'SHIPPED', 'DELIVERED', 'CANCELLED') DEFAULT 'PENDING',
     total_amount DECIMAL(12,2) DEFAULT 0,
     
-    shipping_address TEXT,
-    payment_method VARCHAR(50),
-    platform VARCHAR(50), -- Facebook, Shopee, etc.
+    payment_method VARCHAR(50),                      -- ví dụ: COD, chuyển khoản
+    platform VARCHAR(50),                            -- ví dụ: Website, Facebook, Shopee, Tiktok
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    
+    INDEX idx_customer (customer_id),
     INDEX idx_status_date (order_status, order_date),
     INDEX idx_platform (platform)
 );
-
 -- Bảng Order Details
 CREATE TABLE order_details (
     detail_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -219,8 +222,73 @@ CREATE TABLE order_details (
     INDEX idx_order (order_id),
     INDEX idx_inventory (inventory_id)
 );
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    email_verified BOOLEAN DEFAULT FALSE,
+    phone VARCHAR(15),
+    role ENUM('superadmin', 'admin', 'moderator', 'staff', 'client', 'guest') DEFAULT 'client',
+    is_active BOOLEAN DEFAULT TRUE,
+    failed_login_attempts INT DEFAULT 0,
+    last_login DATETIME,
+    last_password_change DATETIME,
+    otp_code VARCHAR(10),
+    otp_expiry DATETIME,
+    avatar_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_username (username),
+    INDEX idx_email (email),
+    INDEX idx_role (role)
+);
+CREATE TABLE customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,  -- mỗi customer gắn với 1 user
+    customer_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    address TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_name (customer_name),
+    INDEX idx_phone (phone),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+-- ================================================
+-- CART DATA
+-- ===============================================
+CREATE TABLE carts (
+    cart_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL UNIQUE,  -- 🔗 mỗi khách hàng chỉ có 1 giỏ hàng
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    
+    INDEX idx_customer (customer_id)
+);
+CREATE TABLE cart_items (
+    item_id INT AUTO_INCREMENT PRIMARY KEY,
+    cart_id INT NOT NULL,
+    inventory_id INT NOT NULL,  -- 🔗 sản phẩm trong kho (hoặc bảng products)
+    quantity INT NOT NULL DEFAULT 1,
+    unit_price DECIMAL(12,2) NOT NULL, -- giá tại thời điểm thêm vào giỏ
+    subtotal DECIMAL(12,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (cart_id) REFERENCES carts(cart_id) ON DELETE CASCADE,
+    FOREIGN KEY (inventory_id) REFERENCES inventory(inventory_id),
+    
+    UNIQUE KEY unique_cart_product (cart_id, inventory_id), -- tránh trùng sản phẩm trong giỏ
+    INDEX idx_cart (cart_id),
+    INDEX idx_inventory (inventory_id)
+);
 
 -- ================================================
 -- SAMPLE DATA FOR TESTING
