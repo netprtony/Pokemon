@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Table, Pagination, Form } from "react-bootstrap";
 import ModalIOS from "./Modal"; // Import your modal component here
 import "../assets/css/theme.css";
+import "../assets/css/Loader.css";
 type Column<T> = {
   key: string;
   label: string;
@@ -305,7 +306,14 @@ export default function DataTable<T>({
                               color: "var(--filter-text)",
                             }}
                           >
-                            {renderCollapse(row)}
+                            {/* Loader khi loading table con */}
+                            {typeof (row as any).loadingDetail !== "undefined" && (row as any).loadingDetail ? (
+                              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 120 }}>
+                                <span className="loader"></span>
+                              </div>
+                            ) : (
+                              renderCollapse(row)
+                            )}
                           </div>
                         </td>
                       </tr>

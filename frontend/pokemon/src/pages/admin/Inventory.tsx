@@ -1,14 +1,14 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
-import DataTable from "../../components/Table";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import "../../assets/css/Inventory.css";
+import type { FieldOption, Filter } from "../../components/AdvancedFilters";
 import AdvancedFilters from "../../components/AdvancedFilters";
+import Button from "../../components/Button";
+import Input from "../../components/Input";
 import Modal from "../../components/Modal";
 import ModalConfirm from "../../components/ModalConfirm";
-import { toast } from "react-toastify";
-import type { Filter, FieldOption } from "../../components/AdvancedFilters";
-import "../../assets/css/Inventory.css";
-import Input from "../../components/Input";
-import Button from "../../components/Button";
+import DataTable from "../../components/Table";
 import Toggle from "../../components/Toggle";
 
 // --- Constants & Mapping ---
@@ -129,7 +129,10 @@ const formatDate = (date: string) => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
   const parts = date.split(/[-\/]/);
   if (parts.length === 3 && parts[2].length === 4)
-    return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+    return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(
+      2,
+      "0"
+    )}`;
   return date;
 };
 
@@ -162,7 +165,14 @@ function useInventoryData({
         const resp = await axios.post(
           `${API_URL}filter`,
           { filters },
-          { params: { page, page_size: pageSize, sort_field: sortField, sort_order: sortOrder } }
+          {
+            params: {
+              page,
+              page_size: pageSize,
+              sort_field: sortField,
+              sort_order: sortOrder,
+            },
+          }
         );
         const data = resp.data as { items: any[]; total: number };
         items = data.items.map((row) => ({
@@ -172,7 +182,13 @@ function useInventoryData({
         total = data.total;
       } else {
         const resp = await axios.get<{ items: any[]; total: number }>(API_URL, {
-          params: { page, page_size: pageSize, search: searchTerm, sort_field: sortField, sort_order: sortOrder },
+          params: {
+            page,
+            page_size: pageSize,
+            search: searchTerm,
+            sort_field: sortField,
+            sort_order: sortOrder,
+          },
         });
         items = resp.data.items.map((row) => ({
           ...row,
@@ -190,7 +206,9 @@ function useInventoryData({
     setLoading(false);
   }, [filters, searchTerm, page, pageSize, sortField, sortOrder]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   return { data, total, loading, fetchData };
 }
 
@@ -209,11 +227,22 @@ const getColumns = (
         <img
           src={row.reference_image_url}
           alt={row.master_card_id}
-          style={{ width: 36, height: 36, objectFit: "contain", cursor: "pointer" }}
-          onClick={() => row.reference_image_url && handlePreviewImage(row.reference_image_url)}
+          style={{
+            width: 36,
+            height: 36,
+            objectFit: "contain",
+            cursor: "pointer",
+          }}
+          onClick={() =>
+            row.reference_image_url &&
+            handlePreviewImage(row.reference_image_url)
+          }
         />
       ) : (
-        <img alt="No image" style={{ width: 36, height: 36, objectFit: "contain", opacity: 0.5 }} />
+        <img
+          alt="No image"
+          style={{ width: 36, height: 36, objectFit: "contain", opacity: 0.5 }}
+        />
       ),
     width: 50,
     align: "center" as const,
@@ -248,13 +277,25 @@ const getColumns = (
     width: 110,
     render: (row: InventoryRow) => (
       <div className="d-flex justify-content-center gap-3">
-        <button className="btn btn-link p-0" title="Thêm chi tiết kho" onClick={() => handleAddDetail(row)}>
+        <button
+          className="btn btn-link p-0"
+          title="Thêm chi tiết kho"
+          onClick={() => handleAddDetail(row)}
+        >
           <i className="bi bi-plus fs-5 text-success"></i>
         </button>
-        <button className="btn btn-link p-0" title="Sửa" onClick={() => handleEdit(row)}>
+        <button
+          className="btn btn-link p-0"
+          title="Sửa"
+          onClick={() => handleEdit(row)}
+        >
           <i className="bi bi-pencil fs-5 text-warning"></i>
         </button>
-        <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDelete(row)}>
+        <button
+          className="btn btn-link p-0"
+          title="Xóa"
+          onClick={() => handleDelete(row)}
+        >
           <i className="bi bi-trash fs-5 text-danger"></i>
         </button>
       </div>
@@ -274,7 +315,12 @@ const InventoryPage: React.FC = () => {
 
   // --- Data ---
   const { data, total, loading, fetchData } = useInventoryData({
-    filters, searchTerm, page, pageSize, sortField, sortOrder
+    filters,
+    searchTerm,
+    page,
+    pageSize,
+    sortField,
+    sortOrder,
   });
 
   // --- Modal, Form, Detail State ---
@@ -294,14 +340,27 @@ const InventoryPage: React.FC = () => {
 
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [detailForm, setDetailForm] = useState(defaultDetailForm);
-  const [detailModalMode, setDetailModalMode] = useState<"add" | "edit" | null>(null);
+  const [detailModalMode, setDetailModalMode] = useState<"add" | "edit" | null>(
+    null
+  );
   const [detailFormTouched, setDetailFormTouched] = useState(false);
 
-  const [detailImages, setDetailImages] = React.useState<{file: File, name: string}[]>([]);
+  const [detailImages, setDetailImages] = React.useState<
+    { file: File; name: string }[]
+  >([]);
   const [detailAngles, setDetailAngles] = React.useState<string[]>([]);
 
   const [cardSearch, setCardSearch] = useState("");
-  const [cardOptions, setCardOptions] = useState<{ value: string; label: string; image?: string; name_en?: string; name_original?: string; card_number?: string }[]>([]);
+  const [cardOptions, setCardOptions] = useState<
+    {
+      value: string;
+      label: string;
+      image?: string;
+      name_en?: string;
+      name_original?: string;
+      card_number?: string;
+    }[]
+  >([]);
   const [cardDropdown, setCardDropdown] = useState(false);
   const cardInputRef = useRef<HTMLInputElement>(null);
 
@@ -337,7 +396,6 @@ const InventoryPage: React.FC = () => {
     });
     setConfirmOpen(true);
   };
-  
 
   const handleCloseModal = () => {
     if (formTouched || detailFormTouched) {
@@ -383,8 +441,11 @@ const InventoryPage: React.FC = () => {
   };
 
   // ✅ Hàm chung cập nhật form
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, files, checked, dataset } = e.target as HTMLInputElement;
+  const handleFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type, files, checked, dataset } =
+      e.target as HTMLInputElement;
 
     setForm((prev) => ({
       ...prev,
@@ -392,9 +453,13 @@ const InventoryPage: React.FC = () => {
         type === "file"
           ? files?.[0] ?? null
           : dataset?.type === "money"
-          ? value === "" ? 0 : Number(value)  // ✅ ép về number
+          ? value === ""
+            ? 0
+            : Number(value) // ✅ ép về number
           : type === "number"
-          ? value === "" ? 0 : Number(value)
+          ? value === ""
+            ? 0
+            : Number(value)
           : type === "checkbox"
           ? checked
           : value,
@@ -403,9 +468,13 @@ const InventoryPage: React.FC = () => {
   };
   const handlePreviewImage = (url: string) => setPreviewImg(url);
 
-
   // Table columns
-  const columns = getColumns(handlePreviewImage, handleAddDetail, handleEdit, handleDelete);
+  const columns = getColumns(
+    handlePreviewImage,
+    handleAddDetail,
+    handleEdit,
+    handleDelete
+  );
 
   // AdvancedFilters handlers
   const handleAddFilter = (filter: Filter) => {
@@ -430,9 +499,12 @@ const InventoryPage: React.FC = () => {
   const fetchCardOptions = async () => {
     if (!cardSearch) return;
     try {
-      const resp = await axios.get("http://localhost:8000/pokemon-cards/search-id-card", {
-        params: { search: cardSearch }
-      });
+      const resp = await axios.get(
+        "http://localhost:8000/pokemon-cards/search-id-card",
+        {
+          params: { search: cardSearch },
+        }
+      );
       const data = resp.data as any[];
       setCardOptions(
         data.map((item: any) => ({
@@ -457,7 +529,10 @@ const InventoryPage: React.FC = () => {
     <form
       className="inventory-modal-form"
       autoComplete="off"
-      onSubmit={(e) => { e.preventDefault(); handleSave(); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSave();
+      }}
       style={{
         display: "grid",
         gridTemplateColumns: "1fr 1fr 1fr",
@@ -468,9 +543,25 @@ const InventoryPage: React.FC = () => {
       }}
     >
       {/* Cột 1: Chỉ hiển thị ảnh đại diện từ reference_image_url */}
-      <div style={{ gridColumn: "1/2", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>Ảnh đại diện thẻ</label>
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div
+        style={{
+          gridColumn: "1/2",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <label className="mac-input-label" style={{ alignSelf: "flex-end" }}>
+          Ảnh đại diện thẻ
+        </label>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           {form.reference_image_url ? (
             <img
               src={form.reference_image_url}
@@ -484,7 +575,10 @@ const InventoryPage: React.FC = () => {
                 marginBottom: 12,
                 cursor: "zoom-in",
               }}
-              onClick={() => form.reference_image_url && handlePreviewImage(form.reference_image_url)}
+              onClick={() =>
+                form.reference_image_url &&
+                handlePreviewImage(form.reference_image_url)
+              }
             />
           ) : (
             <div
@@ -509,22 +603,41 @@ const InventoryPage: React.FC = () => {
       </div>
 
       {/* Cột 2: Các trường chính */}
-      <div style={{ gridColumn: "2/3", display: "flex", flexDirection: "column", gap: 18 }}>
+      <div
+        style={{
+          gridColumn: "2/3",
+          display: "flex",
+          flexDirection: "column",
+          gap: 18,
+        }}
+      >
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>Mã thẻ</label>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", position: "relative" }}>
+          <label
+            className="mac-input-label"
+            style={{ alignSelf: "flex-start" }}
+          >
+            Mã thẻ
+          </label>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
             <input
               ref={cardInputRef}
               className="mac-input"
               style={{ minWidth: 500, fontSize: 18 }}
               value={cardSearch}
-              onChange={e => {
+              onChange={(e) => {
                 setCardSearch(e.target.value);
                 setCardDropdown(false);
               }}
               placeholder="Nhập mã thẻ để tìm..."
               autoComplete="off"
-              onKeyDown={e => {
+              onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   fetchCardOptions();
@@ -554,10 +667,10 @@ const InventoryPage: React.FC = () => {
                   boxShadow: "0 4px 16px #0001",
                   minWidth: 500,
                   maxHeight: 650,
-                  overflowY: "auto"
+                  overflowY: "auto",
                 }}
               >
-                {cardOptions.map(opt => (
+                {cardOptions.map((opt) => (
                   <div
                     key={opt.value}
                     style={{
@@ -566,10 +679,10 @@ const InventoryPage: React.FC = () => {
                       gap: 12,
                       padding: "10px 14px",
                       cursor: "pointer",
-                      borderBottom: "1px solid #f2f2f2"
+                      borderBottom: "1px solid #f2f2f2",
                     }}
                     onClick={() => {
-                      setForm(prev => ({
+                      setForm((prev) => ({
                         ...prev,
                         master_card_id: opt.value,
                         reference_image_url: opt.image ?? "",
@@ -589,17 +702,25 @@ const InventoryPage: React.FC = () => {
                           objectFit: "contain",
                           borderRadius: 6,
                           background: "#fafbfc",
-                          border: "1px solid #eee"
+                          border: "1px solid #eee",
                         }}
                       />
                     )}
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontWeight: 600, fontSize: 17 }}>{opt.value}</span>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      <span style={{ fontWeight: 600, fontSize: 17 }}>
+                        {opt.value}
+                      </span>
                       {opt.name_en && (
-                        <span style={{ color: "#1976d2", fontSize: 15 }}>{opt.name_en}</span>
+                        <span style={{ color: "#1976d2", fontSize: 15 }}>
+                          {opt.name_en}
+                        </span>
                       )}
                       {opt.card_number && (
-                        <span style={{ color: "#888", fontSize: 14 }}>#{opt.card_number}</span>
+                        <span style={{ color: "#888", fontSize: 14 }}>
+                          #{opt.card_number}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -633,7 +754,12 @@ const InventoryPage: React.FC = () => {
           type="text"
         />
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>Ngôn ngữ</label>
+          <label
+            className="mac-input-label"
+            style={{ alignSelf: "flex-start" }}
+          >
+            Ngôn ngữ
+          </label>
           <select
             className="mac-input"
             name="language"
@@ -648,7 +774,14 @@ const InventoryPage: React.FC = () => {
       </div>
 
       {/* Cột 3: Giá, vị trí, ngày thêm */}
-      <div style={{ gridColumn: "3/4", display: "flex", flexDirection: "column", gap: 18 }}>
+      <div
+        style={{
+          gridColumn: "3/4",
+          display: "flex",
+          flexDirection: "column",
+          gap: 18,
+        }}
+      >
         <Input
           label="Giá mua trung bình"
           name="avg_purchase_price"
@@ -671,30 +804,40 @@ const InventoryPage: React.FC = () => {
           type="text"
         />
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>Ngày thêm</label>
+          <label
+            className="mac-input-label"
+            style={{ alignSelf: "flex-start" }}
+          >
+            Ngày thêm
+          </label>
           <input
             className="mac-input"
             name="date_added"
             type="date"
-            value={formatDate(form.date_added || "") || (() => {
-              const d = new Date();
-              const day = String(d.getDate()).padStart(2, "0");
-              const month = String(d.getMonth() + 1).padStart(2, "0");
-              const year = d.getFullYear();
-              return `${year}-${month}-${day}`;
-            })()}
+            value={
+              formatDate(form.date_added || "") ||
+              (() => {
+                const d = new Date();
+                const day = String(d.getDate()).padStart(2, "0");
+                const month = String(d.getMonth() + 1).padStart(2, "0");
+                const year = d.getFullYear();
+                return `${year}-${month}-${day}`;
+              })()
+            }
             onChange={handleFormChange}
             required
           />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <label  className="mac-input-label" style={{ minWidth: 110 }}>Đang hoạt động</label>
+          <label className="mac-input-label" style={{ minWidth: 110 }}>
+            Đang hoạt động
+          </label>
           <Toggle
-        checked={form.is_active}
-        onChange={(checked) => {
-          setForm((prev) => ({ ...prev, is_active: checked }));
-          setFormTouched(true);
-        }}
+            checked={form.is_active}
+            onChange={(checked) => {
+              setForm((prev) => ({ ...prev, is_active: checked }));
+              setFormTouched(true);
+            }}
           />
         </div>
       </div>
@@ -707,13 +850,18 @@ const InventoryPage: React.FC = () => {
           justifyContent: "flex-end",
           gap: 12,
           marginTop: 32,
-          alignSelf: "end"
+          alignSelf: "end",
         }}
       >
         <Button type="submit" variant="primary" size="md">
           {modalMode === "add" ? "Thêm mới" : "Lưu thay đổi"}
         </Button>
-        <Button type="button" variant="gray-outline" size="md" onClick={handleCloseModal}>
+        <Button
+          type="button"
+          variant="gray-outline"
+          size="md"
+          onClick={handleCloseModal}
+        >
           Đóng
         </Button>
       </div>
@@ -728,27 +876,30 @@ const InventoryPage: React.FC = () => {
 
   const fetchDetailInventory = async (inventory_id: number) => {
     try {
-      const resp = await axios.get(`http://localhost:8000/detail-inventory/by-inventory/${inventory_id}`);
+      const resp = await axios.get(
+        `http://localhost:8000/detail-inventory/by-inventory/${inventory_id}`
+      );
       // Parse card_photos nếu là string JSON
-      const fixedData = (resp.data as any[]).map(row => ({
+      const fixedData = (resp.data as any[]).map((row) => ({
         ...row,
-        card_photos: typeof row.card_photos === "string"
-          ? (() => {
-              try {
-                const arr = JSON.parse(row.card_photos);
-                return Array.isArray(arr) ? arr : [];
-              } catch {
-                return [];
-              }
-            })()
-          : Array.isArray(row.card_photos)
-          ? row.card_photos
-          : [],
+        card_photos:
+          typeof row.card_photos === "string"
+            ? (() => {
+                try {
+                  const arr = JSON.parse(row.card_photos);
+                  return Array.isArray(arr) ? arr : [];
+                } catch {
+                  return [];
+                }
+              })()
+            : Array.isArray(row.card_photos)
+            ? row.card_photos
+            : [],
       }));
-      setDetailData(prev => ({ ...prev, [inventory_id]: fixedData }));
+      setDetailData((prev) => ({ ...prev, [inventory_id]: fixedData }));
     } catch {
       toast.error("Không thể tải chi tiết inventory!");
-      setDetailData(prev => ({ ...prev, [inventory_id]: [] }));
+      setDetailData((prev) => ({ ...prev, [inventory_id]: [] }));
     }
   };
 
@@ -772,13 +923,15 @@ const InventoryPage: React.FC = () => {
                   objectFit: "contain",
                   borderRadius: 6,
                   border: "1px solid #eee",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
                 onClick={() => setPreviewImg(`/detail_inventory_images/${img}`)}
               />
             ))
           ) : (
-            <span className="text-muted" style={{ fontSize: 13 }}>Không có ảnh</span>
+            <span className="text-muted" style={{ fontSize: 13 }}>
+              Không có ảnh
+            </span>
           )}
         </div>
       ),
@@ -788,34 +941,38 @@ const InventoryPage: React.FC = () => {
     {
       key: "is_graded",
       label: "Đã chấm điểm",
-      render: (row: any) => row.is_graded ? "Đã chấm" : "Chưa chấm"
+      render: (row: any) => (row.is_graded ? "Đã chấm" : "Chưa chấm"),
     },
     { key: "grade_company", label: "Hãng chấm" },
     { key: "grade_score", label: "Điểm" },
     {
       key: "purchase_price",
       label: "Giá mua",
-      render: (row: any) => row.purchase_price ? row.purchase_price.toLocaleString("vi-VN") : "-"
+      render: (row: any) =>
+        row.purchase_price ? row.purchase_price.toLocaleString("vi-VN") : "-",
     },
     {
       key: "selling_price",
       label: "Giá bán",
-      render: (row: any) => row.selling_price ? row.selling_price.toLocaleString("vi-VN") : "-"
+      render: (row: any) =>
+        row.selling_price ? row.selling_price.toLocaleString("vi-VN") : "-",
     },
     {
       key: "date_added",
       label: "Ngày thêm",
-      render: (row: any) => row.date_added ? row.date_added.substring(0, 10) : "-"
+      render: (row: any) =>
+        row.date_added ? row.date_added.substring(0, 10) : "-",
     },
     {
       key: "last_updated",
       label: "Cập nhật cuối",
-      render: (row: any) => row.last_updated ? row.last_updated.substring(0, 10) : "-"
+      render: (row: any) =>
+        row.last_updated ? row.last_updated.substring(0, 10) : "-",
     },
     {
       key: "is_sold",
       label: "Đã bán",
-      render: (row: any) => row.is_sold ? "Đã bán" : "Chưa bán"
+      render: (row: any) => (row.is_sold ? "Đã bán" : "Chưa bán"),
     },
     { key: "notes", label: "Ghi chú" },
     {
@@ -830,7 +987,11 @@ const InventoryPage: React.FC = () => {
           >
             <i className="bi bi-pencil fs-6 text-warning"></i>
           </button>
-          <button className="btn btn-link p-0" title="Xóa" onClick={() => handleDeleteDetail(row)}>
+          <button
+            className="btn btn-link p-0"
+            title="Xóa"
+            onClick={() => handleDeleteDetail(row)}
+          >
             <i className="bi bi-trash fs-6 text-danger"></i>
           </button>
         </div>
@@ -858,10 +1019,15 @@ const InventoryPage: React.FC = () => {
 
   const renderCollapse = (row: InventoryRow) => {
     // Nếu chưa có detail, fetch
-    if (!detailData[row.inventory_id] && !loadingDetailIds.includes(row.inventory_id)) {
-      setLoadingDetailIds(ids => [...ids, row.inventory_id]);
+    if (
+      !detailData[row.inventory_id] &&
+      !loadingDetailIds.includes(row.inventory_id)
+    ) {
+      setLoadingDetailIds((ids) => [...ids, row.inventory_id]);
       fetchDetailInventory(row.inventory_id).finally(() => {
-        setLoadingDetailIds(ids => ids.filter(id => id !== row.inventory_id));
+        setLoadingDetailIds((ids) =>
+          ids.filter((id) => id !== row.inventory_id)
+        );
       });
       return <div className="text-muted py-3">Đang tải chi tiết...</div>;
     }
@@ -876,7 +1042,7 @@ const InventoryPage: React.FC = () => {
   }
   function handleEditDetail(row: any) {
     // Nếu giá trị không hợp lệ, set về giá trị đầu tiên trong US_OPTIONS
-    const validUS = US_OPTIONS.map(opt => opt.value);
+    const validUS = US_OPTIONS.map((opt) => opt.value);
     const usValue = validUS.includes(row.physical_condition_us)
       ? row.physical_condition_us
       : validUS[0];
@@ -888,19 +1054,17 @@ const InventoryPage: React.FC = () => {
   async function handleSaveDetail() {
     try {
       let savedDetail: DetailInventoryForm | null = null;
-      const {
-        detail_id,
-        inventory_id,
-        date_added,
-        photo_count,
-        ...payload
-      } = detailForm;
+      const { detail_id, inventory_id, date_added, photo_count, ...payload } =
+        detailForm;
 
       // Đảm bảo card_photos luôn là mảng chuỗi
       let card_photos: string[] = [];
       if (Array.isArray(payload.card_photos)) {
         card_photos = payload.card_photos.map(String);
-      } else if (typeof payload.card_photos === "string" && payload.card_photos) {
+      } else if (
+        typeof payload.card_photos === "string" &&
+        payload.card_photos
+      ) {
         try {
           const arr = JSON.parse(payload.card_photos);
           card_photos = Array.isArray(arr) ? arr.map(String) : [];
@@ -956,14 +1120,18 @@ const InventoryPage: React.FC = () => {
       // Nếu có ảnh thì upload
       if (detailImages.length > 0 && savedDetail) {
         const formData = new FormData();
-        detailImages.forEach((img) => formData.append("files", img.file, img.name));
+        detailImages.forEach((img) =>
+          formData.append("files", img.file, img.name)
+        );
         const angles = detailImages.map((img) => img.name);
         const query = new URLSearchParams({
           inventory_id: String(savedDetail.inventory_id),
         });
         angles.forEach((angle) => query.append("angles", angle));
         await axios.post(
-          `http://localhost:8000/detail-inventory/${savedDetail.detail_id}/upload-photos?${query.toString()}`,
+          `http://localhost:8000/detail-inventory/${
+            savedDetail.detail_id
+          }/upload-photos?${query.toString()}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
@@ -976,15 +1144,14 @@ const InventoryPage: React.FC = () => {
       setDetailAngles([]);
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.detail) {
-      const detail = err.response.data.detail;
-      // Nếu detail là object, stringify để dễ debug
-      const msg = typeof detail === "string"
-        ? detail
-        : JSON.stringify(detail, null, 2);
-      toast.error("Lỗi: " + msg);
-    } else {
-      toast.error("Lỗi khi lưu chi tiết hoặc upload ảnh!");
-    }
+        const detail = err.response.data.detail;
+        // Nếu detail là object, stringify để dễ debug
+        const msg =
+          typeof detail === "string" ? detail : JSON.stringify(detail, null, 2);
+        toast.error("Lỗi: " + msg);
+      } else {
+        toast.error("Lỗi khi lưu chi tiết hoặc upload ảnh!");
+      }
     }
   }
 
@@ -992,7 +1159,9 @@ const InventoryPage: React.FC = () => {
     setConfirmMessage(`Bạn có chắc muốn xóa chi tiết ID ${row.detail_id}?`);
     setConfirmAction(() => async () => {
       try {
-        await axios.delete(`http://localhost:8000/detail-inventory/${row.detail_id}`);
+        await axios.delete(
+          `http://localhost:8000/detail-inventory/${row.detail_id}`
+        );
         toast.success("Xóa chi tiết thành công!");
         fetchDetailInventory(row.inventory_id);
       } catch {
@@ -1002,9 +1171,10 @@ const InventoryPage: React.FC = () => {
     });
     setConfirmOpen(true);
   }
-  
 
-  function handleDetailFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleDetailFormChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
     const { name, value, type, checked } = e.target as HTMLInputElement;
     setDetailForm((prev) => ({
       ...prev,
@@ -1098,7 +1268,7 @@ const InventoryPage: React.FC = () => {
               objectFit: "contain",
               borderRadius: 12,
               boxShadow: "0 8px 32px #0003",
-              background: "#fff"
+              background: "#fff",
             }}
           />
         )}
@@ -1111,24 +1281,54 @@ const InventoryPage: React.FC = () => {
       >
         <div className="d-flex flex-wrap gap-3">
           {previewImgs.map((url, idx) => (
-            <img key={idx} src={url} alt={`Preview ${idx}`} style={{ width: 120, height: 120, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }} />
+            <img
+              key={idx}
+              src={url}
+              alt={`Preview ${idx}`}
+              style={{
+                width: 120,
+                height: 120,
+                objectFit: "contain",
+                borderRadius: 8,
+                border: "1px solid #eee",
+              }}
+            />
           ))}
         </div>
       </Modal>
       <Modal
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
-        title={detailModalMode === "add" ? "Thêm chi tiết thẻ" : "Sửa chi tiết thẻ"}
+        title={
+          detailModalMode === "add" ? "Thêm chi tiết thẻ" : "Sửa chi tiết thẻ"
+        }
       >
         <form
           className="detail-modal-form"
           autoComplete="off"
-          onSubmit={(e) => { e.preventDefault(); handleSaveDetail(); }}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, minWidth: 600 }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSaveDetail();
+          }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 24,
+            minWidth: 600,
+          }}
         >
           {/* --- Cột 1: Upload ảnh và xem trước --- */}
-          <div style={{ gridColumn: "1/2", display: "flex", flexDirection: "column", gap: 12 }}>
-            <label className="mac-input-label">Ảnh chi tiết (có thể chọn nhiều)</label>
+          <div
+            style={{
+              gridColumn: "1/2",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
+            <label className="mac-input-label">
+              Ảnh chi tiết (có thể chọn nhiều)
+            </label>
             {/* Khu vực hình vuông hiển thị ảnh đã upload + nút "+" */}
             <div
               style={{
@@ -1142,70 +1342,80 @@ const InventoryPage: React.FC = () => {
                 gridTemplateRows: "repeat(2, 1fr)",
                 gap: 16,
                 padding: 16,
-                position: "relative"
+                position: "relative",
               }}
             >
               {/* Hiển thị ảnh đã có trong detailForm.card_photos */}
-              {detailForm.card_photos && detailForm.card_photos.map((img: string, idx: number) => (
-                <div
-                  key={`existing-${idx}`}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    width: "100%",
-                    height: "100%",
-                  }}
-                >
-                  {/* Nút xóa cho ảnh đã lưu */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDetailForm(prev => ({
-                        ...prev,
-                        card_photos: prev.card_photos.filter((_, i) => i !== idx)
-                      }));
-                      setDetailFormTouched(true);
-                    }}
+              {detailForm.card_photos &&
+                detailForm.card_photos.map((img: string, idx: number) => (
+                  <div
+                    key={`existing-${idx}`}
                     style={{
-                      position: "absolute",
-                      top: 6,
-                      right: 10,
-                      zIndex: 2,
-                      background: "rgba(255,255,255,0.25)",
-                      border: "1px solid rgba(255,255,255,0.3)",
-                      borderRadius: "50%",
-                      width: 28,
-                      height: 38,
+                      position: "relative",
                       display: "flex",
+                      flexDirection: "column",
                       alignItems: "center",
-                      justifyContent: "center",
-                      backdropFilter: "blur(6px)",
-                      WebkitBackdropFilter: "blur(6px)",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                    title="Xóa ảnh này"
-                  >
-                    <i className="bi bi-x-lg" style={{ fontSize: 18, color: "#fff" }}></i>
-                  </button>
-                  <img
-                    src={`/detail_inventory_images/${img}`}
-                    alt={`photo-${idx}`}
-                    style={{
                       width: "100%",
-                      height: "80%",
-                      objectFit: "cover",
-                      borderRadius: 8,
-                      border: "1px solid #ddd",
+                      height: "100%",
                     }}
-                    onClick={() => setPreviewImg(`/detail_inventory_images/${img}`)}
-                  />
-                  <span style={{ marginTop: 4, fontSize: 14, color: "#555" }}>{img}</span>
-                </div>
-              ))}
+                  >
+                    {/* Nút xóa cho ảnh đã lưu */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailForm((prev) => ({
+                          ...prev,
+                          card_photos: prev.card_photos.filter(
+                            (_, i) => i !== idx
+                          ),
+                        }));
+                        setDetailFormTouched(true);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: 6,
+                        right: 10,
+                        zIndex: 2,
+                        background: "rgba(255,255,255,0.25)",
+                        border: "1px solid rgba(255,255,255,0.3)",
+                        borderRadius: "50%",
+                        width: 28,
+                        height: 38,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backdropFilter: "blur(6px)",
+                        WebkitBackdropFilter: "blur(6px)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      title="Xóa ảnh này"
+                    >
+                      <i
+                        className="bi bi-x-lg"
+                        style={{ fontSize: 18, color: "#fff" }}
+                      ></i>
+                    </button>
+                    <img
+                      src={`/detail_inventory_images/${img}`}
+                      alt={`photo-${idx}`}
+                      style={{
+                        width: "100%",
+                        height: "80%",
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #ddd",
+                      }}
+                      onClick={() =>
+                        setPreviewImg(`/detail_inventory_images/${img}`)
+                      }
+                    />
+                    <span style={{ marginTop: 4, fontSize: 14, color: "#555" }}>
+                      {img}
+                    </span>
+                  </div>
+                ))}
               {/* Hiển thị ảnh vừa upload (chưa lưu) */}
               {detailImages.map((img, idx) => (
                 <div
@@ -1222,11 +1432,26 @@ const InventoryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      const ANGLES = ["front", "back", "corner1", "corner2", "corner3", "corner4", "corner5", "corner6", "corner7", "corner8"];
-                      setDetailImages(prev => prev.filter((_, i) => i !== idx).map((item, i) => ({
-                        ...item,
-                        name: ANGLES[i] || `angle${i + 1}`
-                      })));
+                      const ANGLES = [
+                        "front",
+                        "back",
+                        "corner1",
+                        "corner2",
+                        "corner3",
+                        "corner4",
+                        "corner5",
+                        "corner6",
+                        "corner7",
+                        "corner8",
+                      ];
+                      setDetailImages((prev) =>
+                        prev
+                          .filter((_, i) => i !== idx)
+                          .map((item, i) => ({
+                            ...item,
+                            name: ANGLES[i] || `angle${i + 1}`,
+                          }))
+                      );
                     }}
                     style={{
                       position: "absolute",
@@ -1249,7 +1474,10 @@ const InventoryPage: React.FC = () => {
                     }}
                     title="Xóa ảnh này"
                   >
-                    <i className="bi bi-x-lg" style={{ fontSize: 18, color: "#fff" }}></i>
+                    <i
+                      className="bi bi-x-lg"
+                      style={{ fontSize: 18, color: "#fff" }}
+                    ></i>
                   </button>
                   <img
                     src={URL.createObjectURL(img.file)}
@@ -1265,9 +1493,13 @@ const InventoryPage: React.FC = () => {
                   <input
                     type="text"
                     value={img.name}
-                    onChange={e => {
+                    onChange={(e) => {
                       const newName = e.target.value;
-                      setDetailImages(prev => prev.map((item, i) => i === idx ? { ...item, name: newName } : item));
+                      setDetailImages((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? { ...item, name: newName } : item
+                        )
+                      );
                     }}
                     style={{
                       marginTop: 4,
@@ -1276,7 +1508,7 @@ const InventoryPage: React.FC = () => {
                       textAlign: "center",
                       border: "1px solid #eee",
                       background: "#fff",
-                      color: "#333"
+                      color: "#333",
                     }}
                   />
                 </div>
@@ -1298,12 +1530,24 @@ const InventoryPage: React.FC = () => {
                     height: "100%",
                     minHeight: 0,
                     minWidth: 0,
-                    gridColumn: ((detailForm.card_photos?.length ?? 0) + detailImages.length) % 5 + 1,
-                    gridRow: Math.floor(((detailForm.card_photos?.length ?? 0) + detailImages.length) / 5) + 1,
+                    gridColumn:
+                      (((detailForm.card_photos?.length ?? 0) +
+                        detailImages.length) %
+                        5) +
+                      1,
+                    gridRow:
+                      Math.floor(
+                        ((detailForm.card_photos?.length ?? 0) +
+                          detailImages.length) /
+                          5
+                      ) + 1,
                   }}
                   title="Thêm ảnh"
                 >
-                  <i className="bi bi-plus-lg" style={{ fontSize: 48, color: "#bbb" }}></i>
+                  <i
+                    className="bi bi-plus-lg"
+                    style={{ fontSize: 48, color: "#bbb" }}
+                  ></i>
                 </label>
               )}
               <input
@@ -1311,14 +1555,28 @@ const InventoryPage: React.FC = () => {
                 type="file"
                 multiple
                 accept="image/*"
-                onChange={e => {
+                onChange={(e) => {
                   const files = Array.from(e.target.files || []);
-                  const ANGLES = ["front", "back", "corner1", "corner2", "corner3", "corner4", "corner5", "corner6", "corner7", "corner8"];
-                  setDetailImages(prev => {
-                    const allFiles = [...prev, ...files.map(f => ({ file: f, name: "" }))].slice(0, 10);
+                  const ANGLES = [
+                    "front",
+                    "back",
+                    "corner1",
+                    "corner2",
+                    "corner3",
+                    "corner4",
+                    "corner5",
+                    "corner6",
+                    "corner7",
+                    "corner8",
+                  ];
+                  setDetailImages((prev) => {
+                    const allFiles = [
+                      ...prev,
+                      ...files.map((f) => ({ file: f, name: "" })),
+                    ].slice(0, 10);
                     return allFiles.map((item, idx) => ({
                       ...item,
-                      name: ANGLES[idx] || `angle${idx + 1}`
+                      name: ANGLES[idx] || `angle${idx + 1}`,
                     }));
                   });
                   e.target.value = "";
@@ -1326,11 +1584,17 @@ const InventoryPage: React.FC = () => {
                 style={{ display: "none" }}
               />
             </div>
-            
           </div>
 
           {/* --- Cột 2: Các trường thông tin khác --- */}
-          <div style={{ gridColumn: "2/3", display: "flex", flexDirection: "column", gap: 18 }}>
+          <div
+            style={{
+              gridColumn: "2/3",
+              display: "flex",
+              flexDirection: "column",
+              gap: 18,
+            }}
+          >
             <Input
               label="Giá mua"
               name="purchase_price"
@@ -1353,10 +1617,14 @@ const InventoryPage: React.FC = () => {
               onChange={handleDetailFormChange}
             />
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <label className="mac-input-label" style={{ minWidth: 110 }}>Đã chấm điểm</label>
+              <label className="mac-input-label" style={{ minWidth: 110 }}>
+                Đã chấm điểm
+              </label>
               <Toggle
                 checked={detailForm.is_graded}
-                onChange={(checked) => setDetailForm((prev) => ({ ...prev, is_graded: checked }))}
+                onChange={(checked) =>
+                  setDetailForm((prev) => ({ ...prev, is_graded: checked }))
+                }
               />
               <label className="mac-input-label">Công ty chấm</label>
               <Input
@@ -1398,8 +1666,10 @@ const InventoryPage: React.FC = () => {
                   required
                 >
                   <option value="">Chọn...</option>
-                  {US_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {US_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1413,8 +1683,10 @@ const InventoryPage: React.FC = () => {
                   required
                 >
                   <option value="">Chọn...</option>
-                  {JP_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {JP_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1422,9 +1694,25 @@ const InventoryPage: React.FC = () => {
           </div>
 
           {/* Nút lưu/đóng */}
-          <div style={{ gridColumn: "2/3", display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
-            <Button type="submit" variant="primary">Lưu</Button>
-            <Button type="button" variant="gray-outline" onClick={() => setDetailModalOpen(false)}>Đóng</Button>
+          <div
+            style={{
+              gridColumn: "2/3",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 12,
+              marginTop: 24,
+            }}
+          >
+            <Button type="submit" variant="primary">
+              Lưu
+            </Button>
+            <Button
+              type="button"
+              variant="gray-outline"
+              onClick={() => setDetailModalOpen(false)}
+            >
+              Đóng
+            </Button>
           </div>
         </form>
       </Modal>
