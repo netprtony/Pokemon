@@ -247,18 +247,19 @@ const PokemonCardPage: React.FC = () => {
       onSort: () => {},
       sortActive: sortField === "reference_image_url",
       sortDirection: sortOrder,
+      sticky: true
     },
-    { key: "master_card_id", label: "Master Card ID", onSort: () => {}, sortActive: sortField === "master_card_id", sortDirection: sortOrder },
-    { key: "set_id", label: "Set ID", onSort: () => {}, sortActive: sortField === "set_id", sortDirection: sortOrder },
-    { key: "card_number", label: "Số thẻ", onSort: () => {}, sortActive: sortField === "card_number", sortDirection: sortOrder },
-    { key: "name_en", label: "Tên (EN)", onSort: () => {}, sortActive: sortField === "name_en", sortDirection: sortOrder },
-    { key: "name_original", label: "Tên gốc", onSort: () => {}, sortActive: sortField === "name_original", sortDirection: sortOrder },
-    { key: "version_en", label: "Phiên bản (EN)", onSort: () => {}, sortActive: sortField === "version_en", sortDirection: sortOrder },
-    { key: "version_original", label: "Phiên bản gốc", onSort: () => {}, sortActive: sortField === "version_original", sortDirection: sortOrder },
-    { key: "supertype", label: "Supertype", onSort: () => {}, sortActive: sortField === "supertype", sortDirection: sortOrder },
-    { key: "subtypes", label: "Subtypes", onSort: () => {}, sortActive: sortField === "subtypes", sortDirection: sortOrder },
-    { key: "rarity", label: "Độ hiếm", onSort: () => {}, sortActive: sortField === "rarity", sortDirection: sortOrder },
-    { key: "illustrator", label: "Họa sĩ", onSort: () => {}, sortActive: sortField === "illustrator", sortDirection: sortOrder },
+    { key: "master_card_id", label: "Master Card ID", onSort: () => {}, sortActive: sortField === "master_card_id", sortDirection: sortOrder, sticky: true },
+    { key: "set_id", label: "Set ID", onSort: () => {}, sortActive: sortField === "set_id", sortDirection: sortOrder, sticky: true },
+    { key: "card_number", label: "Số thẻ", onSort: () => {}, sortActive: sortField === "card_number", sortDirection: sortOrder, sticky: true },
+    { key: "name_en", label: "Tên (EN)", onSort: () => {}, sortActive: sortField === "name_en", sortDirection: sortOrder, sticky: true },
+    { key: "name_original", label: "Tên gốc", onSort: () => {}, sortActive: sortField === "name_original", sortDirection: sortOrder, sticky: true },
+    { key: "version_en", label: "Phiên bản (EN)", onSort: () => {}, sortActive: sortField === "version_en", sortDirection: sortOrder, sticky: true },
+    { key: "version_original", label: "Phiên bản gốc", onSort: () => {}, sortActive: sortField === "version_original", sortDirection: sortOrder, sticky: true },
+    { key: "supertype", label: "Supertype", onSort: () => {}, sortActive: sortField === "supertype", sortDirection: sortOrder, sticky: true },
+    { key: "subtypes", label: "Subtypes", onSort: () => {}, sortActive: sortField === "subtypes", sortDirection: sortOrder, sticky: true },
+    { key: "rarity", label: "Độ hiếm", onSort: () => {}, sortActive: sortField === "rarity", sortDirection: sortOrder, sticky: true },
+    { key: "illustrator", label: "Họa sĩ", onSort: () => {}, sortActive: sortField === "illustrator", sortDirection: sortOrder, sticky: true },
     {
       key: "flavorText",
       label: "Flavor Text",
@@ -266,6 +267,7 @@ const PokemonCardPage: React.FC = () => {
       onSort: () => {},
       sortActive: sortField === "flavorText",
       sortDirection: sortOrder,
+      sticky: true
     },
     {
       key: "updated_at",
@@ -277,6 +279,7 @@ const PokemonCardPage: React.FC = () => {
       onSort: () => {},
       sortActive: sortField === "updated_at",
       sortDirection: sortOrder,
+      sticky: true
     },
     {
       key: "action",
@@ -301,6 +304,7 @@ const PokemonCardPage: React.FC = () => {
           </button>
         </div>
       ),
+      sticky: true
     },
   ];
 

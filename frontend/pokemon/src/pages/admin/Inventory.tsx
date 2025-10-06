@@ -243,18 +243,20 @@ const getColumns = (
           alt="No image"
           style={{ width: 36, height: 36, objectFit: "contain", opacity: 0.5 }}
         />
+      
       ),
     width: 50,
     align: "center" as const,
+    sticky: true,
   },
-  { key: "inventory_id", label: "ID" },
-  { key: "master_card_id", label: "Mã thẻ" },
-  { key: "total_quantity", label: "Số lượng" },
-  { key: "quantity_sold", label: "Đã bán" },
-  { key: "avg_purchase_price", label: "Giá mua TB" },
-  { key: "avg_selling_price", label: "Giá bán TB" },
-  { key: "storage_location", label: "Vị trí lưu trữ" },
-  { key: "language", label: "Ngôn ngữ" },
+  { key: "inventory_id", label: "ID", sticky: true },
+  { key: "master_card_id", label: "Mã thẻ", sticky: true },
+  { key: "total_quantity", label: "Số lượng", sticky: true },
+  { key: "quantity_sold", label: "Đã bán", sticky: true },
+  { key: "avg_purchase_price", label: "Giá mua TB", sticky: true },
+  { key: "avg_selling_price", label: "Giá bán TB", sticky: true },
+  { key: "storage_location", label: "Vị trí lưu trữ", sticky: true },
+  { key: "language", label: "Ngôn ngữ", sticky: true },
   {
     key: "is_active",
     label: "Hoạt động",
@@ -266,10 +268,11 @@ const getColumns = (
       ),
     align: "center" as const,
     width: 90,
+    sticky: true,
   },
-  { key: "date_added", label: "Ngày thêm" },
-  { key: "last_updated", label: "Cập nhật cuối" },
-  { key: "notes", label: "Ghi chú" },
+  { key: "date_added", label: "Ngày thêm", sticky: true },
+  { key: "last_updated", label: "Cập nhật cuối", sticky: true },
+  { key: "notes", label: "Ghi chú", sticky: true },
   {
     key: "action",
     label: "Thao tác",
@@ -300,6 +303,7 @@ const getColumns = (
         </button>
       </div>
     ),
+    sticky: true,
   },
 ];
 
@@ -365,7 +369,21 @@ const InventoryPage: React.FC = () => {
   const cardInputRef = useRef<HTMLInputElement>(null);
 
   // Thêm state:
-  const [loadingDetailIds, setLoadingDetailIds] = useState<number[]>([]);
+  const [openedInventoryId, setOpenedInventoryId] = useState<number | null>(null);
+  const [priceData, setPriceData] = useState<any | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+
+  // --- Effect: gọi API khi openedInventoryId thay đổi ---
+  useEffect(() => {
+    if (openedInventoryId !== null) {
+      // Tìm inventory row đang mở
+      const row = data.find((r) => r.inventory_id === openedInventoryId);
+      if (row) fetchPriceData(row);
+    } else {
+      setPriceData(null);
+    }
+    // eslint-disable-next-line
+  }, [openedInventoryId]);
 
   // --- Handlers ---
   const handleAdd = () => {
@@ -904,8 +922,8 @@ const InventoryPage: React.FC = () => {
   };
 
   const detailColumns = [
-    { key: "detail_id", label: "ID" },
-    { key: "card_photos_count", label: "Số ảnh" },
+    { key: "detail_id", label: "ID", sticky: true },
+    { key: "card_photos_count", label: "Số ảnh" , sticky: true},
     {
       key: "card_photos",
       label: "Ảnh",
@@ -935,46 +953,53 @@ const InventoryPage: React.FC = () => {
           )}
         </div>
       ),
+      sticky: true,
     },
-    { key: "physical_condition_us", label: "Điều kiện US" },
-    { key: "physical_condition_jp", label: "Điều kiện JP" },
+    { key: "physical_condition_us", label: "Điều kiện US", sticky: true },
+    { key: "physical_condition_jp", label: "Điều kiện JP", sticky: true },
     {
       key: "is_graded",
       label: "Đã chấm điểm",
       render: (row: any) => (row.is_graded ? "Đã chấm" : "Chưa chấm"),
+      sticky: true,
     },
-    { key: "grade_company", label: "Hãng chấm" },
-    { key: "grade_score", label: "Điểm" },
+    { key: "grade_company", label: "Hãng chấm", sticky: true },
+    { key: "grade_score", label: "Điểm", sticky: true },
     {
       key: "purchase_price",
       label: "Giá mua",
       render: (row: any) =>
         row.purchase_price ? row.purchase_price.toLocaleString("vi-VN") : "-",
+      sticky: true
     },
     {
       key: "selling_price",
       label: "Giá bán",
       render: (row: any) =>
         row.selling_price ? row.selling_price.toLocaleString("vi-VN") : "-",
+      sticky: true
     },
     {
       key: "date_added",
       label: "Ngày thêm",
       render: (row: any) =>
         row.date_added ? row.date_added.substring(0, 10) : "-",
+      sticky: true
     },
     {
       key: "last_updated",
       label: "Cập nhật cuối",
       render: (row: any) =>
         row.last_updated ? row.last_updated.substring(0, 10) : "-",
+      sticky: true
     },
     {
       key: "is_sold",
       label: "Đã bán",
       render: (row: any) => (row.is_sold ? "Đã bán" : "Chưa bán"),
+      sticky: true
     },
-    { key: "notes", label: "Ghi chú" },
+    { key: "notes", label: "Ghi chú", sticky: true },
     {
       key: "action",
       label: "Thao tác",
@@ -996,6 +1021,7 @@ const InventoryPage: React.FC = () => {
           </button>
         </div>
       ),
+      sticky: true
     },
   ];
 
@@ -1017,22 +1043,13 @@ const InventoryPage: React.FC = () => {
     );
   };
 
-  const renderCollapse = (row: InventoryRow) => {
-    // Nếu chưa có detail, fetch
-    if (
-      !detailData[row.inventory_id] &&
-      !loadingDetailIds.includes(row.inventory_id)
-    ) {
-      setLoadingDetailIds((ids) => [...ids, row.inventory_id]);
-      fetchDetailInventory(row.inventory_id).finally(() => {
-        setLoadingDetailIds((ids) =>
-          ids.filter((id) => id !== row.inventory_id)
-        );
-      });
-      return <div className="text-muted py-3">Đang tải chi tiết...</div>;
-    }
-    return renderDetailTable(row.inventory_id);
-  };
+  // --- renderCollapse chỉ là hàm render, KHÔNG dùng hook ---
+  const renderCollapse = (row: InventoryRow) => (
+    <div>
+      {/* {renderPriceBox()} */}
+      {renderDetailTable(row.inventory_id)}
+    </div>
+  );
 
   function handleAddDetail(row: InventoryRow) {
     setDetailForm({ ...defaultDetailForm, inventory_id: row.inventory_id });
@@ -1197,6 +1214,152 @@ const InventoryPage: React.FC = () => {
     setDetailFormTouched(true);
   }
 
+  const fetchPriceData = async (row: InventoryRow) => {
+    setPriceLoading(true);
+    try {
+      // 1. Gọi API lấy thông tin card
+      const cardResp = await axios.get("http://localhost:8000/pokemon-cards/search-id-card", {
+        params: { search: row.master_card_id },
+      });
+      const cardArr = cardResp.data as any[];
+      const cardData = cardArr?.[0];
+      if (!cardData) {
+        setPriceData(null);
+        setPriceLoading(false);
+        return;
+      }
+      // 2. Lấy đúng các param từ cardData
+      const version_en = cardData.set_id || "celebrations";
+      const name_en = cardData.name_en || row.master_card_id;
+      const card_number = cardData.card_number
+        ? String(cardData.card_number).padStart(3, "0")
+        : "007";
+      // 3. Gọi API lấy giá
+      const resp = await axios.get("http://localhost:8000/pricecharting/result", {
+        params: {
+          version_en,
+          name_en,
+          card_number,
+        },
+      });
+      const priceArr = resp.data as any[];
+      setPriceData(priceArr[0] || {});
+    } catch {
+      setPriceData(null);
+    }
+    setPriceLoading(false);
+  };
+
+  const renderPriceBox = () => {
+    if (priceLoading) return (
+      <div className="py-3">
+      Đang tải giá...
+      <div className="progress mt-2" style={{ height: 6, maxWidth: 320 }}>
+        <div
+        className="progress-bar progress-bar-striped progress-bar-animated bg-info"
+        role="progressbar"
+        style={{ width: "100%" }}
+        aria-valuenow={100}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        ></div>
+      </div>
+      </div>
+    );
+    if (!priceData) return null;
+    // Gom các giá trị có url thành combobox
+    const urlOptions = [
+      priceData.eBay_link_table_1 && {
+        label: "eBay",
+        url: priceData.eBay_link_table_1,
+        price: priceData.eBay_price_table_1,
+      },
+      priceData.TCGPlayer_link_table_1 && {
+        label: "TCGPlayer",
+        url: priceData.TCGPlayer_link_table_1,
+        price: priceData.TCGPlayer_price_table_1,
+      },
+      priceData.url && {
+        label: "PriceCharting",
+        url: priceData.url,
+      },
+    ].filter(Boolean);
+
+    return (
+      <div className="price-box" style={{ padding: 12 }}>
+        <div style={{ overflowX: "auto", width: "77%" }}>
+          <table className="table table-bordered" style={{ tableLayout: "fixed", width: "100%", fontSize: 14 }}>
+          <thead>
+        <tr>
+          <th style={{ width: 120 }}>Ungraded</th>
+          <th style={{ width: 90 }}>Grade 1</th>
+          <th style={{ width: 90 }}>Grade 2</th>
+          <th style={{ width: 90 }}>Grade 3</th>
+          <th style={{ width: 90 }}>Grade 4</th>
+          <th style={{ width: 90 }}>Grade 5</th>
+          <th style={{ width: 90 }}>Grade 6</th>
+          <th style={{ width: 90 }}>Grade 7</th>
+          <th style={{ width: 90 }}>Grade 8</th>
+          <th style={{ width: 90 }}>Grade 9</th>
+          <th style={{ width: 90 }}>Grade 9.5</th>
+          <th style={{ width: 90 }}>Grade 10</th>
+          <th style={{ width: 90 }}>PSA 10</th>
+          <th style={{ width: 90 }}>TAG 10</th>
+          <th style={{ width: 90 }}>ACE 10</th>
+          <th style={{ width: 90 }}>SGC 10</th>
+          <th style={{ width: 90 }}>CGC 10</th>
+          <th style={{ width: 90 }}>BGS 10</th>
+          <th style={{ width: 110 }}>BGS 10 Black</th>
+          <th style={{ width: 120 }}>CGC 10 Pristine</th>
+          <th style={{ width: 180 }}>Links</th>
+        </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td>{priceData.Ungraded || "-"}</td>
+          <td>{priceData["Grade 1"] || "-"}</td>
+          <td>{priceData["Grade 2"] || "-"}</td>
+          <td>{priceData["Grade 3"] || "-"}</td>
+          <td>{priceData["Grade 4"] || "-"}</td>
+          <td>{priceData["Grade 5"] || "-"}</td>
+          <td>{priceData["Grade 6"] || "-"}</td>
+          <td>{priceData["Grade 7"] || "-"}</td>
+          <td>{priceData["Grade 8"] || "-"}</td>
+          <td>{priceData["Grade 9"] || "-"}</td>
+          <td>{priceData["Grade 9.5"] || "-"}</td>
+          <td>{priceData["Grade 10"] || "-"}</td>
+          <td>{priceData["PSA 10"] || "-"}</td>
+          <td>{priceData["TAG 10"] || "-"}</td>
+          <td>{priceData["ACE 10"] || "-"}</td>
+          <td>{priceData["SGC 10"] || "-"}</td>
+          <td>{priceData["CGC 10"] || "-"}</td>
+          <td>{priceData["BGS 10"] || "-"}</td>
+          <td>{priceData["BGS 10 Black"] || "-"}</td>
+          <td>{priceData["CGC 10 Pristine"] || "-"}</td>
+          <td>
+            <select
+          style={{ minWidth: 160 }}
+          onChange={(e) => {
+            const url = e.target.value;
+            if (url) window.open(url, "_blank");
+          }}
+            >
+          <option value="">Chọn nguồn giá...</option>
+          {urlOptions.map((opt) => (
+            <option key={opt.label} value={opt.url}>
+              {opt.label} ({opt.price})
+            </option>
+          ))}
+            </select>
+          </td>
+        </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="container-fluid py-4">
       <h3 className="mb-3 fw-bold">Danh sách kho thẻ</h3>
@@ -1209,11 +1372,13 @@ const InventoryPage: React.FC = () => {
         onExportCSV={handleExportCSV}
         onExportJSON={handleExportJSON}
       />
-      <div className="d-flex justify-content-end mb-3">
+      <div className="d-flex justify-content-center mb-3">
         <button className="btn btn-success" onClick={handleAdd}>
           <i className="bi bi-plus-lg me-2"></i> Thêm thẻ mới
         </button>
       </div>
+      {/* Hiển thị khung bảng giá ngay dưới nút Thêm thẻ mới */}
+      {renderPriceBox()}
       <DataTable
         columns={columns}
         data={data}
@@ -1228,6 +1393,11 @@ const InventoryPage: React.FC = () => {
         sortField={sortField}
         sortOrder={sortOrder}
         renderCollapse={renderCollapse}
+        onCollapseOpen={(row) => setOpenedInventoryId(row.inventory_id)}
+        onCollapseClose={() => {
+          setOpenedInventoryId(null);
+          setPriceData(null);
+        }}
       />
       {/* Modal nhập thông tin */}
       <Modal

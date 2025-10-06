@@ -150,12 +150,40 @@ CREATE TABLE market_prices (
     -- Metadata
     price_date DATE NOT NULL,
     data_source VARCHAR(50) DEFAULT 'Manual',
+    urls JSON,
     
     FOREIGN KEY (master_card_id) REFERENCES pokemon_cards_master(master_card_id),
     INDEX idx_card_date (master_card_id, price_date),
     INDEX idx_date (price_date)
 );
+-- CREATE TABLE market_sources (
+--     source_id INT AUTO_INCREMENT PRIMARY KEY,
+--     source_name VARCHAR(100) NOT NULL,          -- Tên nguồn (vd: TCGPlayer NM, eBay, Yahoo Auction)
+--     region ENUM('US', 'JP', 'EU', 'VN', 'GLOBAL') NOT NULL, -- Khu vực
+--     condition VARCHAR(50),                      -- Điều kiện thẻ (Near Mint, Lightly Played, A, B,...)
+--     description TEXT,
+--     data_source VARCHAR(100),                   -- Cách crawl (API, web scraping, manual,...)
+--     is_active BOOLEAN DEFAULT TRUE
+-- );
+-- CREATE TABLE market_prices (
+--     price_id INT AUTO_INCREMENT PRIMARY KEY,
+--     master_card_id VARCHAR(20) NOT NULL,
+--     source_id INT NOT NULL,                      -- 🔗 liên kết đến market_sources
+--     price DECIMAL(12,2) NOT NULL,                -- Giá theo nguồn
+--     currency VARCHAR(10) DEFAULT 'USD',          -- Tiền tệ của nguồn (USD, JPY, ...)
+--     exchange_rate_to_vnd DECIMAL(12,2),          -- Tỷ giá nếu có
+--     price_vnd AS (price * exchange_rate_to_vnd) STORED, -- Giá quy đổi (nếu cần)
+--     price_date DATE NOT NULL,                    -- Ngày cập nhật giá
+--     note TEXT,
+    
+--     FOREIGN KEY (master_card_id) REFERENCES pokemon_cards_master(master_card_id)
+--         ON DELETE CASCADE ON UPDATE CASCADE,
+--     FOREIGN KEY (source_id) REFERENCES market_sources(source_id)
+--         ON DELETE CASCADE ON UPDATE CASCADE,
 
+--     INDEX idx_card_date (master_card_id, price_date),
+--     INDEX idx_source_date (source_id, price_date)
+-- );
 -- Bảng cảnh báo giá (Price Alerts)
 CREATE TABLE price_alerts (
     alert_id INT AUTO_INCREMENT PRIMARY KEY,

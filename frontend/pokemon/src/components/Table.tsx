@@ -12,6 +12,7 @@ type Column<T> = {
   onSort?: () => void;
   sortActive?: boolean;
   sortDirection?: "asc" | "desc";
+  sticky?: boolean; // Thêm dòng này
 };
 
 interface DataTableProps<T> {
@@ -28,6 +29,8 @@ interface DataTableProps<T> {
   onSort?: (field: string, order: "asc" | "desc") => void;
   sortField?: string;
   sortOrder?: "asc" | "desc";
+  onCollapseOpen?: (row: T) => void;      // thêm dòng này
+  onCollapseClose?: () => void;           // thêm dòng này
 }
 
 export default function DataTable<T>({
@@ -43,6 +46,8 @@ export default function DataTable<T>({
   sortField,
   sortOrder,
   renderCollapse,
+  onCollapseOpen,      // thêm dòng này
+  onCollapseClose,     // thêm dòng này
 }: DataTableProps<T>) {
   // State nội bộ
   const [internalPage, setInternalPage] = useState(1);
@@ -107,6 +112,18 @@ export default function DataTable<T>({
     document.addEventListener("mouseup", stopDrag);
   };
 
+  // Sửa lại event mở/đóng collapse
+  const handleRowClick = (row: T, globalIdx: number) => {
+    if (!renderCollapse) return;
+    if (openRow === globalIdx) {
+      setOpenRow(null);
+      onCollapseClose && onCollapseClose();
+    } else {
+      setOpenRow(globalIdx);
+      onCollapseOpen && onCollapseOpen(row);
+    }
+  };
+
   return (
     <div
       className="rounded-4 p-4 shadow-sm"
@@ -139,7 +156,7 @@ export default function DataTable<T>({
       </div>
 
       {/* Table with scroll */}
-      <div style={{ maxHeight: "70vh", overflowY: "auto", overflowX: "auto", width: "100%", maxWidth: "1630px" }}>
+      <div style={{ maxHeight: "70vh", overflowY: "auto", overflowX: "auto", width: "100%", maxWidth: "1590px" }}>
         <Table
           hover
           responsive
@@ -158,7 +175,11 @@ export default function DataTable<T>({
                     textAlign: col.align || "left",
                     width: colWidths[col.key] || col.width,
                     whiteSpace: "nowrap",
-                    position: "relative",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 2,
+                    left: col.sticky ? 0 : undefined, // Thêm dòng này
+                    boxShadow: col.sticky ? "2px 0 8px -2px rgba(0,0,0,0.04)" : undefined, // Tùy chọn
                     fontWeight: 700,
                     color: "var(--table-header-text)",
                     background: "var(--table-header-bg)",
@@ -216,7 +237,6 @@ export default function DataTable<T>({
                     <div className="placeholder-glow w-100 mb-3">
                       <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
                     </div>
-                    <span className="text-muted mt-3">Đang tải dữ liệu...</span>
                   </div>
                 </td>
               </tr>
@@ -232,7 +252,6 @@ export default function DataTable<T>({
                       alt="No data"
                       style={{ width: 220, height: 220, objectFit: "contain", opacity: 0.5 }}
                     />
-                    <div>Không có dữ liệu</div>
                   </div>
                 </td>
               </tr>
@@ -248,7 +267,7 @@ export default function DataTable<T>({
                         color: "var(--sidebar-text)",
                         transition: "background 0.2s, color 0.2s",
                       }}
-                      onClick={() => renderCollapse && setOpenRow(openRow === globalIdx ? null : globalIdx)}
+                      onClick={() => handleRowClick(row, globalIdx)} // sửa lại event click
                     >
                       {columns.map((col) => (
                         <td
@@ -259,8 +278,11 @@ export default function DataTable<T>({
                             border: "none",
                             fontWeight: col.key === "status" ? 600 : 400,
                             fontSize: "1rem",
-                            background: "inherit",
                             color: "inherit",
+                            position: col.sticky ? "sticky" : undefined, // Thêm dòng này
+                            left: col.sticky ? 0 : undefined, // Thêm dòng này
+                            zIndex: col.sticky ? 1 : undefined, // Thêm dòng này
+                            background: col.sticky ? "var(--table-header-bg)" : "inherit", // Tùy chọn
                           }}
                         >
                           {/* Nếu là hình ảnh, cho phép click để xem lớn */}

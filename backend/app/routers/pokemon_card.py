@@ -200,12 +200,14 @@ def search_id_card(
         PokemonCardMaster.card_number,
         PokemonCardMaster.name_en,
         PokemonCardMaster.name_original,
+        PokemonCardMaster.version_en,
 
     ).filter(
         PokemonCardMaster.master_card_id.ilike(f"%{search}%") |
         PokemonCardMaster.card_number.ilike(f"%{search}%") |
         PokemonCardMaster.name_en.ilike(f"%{search}%") |
-        PokemonCardMaster.name_original.ilike(f"%{search}%")
+        PokemonCardMaster.name_original.ilike(f"%{search}%")|
+        PokemonCardMaster.version_en.ilike(f"%{search}%")
     ).all()
     return [
         {
@@ -214,6 +216,7 @@ def search_id_card(
             "name_en": r.name_en,
             "name_original": r.name_original,
             "card_number": r.card_number,
+            "version_en": r.version_en,
         }
         for r in results
     ]
