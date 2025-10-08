@@ -1,4 +1,5 @@
 import scrapy
+import requests
 
 class PriceChartingSpider(scrapy.Spider):
     name = "pricecharting"
@@ -49,5 +50,21 @@ class PriceChartingSpider(scrapy.Spider):
                 tcg_link = tcg_row.xpath('.//td[contains(@class, "see-it")]/a/@href').get()
                 result[f"TCGPlayer_price_table_{idx}"] = tcg_price.strip() if tcg_price else None
                 result[f"TCGPlayer_link_table_{idx}"] = response.urljoin(tcg_link) if tcg_link else None
+
+        # Lấy tỷ giá USD/VND
+        try:
+            usd_resp = requests.get("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json", timeout=10)
+            usd_json = usd_resp.json()
+            result["usd_to_vnd_rate"] = float(usd_json["usd"]["vnd"])
+        except Exception:
+            result["usd_to_vnd_rate"] = None
+
+        # Lấy tỷ giá JPY/VND
+        try:
+            jpy_resp = requests.get("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/jpy.json", timeout=10)
+            jpy_json = jpy_resp.json()
+            result["jpy_to_vnd_rate"] = float(jpy_json["jpy"]["vnd"])
+        except Exception:
+            result["jpy_to_vnd_rate"] = None
 
         yield result

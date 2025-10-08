@@ -6,7 +6,10 @@ import subprocess
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import MarketPrice
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+ROOT_DIR = os.getenv("PROJECT_ROOT")
 router = APIRouter(prefix="/pricecharting", tags=["PriceCharting"])
 
 @router.get("/result")
@@ -17,9 +20,8 @@ def get_pricecharting_result(
     master_card_id: str = Query(...),
     db: Session = Depends(get_db)
 ):
-    import decimal
 
-    json_path = os.path.abspath("d:/Pokemon/backend/crawler/data.json")
+    json_path = os.path.abspath(f"{ROOT_DIR}/backend/crawler/data.json")
     cmd = [
         "scrapy", "crawl", "pricecharting",
         "-a", f'version_en={version_en}',
@@ -27,7 +29,7 @@ def get_pricecharting_result(
         "-a", f'card_number={card_number}',
         "-O", "data.json"
     ]
-    cwd = os.path.abspath("d:/Pokemon/backend/crawler")
+    cwd = os.path.abspath(f"{ROOT_DIR}/backend/crawler")
     subprocess.run(cmd, cwd=cwd, check=True)
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -52,7 +54,8 @@ def get_pricecharting_result(
 
     # Tách các trường link/url
     url_fields = {k: v for k, v in result.items() if "link" in k.lower() or "url" in k.lower()}
-
+    usd_to_vnd_rate = result.get("usd_to_vnd_rate")
+    jpy_to_vnd_rate = result.get("jpy_to_vnd_rate")
     # Các trường giá chính
     ebay_price = _parse_decimal(result.get("eBay_price_table_1"))
     tcgplayer_price = _parse_decimal(result.get("TCGPlayer_price_table_1"))

@@ -428,24 +428,24 @@ const InventoryPage: React.FC = () => {
     }
   };
 
+  const [addLoading, setAddLoading] = useState(false);
+
   const handleSave = async () => {
     try {
+      setAddLoading(true);
       const { reference_image_url, inventory_id, ...payload } = form;
-      // Nếu date_added rỗng, set lại ngày hiện tại
       if (!payload.date_added) {
         payload.date_added = new Date().toISOString().slice(0, 10);
       }
-      // Chuyển date_added về dạng YYYY-MM-DD nếu đang là DD/MM/YYYY
       if (payload.date_added && payload.date_added.includes("/")) {
         const [day, month, year] = payload.date_added.split("/");
         payload.date_added = `${year}-${month}-${day}`;
       }
-      // Log payload để debug
-      console.log("Payload gửi lên:", payload);
       if (modalMode === "add") {
+        // Thêm inventory
         await axios.post(API_URL, payload);
         toast.success("Thêm mới thành công!");
-        setModalOpen(false); // Đóng modal sau khi thêm thành công
+        setModalOpen(false);
         fetchData();
       } else if (modalMode === "edit") {
         await axios.put(`${API_URL}${form.inventory_id}`, payload);
@@ -455,6 +455,8 @@ const InventoryPage: React.FC = () => {
       }
     } catch {
       toast.error("Lỗi khi lưu dữ liệu!");
+    } finally {
+      setAddLoading(false);
     }
   };
 
@@ -871,7 +873,7 @@ const InventoryPage: React.FC = () => {
           alignSelf: "end",
         }}
       >
-        <Button type="submit" variant="primary" size="md">
+        <Button type="submit" variant="primary" size="md" loading={addLoading}>
           {modalMode === "add" ? "Thêm mới" : "Lưu thay đổi"}
         </Button>
         <Button
@@ -1309,13 +1311,11 @@ const InventoryPage: React.FC = () => {
             <tbody>
               <tr>
                 {grades.map((g) => (
-                    <td key={g}>
+                  <td key={g}>$
                     {pricecharting[g] !== undefined && pricecharting[g] !== null
-                      ? pricecharting[g] === "-"
-                      ? "-"
-                      : `$${pricecharting[g]}`
+                      ? pricecharting[g]
                       : "-"}
-                    </td>
+                  </td>
                 ))}
                 <td>
                   <select
