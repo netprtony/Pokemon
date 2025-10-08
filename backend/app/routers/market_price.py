@@ -11,6 +11,7 @@ from app.schemas.market_price import (
 from app.schemas.filter import FilterRequest
 from app.models import MarketPrice
 from app.database import get_db
+import json
 
 router = APIRouter(prefix="/market-price", tags=["Market Price"])
 
@@ -132,3 +133,44 @@ def filter_market_prices(
     total = query.order_by(None).count()
     items = query.offset((page - 1) * page_size).limit(page_size).all()
     return {"items": items, "total": total}
+
+
+
+@router.get("/by-master/{master_card_id}", response_model=MarketPriceOut)
+def get_market_price_by_master_card_id(master_card_id: str, db: Session = Depends(get_db)):
+    db_item = (
+        db.query(MarketPrice)
+        .filter(MarketPrice.master_card_id == master_card_id)
+        .order_by(MarketPrice.price_date.desc())
+        .first()
+    )
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Market price not found")
+    pricecharting_price = db_item.pricecharting_price
+    if isinstance(pricecharting_price, str):
+        try:
+            pricecharting_price = json.loads(pricecharting_price)
+        except Exception:
+            pricecharting_price = None
+    url = db_item.urls if hasattr(db_item, "urls") else db_item.url
+    if isinstance(url, str):
+        try:
+            url = json.loads(url)
+        except Exception:
+            url = None
+    return {
+        "price_id": db_item.price_id,
+        "master_card_id": db_item.master_card_id,
+        "tcgplayer_price": db_item.tcgplayer_price,
+        "ebay_avg_price": db_item.ebay_avg_price,
+        "pricecharting_price": pricecharting_price,
+        "cardrush_a_price": db_item.cardrush_a_price,
+        "cardrush_b_price": db_item.cardrush_b_price,
+        "snkrdunk_price": db_item.snkrdunk_price,
+        "yahoo_auction_avg": db_item.yahoo_auction_avg,
+        "usd_to_vnd_rate": db_item.usd_to_vnd_rate,
+        "jpy_to_vnd_rate": db_item.jpy_to_vnd_rate,
+        "price_date": db_item.price_date,
+        "data_source": db_item.data_source,
+        "url": url
+    }

@@ -140,10 +140,9 @@ class MarketPrice(Base):
     price_id = Column(Integer, primary_key=True, autoincrement=True)
     master_card_id = Column(String(20), ForeignKey("pokemon_cards_master.master_card_id"), nullable=False)
 
-    tcgplayer_nm_price = Column(DECIMAL(10, 2))
-    tcgplayer_lp_price = Column(DECIMAL(10, 2))
+    tcgplayer_price = Column(DECIMAL(10, 2))
     ebay_avg_price = Column(DECIMAL(10, 2))
-    pricecharting_price = Column(DECIMAL(10, 2))
+    pricecharting_price = Column(JSON)
     cardrush_a_price = Column(DECIMAL(10, 2))
     cardrush_b_price = Column(DECIMAL(10, 2))
     snkrdunk_price = Column(DECIMAL(10, 2))
@@ -152,6 +151,7 @@ class MarketPrice(Base):
     jpy_to_vnd_rate = Column(DECIMAL(6, 2))
     price_date = Column(Date, nullable=False)
     data_source = Column(String(50), default="Manual")
+    urls = Column(JSON)
 
     card = relationship("PokemonCardMaster", back_populates="market_prices")
 

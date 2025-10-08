@@ -12,6 +12,7 @@ from app.models import Inventory, PokemonCardMaster
 from app.database import get_db
 import os
 import json
+import requests
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 INVENTORY_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/inventory_images")
@@ -23,6 +24,37 @@ def create_inventory(data: InventoryCreate, db: Session = Depends(get_db)):
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
+
+    # Gọi API crawl giá và lưu vào DB
+    try:
+        # Lấy thông tin card từ bảng master nếu cần
+        master_card = db.query(PokemonCardMaster).filter(
+            PokemonCardMaster.master_card_id == db_item.master_card_id
+        ).first()
+        # Nếu có các trường version_en, name_en, card_number trong master_card thì lấy ra
+        version_en = getattr(master_card, "version_en", "")
+        name_en = getattr(master_card, "name_en", "")
+        card_number = getattr(master_card, "card_number", "")
+        # Nếu không có thì dùng giá trị mặc định hoặc từ inventory
+        if not version_en or not name_en or not card_number:
+            # Nếu inventory có các trường này thì lấy, nếu không thì để rỗng
+            version_en = getattr(db_item, "version_en", "")
+            name_en = getattr(db_item, "name_en", "")
+            card_number = getattr(db_item, "card_number", "")
+        # Gọi API nội bộ
+        requests.get(
+            "http://localhost:8000/pricecharting/result",
+            params={
+                "version_en": version_en,
+                "name_en": name_en,
+                "card_number": card_number,
+                "master_card_id": db_item.master_card_id,
+            },
+            timeout=60
+        )
+    except Exception as e:
+        print("Crawl pricecharting error:", e)
+
     return db_item
 
 # Sửa

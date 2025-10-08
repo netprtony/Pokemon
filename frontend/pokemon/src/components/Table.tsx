@@ -156,15 +156,36 @@ export default function DataTable<T>({
       </div>
 
       {/* Table with scroll */}
-      <div style={{ maxHeight: "70vh", overflowY: "auto", overflowX: "auto", width: "100%", maxWidth: "1590px" }}>
+      <div
+        style={{
+          maxHeight: "70vh",
+          overflowY: "auto",
+          overflowX: "auto",
+          width: "100%",
+          maxWidth: "1590px",
+          position: "relative",
+        }}
+      >
         <Table
           hover
           responsive
           className="align-middle mb-0"
           ref={tableRef}
-          style={{ fontSize: "1rem", minWidth: 1200 }}
+          style={{
+            fontSize: "1rem",
+            minWidth: 1200,
+            borderCollapse: "separate",
+            borderSpacing: 0,
+          }}
         >
-          <thead style={{ background: "var(--table-header-bg)" }}>
+          <thead
+            style={{
+              background: "var(--table-header-bg)",
+              position: "sticky",
+              top: 0,
+              zIndex: 3,
+            }}
+          >
             <tr>
               {columns.map((col) => (
                 <th
@@ -177,7 +198,7 @@ export default function DataTable<T>({
                     whiteSpace: "nowrap",
                     position: "sticky",
                     top: 0,
-                    zIndex: 2,
+                    zIndex: col.sticky ? 4 : 3,
                     left: col.sticky ? 0 : undefined, // Thêm dòng này
                     boxShadow: col.sticky ? "2px 0 8px -2px rgba(0,0,0,0.04)" : undefined, // Tùy chọn
                     fontWeight: 700,

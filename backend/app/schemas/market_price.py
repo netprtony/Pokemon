@@ -1,14 +1,13 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional, List, Dict, Any
 from datetime import date
 
 class MarketPriceBase(BaseModel):
     price_id: int
     master_card_id: str
-    tcgplayer_nm_price: Optional[float]
-    tcgplayer_lp_price: Optional[float]
+    tcgplayer_price: Optional[float]
     ebay_avg_price: Optional[float]
-    pricecharting_price: Optional[float]
+    pricecharting_price: Optional[Dict[str, Any]]  # hoặc Optional[str] nếu lưu JSON string
     cardrush_a_price: Optional[float]
     cardrush_b_price: Optional[float]
     snkrdunk_price: Optional[float]
@@ -17,13 +16,13 @@ class MarketPriceBase(BaseModel):
     jpy_to_vnd_rate: Optional[float]
     price_date: date
     data_source: Optional[str]
+    url: Optional[Dict[str, Any]]  # hoặc Optional[str] nếu lưu JSON string
 
 class MarketPriceCreate(BaseModel):
     master_card_id: str
-    tcgplayer_nm_price: Optional[float]
-    tcgplayer_lp_price: Optional[float]
+    tcgplayer_price: Optional[float]
     ebay_avg_price: Optional[float]
-    pricecharting_price: Optional[float]
+    pricecharting_price: Optional[Dict[str, Any]]
     cardrush_a_price: Optional[float]
     cardrush_b_price: Optional[float]
     snkrdunk_price: Optional[float]
@@ -32,12 +31,12 @@ class MarketPriceCreate(BaseModel):
     jpy_to_vnd_rate: Optional[float]
     price_date: date
     data_source: Optional[str]
+    url: Optional[Dict[str, Any]]
 
 class MarketPriceUpdate(BaseModel):
-    tcgplayer_nm_price: Optional[float]
-    tcgplayer_lp_price: Optional[float]
+    tcgplayer_price: Optional[float]
     ebay_avg_price: Optional[float]
-    pricecharting_price: Optional[float]
+    pricecharting_price: Optional[Dict[str, Any]]
     cardrush_a_price: Optional[float]
     cardrush_b_price: Optional[float]
     snkrdunk_price: Optional[float]
@@ -46,6 +45,7 @@ class MarketPriceUpdate(BaseModel):
     jpy_to_vnd_rate: Optional[float]
     price_date: Optional[date]
     data_source: Optional[str]
+    url: Optional[Dict[str, Any]]
 
 class MarketPriceOut(MarketPriceBase):
     class Config:

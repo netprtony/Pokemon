@@ -1217,144 +1217,126 @@ const InventoryPage: React.FC = () => {
   const fetchPriceData = async (row: InventoryRow) => {
     setPriceLoading(true);
     try {
-      // 1. Gọi API lấy thông tin card
-      const cardResp = await axios.get("http://localhost:8000/pokemon-cards/search-id-card", {
-        params: { search: row.master_card_id },
-      });
-      const cardArr = cardResp.data as any[];
-      const cardData = cardArr?.[0];
-      if (!cardData) {
-        setPriceData(null);
-        setPriceLoading(false);
-        return;
-      }
-      // 2. Lấy đúng các param từ cardData
-      const version_en = cardData.set_id || "celebrations";
-      const name_en = cardData.name_en || row.master_card_id;
-      const card_number = cardData.card_number
-        ? String(cardData.card_number).padStart(3, "0")
-        : "007";
-      // 3. Gọi API lấy giá
-      const resp = await axios.get("http://localhost:8000/pricecharting/result", {
-        params: {
-          version_en,
-          name_en,
-          card_number,
-        },
-      });
-      const priceArr = resp.data as any[];
-      setPriceData(priceArr[0] || {});
+      const resp = await axios.get(
+        `http://localhost:8000/market-price/by-master/${row.master_card_id}`
+      );
+      setPriceData(resp.data); // resp.data đã đúng kiểu như bạn yêu cầu
     } catch {
       setPriceData(null);
     }
     setPriceLoading(false);
   };
 
-  const renderPriceBox = () => {
-    if (priceLoading) return (
-      <div className="py-3">
-      Đang tải giá...
-      <div className="progress mt-2" style={{ height: 6, maxWidth: 320 }}>
-        <div
-        className="progress-bar progress-bar-striped progress-bar-animated bg-info"
-        role="progressbar"
-        style={{ width: "100%" }}
-        aria-valuenow={100}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        ></div>
-      </div>
-      </div>
-    );
+ const renderPriceBox = () => {
+    if (priceLoading)
+      return (
+        <div className="py-3">
+          Đang tải giá...
+          <div className="progress mt-2" style={{ height: 6, maxWidth: 320 }}>
+            <div
+              className="progress-bar progress-bar-striped progress-bar-animated bg-info"
+              role="progressbar"
+              style={{ width: "100%" }}
+              aria-valuenow={100}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            ></div>
+          </div>
+        </div>
+      );
     if (!priceData) return null;
-    // Gom các giá trị có url thành combobox
+
+    // Lấy các giá trị grade từ pricecharting_price
+    const grades = [
+      "Ungraded",
+      "Grade 1",
+      "Grade 2",
+      "Grade 3",
+      "Grade 4",
+      "Grade 5",
+      "Grade 6",
+      "Grade 7",
+      "Grade 8",
+      "Grade 9",
+      "Grade 9.5",
+      "Grade 10",
+      "PSA 10",
+      "TAG 10",
+      "ACE 10",
+      "SGC 10",
+      "CGC 10",
+      "BGS 10",
+      "BGS 10 Black",
+      "CGC 10 Pristine",
+    ];
+    const pricecharting = priceData.pricecharting_price || {};
+
+    // Lấy các url nguồn từ priceData.url
+    const urlObj = priceData.url || {};
     const urlOptions = [
-      priceData.eBay_link_table_1 && {
+      urlObj.eBay_link_table_1 && {
         label: "eBay",
-        url: priceData.eBay_link_table_1,
-        price: priceData.eBay_price_table_1,
+        url: urlObj.eBay_link_table_1,
+        price: priceData.ebay_avg_price,
       },
-      priceData.TCGPlayer_link_table_1 && {
+      urlObj.TCGPlayer_link_table_1 && {
         label: "TCGPlayer",
-        url: priceData.TCGPlayer_link_table_1,
-        price: priceData.TCGPlayer_price_table_1,
-      },
-      priceData.url && {
+        url: urlObj.TCGPlayer_link_table_1,
+        price: priceData.tcgplayer_price,
+      },  
+      urlObj.url && {
         label: "PriceCharting",
-        url: priceData.url,
+        url: urlObj.url,
+        price: "",
       },
     ].filter(Boolean);
 
     return (
       <div className="price-box" style={{ padding: 12 }}>
         <div style={{ overflowX: "auto", width: "77%" }}>
-          <table className="table table-bordered" style={{ tableLayout: "fixed", width: "100%", fontSize: 14 }}>
-          <thead>
-        <tr>
-          <th style={{ width: 120 }}>Ungraded</th>
-          <th style={{ width: 90 }}>Grade 1</th>
-          <th style={{ width: 90 }}>Grade 2</th>
-          <th style={{ width: 90 }}>Grade 3</th>
-          <th style={{ width: 90 }}>Grade 4</th>
-          <th style={{ width: 90 }}>Grade 5</th>
-          <th style={{ width: 90 }}>Grade 6</th>
-          <th style={{ width: 90 }}>Grade 7</th>
-          <th style={{ width: 90 }}>Grade 8</th>
-          <th style={{ width: 90 }}>Grade 9</th>
-          <th style={{ width: 90 }}>Grade 9.5</th>
-          <th style={{ width: 90 }}>Grade 10</th>
-          <th style={{ width: 90 }}>PSA 10</th>
-          <th style={{ width: 90 }}>TAG 10</th>
-          <th style={{ width: 90 }}>ACE 10</th>
-          <th style={{ width: 90 }}>SGC 10</th>
-          <th style={{ width: 90 }}>CGC 10</th>
-          <th style={{ width: 90 }}>BGS 10</th>
-          <th style={{ width: 110 }}>BGS 10 Black</th>
-          <th style={{ width: 120 }}>CGC 10 Pristine</th>
-          <th style={{ width: 180 }}>Links</th>
-        </tr>
-          </thead>
-          <tbody>
-        <tr>
-          <td>{priceData.Ungraded || "-"}</td>
-          <td>{priceData["Grade 1"] || "-"}</td>
-          <td>{priceData["Grade 2"] || "-"}</td>
-          <td>{priceData["Grade 3"] || "-"}</td>
-          <td>{priceData["Grade 4"] || "-"}</td>
-          <td>{priceData["Grade 5"] || "-"}</td>
-          <td>{priceData["Grade 6"] || "-"}</td>
-          <td>{priceData["Grade 7"] || "-"}</td>
-          <td>{priceData["Grade 8"] || "-"}</td>
-          <td>{priceData["Grade 9"] || "-"}</td>
-          <td>{priceData["Grade 9.5"] || "-"}</td>
-          <td>{priceData["Grade 10"] || "-"}</td>
-          <td>{priceData["PSA 10"] || "-"}</td>
-          <td>{priceData["TAG 10"] || "-"}</td>
-          <td>{priceData["ACE 10"] || "-"}</td>
-          <td>{priceData["SGC 10"] || "-"}</td>
-          <td>{priceData["CGC 10"] || "-"}</td>
-          <td>{priceData["BGS 10"] || "-"}</td>
-          <td>{priceData["BGS 10 Black"] || "-"}</td>
-          <td>{priceData["CGC 10 Pristine"] || "-"}</td>
-          <td>
-            <select
-          style={{ minWidth: 160 }}
-          onChange={(e) => {
-            const url = e.target.value;
-            if (url) window.open(url, "_blank");
-          }}
-            >
-          <option value="">Chọn nguồn giá...</option>
-          {urlOptions.map((opt) => (
-            <option key={opt.label} value={opt.url}>
-              {opt.label} ({opt.price})
-            </option>
-          ))}
-            </select>
-          </td>
-        </tr>
-          </tbody>
-        </table>
+          <table
+            className="table table-bordered"
+            style={{ tableLayout: "fixed", width: "100%", fontSize: 14 }}
+          >
+            <thead>
+              <tr>
+                {grades.map((g) => (
+                  <th key={g} style={{ width: 90 }}>{g}</th>
+                ))}
+                <th style={{ width: 180 }}>Links</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {grades.map((g) => (
+                    <td key={g}>
+                    {pricecharting[g] !== undefined && pricecharting[g] !== null
+                      ? pricecharting[g] === "-"
+                      ? "-"
+                      : `$${pricecharting[g]}`
+                      : "-"}
+                    </td>
+                ))}
+                <td>
+                  <select
+                    style={{ minWidth: 160 }}
+                    onChange={(e) => {
+                      const url = e.target.value;
+                      if (url) window.open(url, "_blank");
+                    }}
+                  >
+                    <option value="">Chọn nguồn giá...</option>
+                    {urlOptions.map((opt) => (
+                      <option key={opt.label} value={opt.url}>
+                        {opt.label}
+                        {opt.price ? ` (${opt.price})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     );
