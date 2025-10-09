@@ -149,7 +149,7 @@ class MarketPrice(Base):
     yahoo_auction_avg = Column(DECIMAL(10, 2))
     usd_to_vnd_rate = Column(DECIMAL(10, 2))
     jpy_to_vnd_rate = Column(DECIMAL(6, 2))
-    price_date = Column(Date, nullable=False)
+    price_date = Column(DateTime, nullable=False)
     data_source = Column(String(50), default="Manual")
     urls = Column(JSON)
 

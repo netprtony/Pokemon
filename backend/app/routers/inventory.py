@@ -19,7 +19,8 @@ router = APIRouter(prefix="/inventory", tags=["Inventory"])
 INVENTORY_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/inventory_images")
 # Thêm mới
 @router.post("/", response_model=InventoryOut, status_code=status.HTTP_201_CREATED)
-def create_inventory(data: InventoryCreate, db: Session = Depends(get_db)):
+def create_inventory(data: InventoryCreate, db:
+    Session = Depends(get_db)):
     data_dict = data.dict(exclude_unset=True)
     db_item = Inventory(**data_dict)
     db.add(db_item)
@@ -30,7 +31,8 @@ def create_inventory(data: InventoryCreate, db: Session = Depends(get_db)):
     try:
         create_market_price(
             master_card_id=db_item.master_card_id,
-            db=db
+            db=db,
+            url=None
         )
     except Exception as e:
         print("Crawl pricecharting error:", e)

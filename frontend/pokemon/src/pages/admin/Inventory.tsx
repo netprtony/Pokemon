@@ -374,6 +374,8 @@ const InventoryPage: React.FC = () => {
   const [priceData, setPriceData] = useState<any | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
 
+  const [priceUrl, setPriceUrl] = useState("");
+
   // --- Effect: gọi API khi openedInventoryId thay đổi ---
   useEffect(() => {
     if (openedInventoryId !== null) {
@@ -1225,11 +1227,28 @@ const InventoryPage: React.FC = () => {
       );
       setPriceData(resp.data); // resp.data đã đúng kiểu như bạn yêu cầu
     } catch {
+      toast.info("Không tìm thấy giá hoặc chưa lấy giá! Vui lòng xóa kho và thêm lại");
       setPriceData(null);
     }
     setPriceLoading(false);
   };
-
+  const handleFetchPriceByUrl = async () => {
+    if (!priceUrl) return;
+    setPriceLoading(true);
+    try {
+      const resp = await axios.post(
+        "http://localhost:8000/market-price/",
+        {},
+        { params: { url: priceUrl, master_card_id: form.master_card_id } }
+      );
+      setPriceData(resp.data);
+      toast.success("Đã lấy giá từ link thành công!");
+    } catch {
+      toast.error("Không lấy được giá từ link!");
+      setPriceData(null);
+    }
+    setPriceLoading(false);
+  };
   const renderPriceBox = () => {
     if (priceLoading)
       return (
@@ -1311,7 +1330,34 @@ const InventoryPage: React.FC = () => {
               <option value="JPY">JPY</option>
               <option value="VND">VND</option>
             </select>
+
           </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Nhập link để lấy giá..."
+            value={priceUrl}
+            onChange={e => setPriceUrl(e.target.value)}
+            style={{
+              minWidth: 180,
+              padding: "4px 8px",
+              fontSize: 15,
+              border: "1px solid #ccc",
+              borderRadius: 6,
+              marginRight: 8,
+            }}
+          />
+          <Button
+            type="button"
+            variant="primary-outline-soft"
+            size="lg"
+            style={{ padding: "4px 16px", fontSize: 15 }}
+            loading={priceLoading}
+            onClick={handleFetchPriceByUrl}
+          >
+            Lấy giá
+          </Button>
+        </span>
         </div>
         <table
           className="table table-bordered"

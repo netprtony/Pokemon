@@ -26,30 +26,39 @@ router = APIRouter(prefix="/market-price", tags=["Market Price"])
 @router.post("/", response_model=MarketPriceOut, status_code=status.HTTP_201_CREATED)
 def create_market_price(
     master_card_id: str = Query(...),
+    url: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
+    if not url:
     # Truy vấn thông tin card từ bảng master
-    master_card = db.query(PokemonCardMaster).filter(
-        PokemonCardMaster.master_card_id == master_card_id
-    ).first()
-    if not master_card:
-        raise HTTPException(
-            status_code=400,
-            detail=f"master_card_id '{master_card_id}' does not exist in pokemon_cards_master"
-        )
-    version_en = getattr(master_card, "version_en", "")
-    name_en = getattr(master_card, "name_en", "")
-    card_number = getattr(master_card, "card_number", "")
+        master_card = db.query(PokemonCardMaster).filter(
+            PokemonCardMaster.master_card_id == master_card_id
+        ).first()
+        if not master_card:
+            raise HTTPException(
+                status_code=400,
+                detail=f"master_card_id '{master_card_id}' does not exist in pokemon_cards_master"
+            )
+        version_en = getattr(master_card, "version_en", "")
+        name_en = getattr(master_card, "name_en", "")
+        card_number = getattr(master_card, "card_number", "")
 
-    # Crawl dữ liệu từ PriceChartingSpider
+        # Crawl dữ liệu từ PriceChartingSpider
+        cmd = [
+            "scrapy", "crawl", "pricecharting",
+            "-a", f'version_en={version_en}',
+            "-a", f'name_en={name_en}',
+            "-a", f'card_number={card_number}',
+            "-O", "data.json"
+        ]
+    else:
+        # Crawl dữ liệu từ PriceChartingSpider với url trực tiếp
+        cmd = [
+            "scrapy", "crawl", "pricecharting",
+            "-a", f'url={url}',
+            "-O", "data.json"
+        ]
     json_path = os.path.abspath(f"{ROOT_DIR}/backend/crawler/data.json")
-    cmd = [
-        "scrapy", "crawl", "pricecharting",
-        "-a", f'version_en={version_en}',
-        "-a", f'name_en={name_en}',
-        "-a", f'card_number={card_number}',
-        "-O", "data.json"
-    ]
     cwd = os.path.abspath(f"{ROOT_DIR}/backend/crawler")
     subprocess.run(cmd, cwd=cwd, check=True)
     with open(json_path, "r", encoding="utf-8") as f:
@@ -91,7 +100,7 @@ def create_market_price(
         tcgplayer_price=tcgplayer_price,
         ebay_avg_price=ebay_price,
         pricecharting_price=price_fields,
-        price_date=datetime.date.today(),
+        price_date=datetime.datetime.now(),
         data_source="PriceCharting",
         usd_to_vnd_rate=usd_to_vnd_rate,
         jpy_to_vnd_rate=jpy_to_vnd_rate,

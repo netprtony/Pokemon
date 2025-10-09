@@ -5,17 +5,23 @@ class PriceChartingSpider(scrapy.Spider):
     name = "pricecharting"
     allowed_domains = ["pricecharting.com"]
 
+    def __init__(self, version_en=None, name_en=None, card_number=None, url=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.version_en = version_en
+        self.name_en = name_en
+        self.card_number = card_number
+        self.start_url = url
+
     def start_requests(self):
-        version_en = getattr(self, "version_en", "base-set")
-        name_en = getattr(self, "name_en", "charizard")
-        card_number = getattr(self, "card_number", "025/102")
-
-        version_en = version_en.lower().replace(" ", "-")
-        name_en = name_en.lower().replace(" ", "-")
-        card_number_short = card_number.split('/')[0]
-
-        url = f"https://www.pricecharting.com/game/pokemon-{version_en}/{name_en}-{card_number_short}#used-prices"
-        yield scrapy.Request(url, callback=self.parse)
+        # Nếu truyền url thì crawl trực tiếp url đó
+        if self.start_url:
+            yield scrapy.Request(self.start_url, callback=self.parse)
+        else:
+            version_en = (self.version_en or "base-set").lower().replace(" ", "-")
+            name_en = (self.name_en or "charizard").lower().replace(" ", "-")
+            card_number_short = (self.card_number or "025/102").split('/')[0]
+            url = f"https://www.pricecharting.com/game/{version_en}/{name_en}-{card_number_short}#used-prices"
+            yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
         result = {}
@@ -66,5 +72,27 @@ class PriceChartingSpider(scrapy.Spider):
             result["jpy_to_vnd_rate"] = float(jpy_json["jpy"]["vnd"])
         except Exception:
             result["jpy_to_vnd_rate"] = None
+
+        # Kiểm tra nếu chỉ crawl được url, usd_to_vnd_rate, jpy_to_vnd_rate
+        only_url_and_rates = (
+            len(result) == 3 and
+            "url" in result and
+            "usd_to_vnd_rate" in result and
+            "jpy_to_vnd_rate" in result
+        )
+        print("only_url_and_rates:", only_url_and_rates)
+        # Nếu thiếu dữ liệu, vào link url tìm table games_table và crawl lại
+        if only_url_and_rates:
+            games_table = response.xpath('//table[contains(@class, "games_table")]')
+            if games_table:
+                # Lấy dòng đầu tiên trong tbody
+                first_row = games_table.xpath('.//tbody/tr[1]')
+                # Lấy href của thẻ a trong td có class title
+                href = first_row.xpath('.//td[contains(@class, "title")]/a/@href').get()
+                print("Retrying with link:", href)
+                if href:
+                    next_url = response.urljoin(href)
+                    yield scrapy.Request(next_url, callback=self.parse)
+                    return
 
         yield result

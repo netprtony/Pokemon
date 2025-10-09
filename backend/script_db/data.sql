@@ -147,7 +147,7 @@ CREATE TABLE market_prices (
     jpy_to_vnd_rate DECIMAL(6,2),
     
     -- Metadata
-    price_date DATE NOT NULL,
+    price_date DATETIME NOT NULL,
     data_source VARCHAR(50) DEFAULT 'Manual',
     url JSON,
     FOREIGN KEY (master_card_id) REFERENCES pokemon_cards_master(master_card_id),

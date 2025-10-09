@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import date
+from datetime import date, datetime
 
 class MarketPriceBase(BaseModel):
     price_id: int
@@ -14,7 +14,7 @@ class MarketPriceBase(BaseModel):
     yahoo_auction_avg: Optional[float]
     usd_to_vnd_rate: Optional[float]
     jpy_to_vnd_rate: Optional[float]
-    price_date: date
+    price_date: datetime
     data_source: Optional[str]
     url: Optional[Dict[str, Any]]  # hoặc Optional[str] nếu lưu JSON string
 
@@ -29,7 +29,7 @@ class MarketPriceCreate(BaseModel):
     yahoo_auction_avg: Optional[float]
     usd_to_vnd_rate: Optional[float]
     jpy_to_vnd_rate: Optional[float]
-    price_date: date
+    price_date: datetime
     data_source: Optional[str]
     url: Optional[Dict[str, Any]]
 
@@ -43,7 +43,7 @@ class MarketPriceUpdate(BaseModel):
     yahoo_auction_avg: Optional[float]
     usd_to_vnd_rate: Optional[float]
     jpy_to_vnd_rate: Optional[float]
-    price_date: Optional[date]
+    price_date: Optional[datetime]
     data_source: Optional[str]
     url: Optional[Dict[str, Any]]
 
