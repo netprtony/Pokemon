@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import "../../assets/css/Inventory.css";
+import "../../assets/css/theme.css";
 import type { FieldOption, Filter } from "../../components/AdvancedFilters";
 import AdvancedFilters from "../../components/AdvancedFilters";
 import Button from "../../components/Button";
@@ -326,7 +327,7 @@ const InventoryPage: React.FC = () => {
     sortField,
     sortOrder,
   });
-
+  const [currency, setCurrency] = useState<"USD" | "JPY" | "VND">("USD");
   // --- Modal, Form, Detail State ---
   type ModalMode = "add" | "edit" | null;
   const [modalOpen, setModalOpen] = useState(false);
@@ -1229,51 +1230,23 @@ const InventoryPage: React.FC = () => {
     setPriceLoading(false);
   };
 
- const renderPriceBox = () => {
+  const renderPriceBox = () => {
     if (priceLoading)
       return (
         <div className="py-3">
           Đang tải giá...
-          <div className="progress mt-2" style={{ height: 6, maxWidth: 320 }}>
-            <div
-              className="progress-bar progress-bar-striped progress-bar-animated bg-info"
-              role="progressbar"
-              style={{ width: "100%" }}
-              aria-valuenow={100}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            ></div>
-          </div>
+          <span className="loader" style={{ marginLeft: 12 }} />
         </div>
       );
     if (!priceData) return null;
 
-    // Lấy các giá trị grade từ pricecharting_price
     const grades = [
-      "Ungraded",
-      "Grade 1",
-      "Grade 2",
-      "Grade 3",
-      "Grade 4",
-      "Grade 5",
-      "Grade 6",
-      "Grade 7",
-      "Grade 8",
-      "Grade 9",
-      "Grade 9.5",
-      "Grade 10",
-      "PSA 10",
-      "TAG 10",
-      "ACE 10",
-      "SGC 10",
-      "CGC 10",
-      "BGS 10",
-      "BGS 10 Black",
-      "CGC 10 Pristine",
+      "Ungraded", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5",
+      "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 9.5", "Grade 10",
+      "PSA 10", "TAG 10", "ACE 10", "SGC 10", "CGC 10", "BGS 10",
+      "BGS 10 Black", "CGC 10 Pristine",
     ];
     const pricecharting = priceData.pricecharting_price || {};
-
-    // Lấy các url nguồn từ priceData.url
     const urlObj = priceData.url || {};
     const urlOptions = [
       urlObj.eBay_link_table_1 && {
@@ -1285,7 +1258,7 @@ const InventoryPage: React.FC = () => {
         label: "TCGPlayer",
         url: urlObj.TCGPlayer_link_table_1,
         price: priceData.tcgplayer_price,
-      },  
+      },
       urlObj.url && {
         label: "PriceCharting",
         url: urlObj.url,
@@ -1293,58 +1266,117 @@ const InventoryPage: React.FC = () => {
       },
     ].filter(Boolean);
 
+    // Thông tin ngày giá và tỷ giá
+    const priceDate = priceData.price_date || "";
+    const usdToVnd = priceData.usd_to_vnd_rate || 0;
+    const jpyToVnd = priceData.jpy_to_vnd_rate || 0;
+
+    // Các trường giá JPY
+    const cardush_a_price = priceData.cardush_a_price ?? "";
+    const cardush_b_price = priceData.cardush_b_price ?? "";
+    const snkrdunk_price = priceData.snkrdunk_price ?? "";
+    const yahoo_auction_avg = priceData.yahoo_auction_avg ?? "";
+
+    // Hàm quy đổi giá
+    const convertPrice = (value: number | string | undefined, type: "USD" | "JPY") => {
+      if (value === undefined || value === null || value === "") return "-";
+      const num = typeof value === "string" ? parseFloat(value) : value;
+      if (currency === "VND") {
+        if (type === "USD") return `${Math.round(num * usdToVnd).toLocaleString()}đ`;
+        if (type === "JPY") return `${Math.round(num * jpyToVnd).toLocaleString()}đ`;
+      }
+      return num.toLocaleString();
+    };
+
     return (
-      <div className="price-box" style={{ padding: 12 }}>
-        <div style={{ overflowX: "auto", width: "77%" }}>
-          <table
-            className="table table-bordered"
-            style={{ tableLayout: "fixed", width: "100%", fontSize: 14 }}
-          >
-            <thead>
-              <tr>
-                {grades.map((g) => (
-                  <th key={g} style={{ width: 90 }}>{g}</th>
-                ))}
-                <th style={{ width: 180 }}>Links</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                {grades.map((g) => (
-                  <td key={g}>$
-                    {pricecharting[g] !== undefined && pricecharting[g] !== null
-                      ? pricecharting[g]
-                      : "-"}
-                  </td>
-                ))}
-                <td>
-                  <select
-                    style={{ minWidth: 160 }}
-                    onChange={(e) => {
-                      const url = e.target.value;
-                      if (url) window.open(url, "_blank");
-                    }}
-                  >
-                    <option value="">Chọn nguồn giá...</option>
-                    {urlOptions.map((opt) => (
-                      <option key={opt.label} value={opt.url}>
-                        {opt.label}
-                        {opt.price ? ` (${opt.price})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div className="price-box" style={{ padding: 12, maxWidth: 1400, margin: "100px 0", overflowX: "auto" }}>
+        <div className="text-secondary" style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 12 }}>
+          <span>
+            <b>Ngày cập nhật giá:</b> {priceDate ? new Date(priceDate).toLocaleString() : "-"}
+          </span>
+          <span>
+            <b>Tỷ giá USD/VND:</b> {usdToVnd ? usdToVnd.toLocaleString() : "-"}
+          </span>
+          <span>
+            <b>Tỷ giá JPY/VND:</b> {jpyToVnd ? jpyToVnd.toLocaleString() : "-"}
+          </span>
+          <span>
+            <b>Xem giá theo:</b>{" "}
+            <select
+              value={currency}
+              onChange={e => setCurrency(e.target.value as "USD" | "JPY" | "VND")}
+              style={{ minWidth: 90, fontWeight: 600 }}
+            >
+              <option value="USD">USD</option>
+              <option value="JPY">JPY</option>
+              <option value="VND">VND</option>
+            </select>
+          </span>
         </div>
+        <table
+          className="table table-bordered"
+          style={{ tableLayout: "fixed", minWidth: 1400, fontSize: 14 }}
+        >
+          <thead>
+            <tr>
+              {grades.map((g) => (
+                <th key={g} style={{ width: 90 }}>{g}</th>
+              ))}
+              <th style={{ width: 120 }}>Cardush A</th>
+              <th style={{ width: 120 }}>Cardush B</th>
+              <th style={{ width: 120 }}>Snkrdunk</th>
+              <th style={{ width: 120 }}>Yahoo Auction</th>
+              <th style={{ width: 180 }}>Links</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {grades.map((g) => (
+                <td key={g}>
+                  {pricecharting[g] !== undefined && pricecharting[g] !== null
+                    ? convertPrice(pricecharting[g], "USD")
+                    : "-"}
+                </td>
+              ))}
+              <td>
+                {convertPrice(cardush_a_price, "JPY")}
+              </td>
+              <td>
+                {convertPrice(cardush_b_price, "JPY")}
+              </td>
+              <td>
+                {convertPrice(snkrdunk_price, "JPY")}
+              </td>
+              <td>
+                {convertPrice(yahoo_auction_avg, "JPY")}
+              </td>
+              <td>
+                <select
+                  style={{ minWidth: 160 }}
+                  onChange={(e) => {
+                    const url = e.target.value;
+                    if (url) window.open(url, "_blank");
+                  }}
+                >
+                  <option value="">Chọn nguồn giá...</option>
+                  {urlOptions.map((opt) => (
+                    <option key={opt.label} value={opt.url}>
+                      {opt.label}
+                      {opt.price ? ` (${convertPrice(opt.price, "USD")})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     );
   };
 
   return (
     <div className="container-fluid py-4">
-      <h3 className="mb-3 fw-bold">Danh sách kho thẻ</h3>
+      <h3 className="text-info">Danh sách kho thẻ</h3>
       <AdvancedFilters
         fieldOptions={fieldOptions}
         filters={filters}

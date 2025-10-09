@@ -67,6 +67,8 @@ def get_pricecharting_result(
         pricecharting_price=price_fields,  # giữ key và value
         price_date=datetime.date.today(),
         data_source="PriceCharting",
+        usd_to_vnd_rate=usd_to_vnd_rate,
+        jpy_to_vnd_rate=jpy_to_vnd_rate,
         urls=url_fields  # giữ key và value
     )
     db.add(market_price)

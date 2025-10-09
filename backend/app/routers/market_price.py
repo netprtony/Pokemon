@@ -1,6 +1,10 @@
+import datetime
+import os
+import subprocess
+import json
+from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Query, status, Depends
 from sqlalchemy.orm import Session
-from typing import List, Optional
 from app.schemas.market_price import (
     MarketPriceBase,
     MarketPriceCreate,
@@ -9,21 +13,121 @@ from app.schemas.market_price import (
     PaginatedMarketPrice,
 )
 from app.schemas.filter import FilterRequest
-from app.models import MarketPrice
+from app.models import MarketPrice, PokemonCardMaster
 from app.database import get_db
-import json
+from dotenv import load_dotenv
+
+load_dotenv()
+ROOT_DIR = os.getenv("PROJECT_ROOT")
 
 router = APIRouter(prefix="/market-price", tags=["Market Price"])
 
 # Thêm mới
 @router.post("/", response_model=MarketPriceOut, status_code=status.HTTP_201_CREATED)
-def create_market_price(data: MarketPriceCreate, db: Session = Depends(get_db)):
-    data_dict = data.dict(exclude_unset=True)
-    db_item = MarketPrice(**data_dict)
+def create_market_price(
+    master_card_id: str = Query(...),
+    db: Session = Depends(get_db),
+):
+    # Truy vấn thông tin card từ bảng master
+    master_card = db.query(PokemonCardMaster).filter(
+        PokemonCardMaster.master_card_id == master_card_id
+    ).first()
+    if not master_card:
+        raise HTTPException(
+            status_code=400,
+            detail=f"master_card_id '{master_card_id}' does not exist in pokemon_cards_master"
+        )
+    version_en = getattr(master_card, "version_en", "")
+    name_en = getattr(master_card, "name_en", "")
+    card_number = getattr(master_card, "card_number", "")
+
+    # Crawl dữ liệu từ PriceChartingSpider
+    json_path = os.path.abspath(f"{ROOT_DIR}/backend/crawler/data.json")
+    cmd = [
+        "scrapy", "crawl", "pricecharting",
+        "-a", f'version_en={version_en}',
+        "-a", f'name_en={name_en}',
+        "-a", f'card_number={card_number}',
+        "-O", "data.json"
+    ]
+    cwd = os.path.abspath(f"{ROOT_DIR}/backend/crawler")
+    subprocess.run(cmd, cwd=cwd, check=True)
+    with open(json_path, "r", encoding="utf-8") as f:
+        crawled = json.load(f)
+    if not crawled:
+        raise HTTPException(status_code=400, detail="No data crawled")
+    result = crawled[0]
+
+    def _parse_decimal(price_str):
+        if not price_str or price_str == "-":
+            return None
+        try:
+            return float(price_str.replace("$", "").replace(",", ""))
+        except Exception:
+            return None
+
+    price_fields = {
+        k: _parse_decimal(v)
+        for k, v in result.items()
+        if (
+            k.startswith("Ungraded") or
+            k.startswith("Grade") or
+            k.startswith("TAG") or
+            k.startswith("ACE") or
+            k.startswith("SGC") or
+            k.startswith("CGC") or
+            k.startswith("PSA") or
+            k.startswith("BGS")
+        )
+    }
+    url_fields = {k: v for k, v in result.items() if "link" in k.lower() or "url" in k.lower()}
+    usd_to_vnd_rate = result.get("usd_to_vnd_rate")
+    jpy_to_vnd_rate = result.get("jpy_to_vnd_rate")
+    ebay_price = _parse_decimal(result.get("eBay_price_table_1"))
+    tcgplayer_price = _parse_decimal(result.get("TCGPlayer_price_table_1"))
+
+    db_item = MarketPrice(
+        master_card_id=master_card_id,
+        tcgplayer_price=tcgplayer_price,
+        ebay_avg_price=ebay_price,
+        pricecharting_price=price_fields,
+        price_date=datetime.date.today(),
+        data_source="PriceCharting",
+        usd_to_vnd_rate=usd_to_vnd_rate,
+        jpy_to_vnd_rate=jpy_to_vnd_rate,
+        urls=url_fields
+    )
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    return db_item
+    pricecharting_price = db_item.pricecharting_price
+    if isinstance(pricecharting_price, str):
+        try:
+            pricecharting_price = json.loads(pricecharting_price)
+        except Exception:
+            pricecharting_price = None
+    url = db_item.urls if hasattr(db_item, "urls") else db_item.url
+    if isinstance(url, str):
+        try:
+            url = json.loads(url)
+        except Exception:
+            url = None
+    return {
+        "price_id": db_item.price_id,
+        "master_card_id": db_item.master_card_id,
+        "tcgplayer_price": db_item.tcgplayer_price,
+        "ebay_avg_price": db_item.ebay_avg_price,
+        "pricecharting_price": pricecharting_price,
+        "cardrush_a_price": db_item.cardrush_a_price,
+        "cardrush_b_price": db_item.cardrush_b_price,
+        "snkrdunk_price": db_item.snkrdunk_price,
+        "yahoo_auction_avg": db_item.yahoo_auction_avg,
+        "usd_to_vnd_rate": db_item.usd_to_vnd_rate,
+        "jpy_to_vnd_rate": db_item.jpy_to_vnd_rate,
+        "price_date": db_item.price_date,
+        "data_source": db_item.data_source,
+        "url": url
+    }
 
 # Sửa
 @router.put("/{price_id}", response_model=MarketPriceOut)

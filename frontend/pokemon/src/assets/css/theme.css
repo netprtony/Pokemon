@@ -21,6 +21,14 @@
   --advanced-filter-bg: #f8f9fa;
   --advanced-filter-text: #222;
   --advanced-filter-textbox: #fff;
+
+  --text-primary: #22223b;
+  --text-secondary: #555;
+  --text-success: #388e3c;
+  --text-danger: #d32f2f;
+  --text-warning: #fbc02d;
+  --text-info: #1976d2;
+  --text-muted: #888;
 }
 
 /* ========== THEME DARK ========== */
@@ -44,6 +52,14 @@
   --advanced-filter-bg: #303030;
   --advanced-filter-text: #e0e0e0;
   --advanced-filter-textbox: #495057;
+
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-success: #81c784;
+  --text-danger: #ef5350;
+  --text-warning: #ffe082;
+  --text-info: #90caf9;
+  --text-muted: #757575;
 }
 
 /* ========== SIDEBAR BASE ========== */
@@ -404,4 +420,34 @@ textarea:focus {
   font-weight: 500;
   margin-bottom: 4px;
 }
+
+/* ========== TEXT COLOR VARIABLES ========== */
+.theme-light {
+  --text-primary: #22223b;
+  --text-secondary: #555;
+  --text-success: #388e3c;
+  --text-danger: #d32f2f;
+  --text-warning: #fbc02d;
+  --text-info: #1976d2;
+  --text-muted: #888;
+}
+
+.theme-dark {
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-success: #81c784;
+  --text-danger: #ef5350;
+  --text-warning: #ffe082;
+  --text-info: #90caf9;
+  --text-muted: #757575;
+}
+
+/* ========== TEXT UTILITY CLASSES ========== */
+.text-primary   { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-success   { color: var(--text-success) !important; }
+.text-danger    { color: var(--text-danger) !important; }
+.text-warning   { color: var(--text-warning) !important; }
+.text-info      { color: var(--text-info) !important; }
+.text-muted     { color: var(--text-muted) !important; }
 
