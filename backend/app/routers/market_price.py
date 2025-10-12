@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query, status, Depends
 from sqlalchemy.orm import Session
 from app.schemas.market_price import (
     MarketPriceBase,
-    MarketPriceCreate,
+    MarketPriceCreate, 
     MarketPriceUpdate,
     MarketPriceOut,
     PaginatedMarketPrice,
