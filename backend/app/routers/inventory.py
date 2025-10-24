@@ -13,7 +13,7 @@ from app.database import get_db
 import os
 
 from app.routers.market_price import create_market_price, MarketPriceCreate
-from card_recognizer import ocr_service
+from card_recognizer import ocr_easyocr
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 INVENTORY_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/inventory_images")
 # Thêm mới
@@ -186,19 +186,25 @@ def filter_inventory(
 
 from fastapi import UploadFile, File
 from fastapi.responses import JSONResponse
-
+from app.models import PokemonCardMaster
 @router.post("/scan-card/")
 async def scan_card_to_inventory(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
     image_bytes = await file.read()
-    extracted_data = ocr_service.process_pokemon_card(image_bytes)
+    extracted_data = ocr_easyocr.process_pokemon_card(image_bytes)
     if extracted_data.get("name") == "Lỗi":
         raise HTTPException(status_code=500, detail="Không thể xử lý ảnh.")
 
     card_name = extracted_data.get("name")
     card_number = extracted_data.get("card_number")
-
-    return JSONResponse(content={"card_name": card_name, "card_number": card_number})
+    results = db.query(PokemonCardMaster).filter(
+        PokemonCardMaster.card_number.ilike(f"%{card_number}%")
+    ).all()
+    if results is None or len(results) == 0:
+        results = db.query(PokemonCardMaster).filter(
+            PokemonCardMaster.name_en.ilike(f"%{card_name}%")
+        ).all()
+    return JSONResponse(content={"card_name": card_name, "card_number": card_number, "results": results})
 

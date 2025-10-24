@@ -4,6 +4,8 @@ import numpy as np
 import json
 from typing import List, Tuple, Dict
 
+WINDOW_NAME = "Template Preview"
+
 # Biến toàn cục để lưu tọa độ
 ref_point: List[Tuple[int, int]] = []
 current_label = ""
@@ -15,15 +17,15 @@ history: List[Dict[str, List[int] | None]] = []
 def snapshot_state():
     history.append({k: (v[:] if v else None) for k, v in rectangles.items()})
 
-def undo_last(window_name="Image"):
+def undo_last():
     global rectangles
     if not history:
         print("Không còn thao tác để undo.")
         return
     rectangles = history.pop()
-    redraw_display(window_name)
+    redraw_display()
 
-def redraw_display(window_name="Image"):
+def redraw_display(extra_rect=None):
     global display_image, base_image, rectangles
     if base_image is None:
         return
@@ -43,7 +45,10 @@ def redraw_display(window_name="Image"):
             1,
             cv2.LINE_AA,
         )
-    cv2.imshow(window_name, display_image)
+    if extra_rect:
+        x, y, w, h = extra_rect
+        cv2.rectangle(display_image, (x, y), (x + w, y + h), (255, 0, 0), 1)
+    cv2.imshow(WINDOW_NAME, display_image)
 
 def click_and_crop(event, x, y, flags, param):
     global ref_point, current_label, rectangles
@@ -53,7 +58,13 @@ def click_and_crop(event, x, y, flags, param):
 
     if event == cv2.EVENT_LBUTTONDOWN:
         ref_point = [(x, y)]
-
+        redraw_display()
+    elif event == cv2.EVENT_MOUSEMOVE and ref_point:
+        x1, y1 = ref_point[0]
+        left, right = sorted([x1, x])
+        top, bottom = sorted([y1, y])
+        preview_box = [left, top, right - left, bottom - top]
+        redraw_display(preview_box)
     elif event == cv2.EVENT_LBUTTONUP and ref_point:
         ref_point.append((x, y))
         x1, y1 = ref_point[0]
@@ -63,6 +74,7 @@ def click_and_crop(event, x, y, flags, param):
 
         snapshot_state()
         rectangles[current_label] = [left, top, right - left, bottom - top]
+        ref_point = []
         redraw_display()
         print(f"Đã lưu tọa độ cho '{current_label}': {rectangles[current_label]}")
 
@@ -71,21 +83,21 @@ def get_coords_for_set(image_paths):
 
     idx = 0
     total = len(image_paths)
-    window_name = "Template Preview"
     rectangles = {}
     history = []
 
-    cv2.namedWindow(window_name)
-    cv2.setMouseCallback(window_name, click_and_crop)
+    cv2.namedWindow(WINDOW_NAME)
+    cv2.setMouseCallback(WINDOW_NAME, click_and_crop)
 
-    instructions = "Nhấn giữ chuột trái để vẽ. Nhấn 'c' để xác nhận, 'r' để vẽ lại khung đang chọn, 'u' để hoàn tác, 'm' để chuyển ảnh tiếp, 'n' để quay lại ảnh trước."
+    instructions = "Nhấn giữ chuột trái để vẽ. Nhấn 'c' để xác nhận, 'r' để vẽ lại khung đang chọn, 'u' để hoàn tác, 'm' để chuyển ảnh tiếp, 'n' để quay lại ảnh trước, 'd' để xóa ảnh hiện tại."
 
     def capture(label: str):
         global current_label
         current_label = label
         print(f"\n>>> VẼ HỘP CHO '{label.upper()}'. {instructions}")
         while True:
-            cv2.imshow(window_name, display_image)
+            if display_image is not None:
+                cv2.imshow(WINDOW_NAME, display_image)
             key = cv2.waitKey(1) & 0xFF
             if key == ord("c"):
                 if rectangles.get(current_label):
@@ -96,13 +108,15 @@ def get_coords_for_set(image_paths):
                     snapshot_state()
                     rectangles[current_label] = None
                 print("Đã xóa khung hiện tại, vui lòng vẽ lại.")
-                redraw_display(window_name)
+                redraw_display()
             elif key == ord("u"):
-                undo_last(window_name)
+                undo_last()
             elif key == ord("m"):
                 return 'next'
             elif key == ord("n"):
                 return 'prev'
+            elif key == ord("d"):
+                return 'delete'
 
     while idx < total:
         image_path = image_paths[idx]
@@ -113,7 +127,7 @@ def get_coords_for_set(image_paths):
             idx += 1
             continue
 
-        redraw_display(window_name)
+        redraw_display()
 
         # Vẽ cho name nếu chưa có
         if "name" not in rectangles or rectangles["name"] is None:
@@ -123,6 +137,15 @@ def get_coords_for_set(image_paths):
                 continue
             elif result == 'prev':
                 idx = max(idx - 1, 0)
+                continue
+            elif result == 'delete':
+                os.remove(image_path)
+                print(f"Đã xóa ảnh: {image_path}")
+                image_paths.pop(idx)
+                total = len(image_paths)
+                if total == 0:
+                    print("Không còn ảnh nào trong thư mục này.")
+                    return None
                 continue
 
         # Vẽ cho card_number nếu chưa có
@@ -134,11 +157,21 @@ def get_coords_for_set(image_paths):
             elif result == 'prev':
                 idx = max(idx - 1, 0)
                 continue
+            elif result == 'delete':
+                os.remove(image_path)
+                print(f"Đã xóa ảnh: {image_path}")
+                image_paths.pop(idx)
+                total = len(image_paths)
+                if total == 0:
+                    print("Không còn ảnh nào trong thư mục này.")
+                    return None
+                continue
 
         # Khi đã có cả 2 khung, cho phép chuyển ảnh để kiểm tra template
         while True:
-            redraw_display(window_name)
-            cv2.imshow(window_name, display_image)
+            redraw_display()
+            if display_image is not None:
+                cv2.imshow(WINDOW_NAME, display_image)
             key = cv2.waitKey(0) & 0xFF
             if key == ord("m"):
                 idx = min(idx + 1, total - 1)
@@ -154,16 +187,28 @@ def get_coords_for_set(image_paths):
                 print("Đã xóa cả hai khung, vui lòng vẽ lại.")
                 break
             elif key == ord("u"):
-                undo_last(window_name)
+                undo_last()
             elif key == ord("c"):
                 # Xác nhận template này
-                cv2.destroyWindow(window_name)
+                cv2.destroyWindow(WINDOW_NAME)
                 cleaned = {k: v for k, v in rectangles.items() if v}
                 base_image = None
                 display_image = None
                 return cleaned
+            elif key == ord("d"):
+                os.remove(image_path)
+                print(f"Đã xóa ảnh: {image_path}")
+                image_paths.pop(idx)
+                total = len(image_paths)
+                if total == 0:
+                    print("Không còn ảnh nào trong thư mục này.")
+                    cv2.destroyWindow(WINDOW_NAME)
+                    base_image = None
+                    display_image = None
+                    return None
+                break
 
-    cv2.destroyWindow(window_name)
+    cv2.destroyWindow(WINDOW_NAME)
     base_image = None
     display_image = None
     return None
@@ -174,22 +219,37 @@ if __name__ == '__main__':
     root_dir = r'D:/Pokemon/backend/script_db/temp_card'
     set_ids = [d for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
 
-    all_templates = {}
+    all_templates: Dict[str, Dict[str, Dict[str, List[int]]]] = {}
 
     for set_id in set_ids:
         set_folder = os.path.join(root_dir, set_id)
-        image_files = [os.path.join(set_folder, f) for f in os.listdir(set_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
-        if not image_files:
-            print(f"Bỏ qua {set_id} vì không có ảnh.")
+        supertype_dirs = [
+            d for d in os.listdir(set_folder)
+            if os.path.isdir(os.path.join(set_folder, d))
+        ]
+
+        if not supertype_dirs:
+            print(f"Bỏ qua {set_id} vì không có thư mục supertype.")
             continue
 
-        print(f"\n===== Đang tạo template cho set: {set_id} =====")
-        coords = get_coords_for_set(image_files)
-        if coords and 'name' in coords and 'card_number' in coords:
-            all_templates[set_id] = coords
-            print(f"Đã tạo template thành công cho {set_id}")
-        else:
-            print(f"Bỏ qua {set_id} do không đủ tọa độ.")
+        for supertype in supertype_dirs:
+            supertype_folder = os.path.join(set_folder, supertype)
+            image_files = [
+                os.path.join(supertype_folder, f)
+                for f in os.listdir(supertype_folder)
+                if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
+            ]
+            if not image_files:
+                print(f"Bỏ qua {set_id}/{supertype} vì không có ảnh.")
+                continue
+
+            print(f"\n===== Tạo template cho set: {set_id} | supertype: {supertype} =====")
+            coords = get_coords_for_set(image_files)
+            if coords and 'name' in coords and 'card_number' in coords:
+                all_templates.setdefault(set_id, {})[supertype] = coords
+                print(f"Đã tạo template cho {set_id}/{supertype}")
+            else:
+                print(f"Bỏ qua {set_id}/{supertype} do không đủ tọa độ.")
 
     # Lưu tất cả template vào một file JSON
     with open('layout_templates.json', 'w') as f:

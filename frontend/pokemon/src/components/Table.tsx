@@ -12,7 +12,7 @@ type Column<T> = {
   onSort?: () => void;
   sortActive?: boolean;
   sortDirection?: "asc" | "desc";
-  sticky?: boolean; // Thêm dòng này
+  sticky?: boolean;
 };
 
 interface DataTableProps<T> {
@@ -29,8 +29,9 @@ interface DataTableProps<T> {
   onSort?: (field: string, order: "asc" | "desc") => void;
   sortField?: string;
   sortOrder?: "asc" | "desc";
-  onCollapseOpen?: (row: T) => void;      // thêm dòng này
-  onCollapseClose?: () => void;           // thêm dòng này
+  onCollapseOpen?: (row: T) => void;
+  onCollapseClose?: () => void;
+  onRowClick?: (row: T) => void; // NEW
 }
 
 export default function DataTable<T>({
@@ -46,8 +47,9 @@ export default function DataTable<T>({
   sortField,
   sortOrder,
   renderCollapse,
-  onCollapseOpen,      // thêm dòng này
-  onCollapseClose,     // thêm dòng này
+  onCollapseOpen,
+  onCollapseClose,
+  onRowClick, // NEW
 }: DataTableProps<T>) {
   // State nội bộ
   const [internalPage, setInternalPage] = useState(1);
@@ -59,6 +61,7 @@ export default function DataTable<T>({
   const tableRef = useRef<HTMLTableElement | null>(null);
   const collapseRef = useRef<HTMLDivElement | null>(null);
   const [maxHeight, setMaxHeight] = useState("0px");
+  const [collapseOpacity, setCollapseOpacity] = useState(0);
 
   const currentPage = page ?? internalPage;
   const currentPageSize = pageSize ?? internalPageSize;
@@ -79,6 +82,25 @@ export default function DataTable<T>({
       setMaxHeight("0px");
     }
   }, [openRow]);
+
+  // Smooth open animation for collapse
+  useEffect(() => {
+    const el = collapseRef.current;
+    if (!el) return;
+
+    if (openRow !== null) {
+      // prepare from 0 -> scrollHeight
+      setMaxHeight("0px");
+      setCollapseOpacity(0);
+      requestAnimationFrame(() => {
+        setMaxHeight(el.scrollHeight + "px");
+        setCollapseOpacity(1);
+      });
+    } else {
+      setMaxHeight("0px");
+      setCollapseOpacity(0);
+    }
+  }, [openRow, paginatedData]);
 
   const handleSort = (field: string) => {
     if (onSort) {
@@ -344,9 +366,16 @@ export default function DataTable<T>({
                             className="overflow-hidden border-start border-primary ps-3"
                             style={{
                               maxHeight,
-                              transition: "max-height 0.3s ease",
+                              opacity: collapseOpacity,
+                              transition: "max-height 0.28s ease, opacity 0.18s ease",
                               background: "var(--filter-bg)",
                               color: "var(--filter-text)",
+                            }}
+                            onTransitionEnd={(e) => {
+                              // after expand, let height be auto for dynamic content
+                              if (openRow !== null && e.propertyName === "max-height") {
+                                setMaxHeight("none");
+                              }
                             }}
                           >
                             {/* Loader khi loading table con */}

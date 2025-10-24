@@ -10,9 +10,40 @@ from app.schemas.inventory_detail import (
 )
 from app.models import DetailInventory
 from app.database import get_db
+from cloudinary import config as cloudinary_config
+from cloudinary.uploader import upload as cloudinary_upload, destroy as cloudinary_destroy
 
 router = APIRouter(prefix="/detail-inventory", tags=["DetailInventory"])
 DETAIL_IMAGE_DIR = os.path.abspath("d:/Pokemon/frontend/pokemon/public/detail_inventory_images")
+# Configure Cloudinary via env (recommended) or explicit keys
+cloudinary_config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True,
+)
+CLOUDINARY_FOLDER = "detail_inventory_images"
+
+def cloudinary_public_id_from_url(url: str) -> Optional[str]:
+    """Extract Cloudinary public_id from secure_url/url."""
+    try:
+        # strip query
+        clean = url.split("?")[0]
+        # split by /upload/
+        parts = clean.split("/upload/")
+        if len(parts) < 2:
+            return None
+        tail = parts[1]
+        # remove leading version v123456...
+        segs = tail.split("/")
+        if segs and segs[0].startswith("v") and segs[0][1:].isdigit():
+            segs = segs[1:]
+        path = "/".join(segs)
+        # remove extension
+        public_id, _ = os.path.splitext(path)
+        return public_id
+    except Exception:
+        return None
 
 def parse_card_photos(row):
     photos = row.get("card_photos")
@@ -75,6 +106,24 @@ def delete_detail_inventory(detail_id: int, db: Session = Depends(get_db)):
     db_item = db.query(DetailInventory).filter(DetailInventory.detail_id == detail_id).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="DetailInventory not found")
+
+    # Delete images on Cloudinary before removing DB row
+    photos = db_item.card_photos or []
+    if isinstance(photos, str):
+        try:
+            photos = json.loads(photos)
+        except Exception:
+            photos = []
+    if isinstance(photos, list):
+        for url in photos:
+            public_id = cloudinary_public_id_from_url(str(url))
+            if public_id:
+                try:
+                    cloudinary_destroy(public_id, invalidate=True, resource_type="image")
+                except Exception:
+                    # ignore errors to ensure DB delete still succeeds
+                    pass
+
     db.delete(db_item)
     db.commit()
     return
@@ -122,25 +171,30 @@ async def upload_detail_photos(
     if not db_item:
         raise HTTPException(status_code=404, detail="DetailInventory not found")
 
-    os.makedirs(DETAIL_IMAGE_DIR, exist_ok=True)
-    saved_files = []
+    # Upload to Cloudinary instead of saving locally
+    saved_files: List[str] = []
     for idx, file in enumerate(files):
-        ext = os.path.splitext(file.filename)[1]
         angle = angles[idx] if idx < len(angles) else f"angle{idx+1}"
         safe_angle = angle.replace(" ", "_").replace("/", "_")
-        base_name = f"{inventory_id}_{detail_id}_{safe_angle}{ext}"
-        save_path = os.path.join(DETAIL_IMAGE_DIR, base_name)
-        # Nếu trùng tên file, thêm hậu tố số
-        count = 1
-        orig_save_path = save_path
-        while os.path.exists(save_path):
-            base_name = f"{inventory_id}_{detail_id}_{safe_angle}_{count}{ext}"
-            save_path = os.path.join(DETAIL_IMAGE_DIR, base_name)
-            count += 1
-        with open(save_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
-        saved_files.append(f"{base_name}")
+        public_id = f"{inventory_id}_{detail_id}_{safe_angle}"
+
+        # Read stream once for upload
+        content = await file.read()
+        try:
+            up_res = cloudinary_upload(
+                content,
+                folder=CLOUDINARY_FOLDER,
+                public_id=public_id,         # base id
+                overwrite=False,             # don't overwrite if exists
+                use_filename=True,           # keep original name base
+                unique_filename=True,        # Cloudinary will append a unique suffix
+                resource_type="image",
+            )
+            url = up_res.get("secure_url") or up_res.get("url")
+            if url:
+                saved_files.append(url)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {e}")
 
     photos = db_item.card_photos or []
     if isinstance(photos, str):
@@ -149,11 +203,15 @@ async def upload_detail_photos(
         except Exception:
             photos = []
     photos.extend(saved_files)
-    # Nếu cột card_photos là ARRAY thì gán trực tiếp, nếu là TEXT thì lưu json.dumps
+
+    # Persist as ARRAY or JSON string depending on model column type
     if hasattr(DetailInventory, "card_photos") and str(DetailInventory.card_photos.type).lower().find("array") >= 0:
         db_item.card_photos = photos
     else:
         db_item.card_photos = json.dumps(photos)
+
+    # Update photo_count
+    db_item.photo_count = len(photos)
 
     db.commit()
     db.refresh(db_item)

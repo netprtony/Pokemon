@@ -12,7 +12,7 @@ from app.schemas.filter import FilterRequest
 from app.models import PokemonCardMaster
 from app.database import get_db
 import os
-from card_recognizer.ocr_service import process_pokemon_card   
+# from card_recognizer.ocr_service import process_pokemon_card   
 
 
 router = APIRouter(prefix="/pokemon-cards", tags=["Pokemon Cards"])

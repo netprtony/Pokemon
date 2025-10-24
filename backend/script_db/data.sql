@@ -288,53 +288,129 @@ CREATE TABLE cart_items (
     INDEX idx_cart (cart_id),
     INDEX idx_inventory (inventory_id)
 );
+-- =========================================================
+-- TRIGGERS: Keep inventory counters in sync with detail_inventory
+-- Logic:
+--   total_quantity    = count of items NOT sold (is_sold = 0)
+--   quantity_sold     = count of items sold (is_sold = 1)
+--   avg_purchase_price= average of purchase_price (non-NULL) over all details
+--   avg_selling_price = average of selling_price (non-NULL) over SOLD items
+-- =========================================================
+DELIMITER $$
 
+DROP PROCEDURE IF EXISTS recalc_inventory_metrics $$
+CREATE PROCEDURE recalc_inventory_metrics(IN p_inventory_id INT)
+BEGIN
+  DECLARE v_total INT DEFAULT 0;
+  DECLARE v_sold INT DEFAULT 0;
+  DECLARE v_avg_purchase DECIMAL(12,2);
+  DECLARE v_avg_selling DECIMAL(12,2);
+
+  -- totals
+  SELECT
+    SUM(CASE WHEN COALESCE(is_sold,0)=0 THEN 1 ELSE 0 END),
+    SUM(CASE WHEN COALESCE(is_sold,0)=1 THEN 1 ELSE 0 END)
+  INTO v_total, v_sold
+  FROM detail_inventory
+  WHERE inventory_id = p_inventory_id;
+
+  -- averages
+  SELECT
+    AVG(purchase_price),
+    AVG(CASE WHEN COALESCE(is_sold,0)=1 THEN selling_price END)
+  INTO v_avg_purchase, v_avg_selling
+  FROM detail_inventory
+  WHERE inventory_id = p_inventory_id;
+
+  UPDATE inventory
+  SET total_quantity      = IFNULL(v_total, 0),
+      quantity_sold       = IFNULL(v_sold, 0),
+      avg_purchase_price  = v_avg_purchase,
+      avg_selling_price   = v_avg_selling,
+      last_updated        = CURRENT_TIMESTAMP
+  WHERE inventory_id = p_inventory_id;
+END $$
+
+-- After INSERT on detail_inventory
+DROP TRIGGER IF EXISTS trg_detail_inventory_ai $$
+CREATE TRIGGER trg_detail_inventory_ai
+AFTER INSERT ON detail_inventory
+FOR EACH ROW
+BEGIN
+  CALL recalc_inventory_metrics(NEW.inventory_id);
+END $$
+
+-- After UPDATE on detail_inventory
+DROP TRIGGER IF EXISTS trg_detail_inventory_au $$
+CREATE TRIGGER trg_detail_inventory_au
+AFTER UPDATE ON detail_inventory
+FOR EACH ROW
+BEGIN
+  -- If the row moved to a different inventory, recalc both
+  IF OLD.inventory_id <> NEW.inventory_id THEN
+    CALL recalc_inventory_metrics(OLD.inventory_id);
+    CALL recalc_inventory_metrics(NEW.inventory_id);
+  ELSE
+    CALL recalc_inventory_metrics(NEW.inventory_id);
+  END IF;
+END $$
+
+-- After DELETE on detail_inventory
+DROP TRIGGER IF EXISTS trg_detail_inventory_ad $$
+CREATE TRIGGER trg_detail_inventory_ad
+AFTER DELETE ON detail_inventory
+FOR EACH ROW
+BEGIN
+  CALL recalc_inventory_metrics(OLD.inventory_id);
+END $$
+
+DELIMITER ;
 -- ================================================
 -- SAMPLE DATA FOR TESTING
 -- ================================================
 
 
 
-INSERT INTO inventory (master_card_id, total_quantity, quantity_sold, avg_purchase_price, avg_selling_price, storage_location, language, is_active, date_added, notes) VALUES
-('base1-11', 2, 0, 1500000, NULL, 'Shelf A1', 'EN', TRUE, '2024-06-01', 'Mint condition'),
-('base1-12', 5, 1, 200000, 300000, 'Box B2', 'EN', TRUE, '2024-06-01', 'Some cards lightly played'),
-('base1-13', 3, 0, 1200000, NULL, 'Shelf A2', 'EN', TRUE, '2024-06-02', 'Near mint'),
-('base1-14', 4, 2, 1000000, 1500000, 'Box C1', 'EN', TRUE, '2024-06-03', 'Includes GX move cards'),
-('base1-15', 6, 0, 800000, NULL, 'Shelf B1', 'EN', TRUE, '2024-06-04', 'Latest series cards');
+-- INSERT INTO inventory (master_card_id, total_quantity, quantity_sold, avg_purchase_price, avg_selling_price, storage_location, language, is_active, date_added, notes) VALUES
+-- ('base1-11', 2, 0, 1500000, NULL, 'Shelf A1', 'EN', TRUE, '2024-06-01', 'Mint condition'),
+-- ('base1-12', 5, 1, 200000, 300000, 'Box B2', 'EN', TRUE, '2024-06-01', 'Some cards lightly played'),
+-- ('base1-13', 3, 0, 1200000, NULL, 'Shelf A2', 'EN', TRUE, '2024-06-02', 'Near mint'),
+-- ('base1-14', 4, 2, 1000000, 1500000, 'Box C1', 'EN', TRUE, '2024-06-03', 'Includes GX move cards'),
+-- ('base1-15', 6, 0, 800000, NULL, 'Shelf B1', 'EN', TRUE, '2024-06-04', 'Latest series cards');
 
-INSERT INTO detail_inventory (inventory_id, physical_condition_us, physical_condition_jp, is_graded, grade_company, grade_score, purchase_price, selling_price, card_photos, date_added, is_sold, notes) VALUES
-(1, 'NearMint', 'A', TRUE, 'PSA', 9.5, 1500000, NULL, JSON_ARRAY('charizard_front.jpg', 'charizard_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA'),
-(1, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1500000, NULL, JSON_ARRAY('charizard_lp_front.jpg', 'charizard_lp_back.jpg'), '2024-06-01', FALSE, 'Lightly played version'),
-(2, 'NearMint', 'A', FALSE, NULL, NULL, 200000, 300000, JSON_ARRAY('pikachu_front.jpg', 'pikachu_back.jpg'), '2024-06-01', TRUE, 'Sold one card'),
-(2, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_lp_front.jpg', 'pikachu_lp_back.jpg'), '2024-06-01', FALSE, 'Lightly played version'),
-(2, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_mp_front.jpg', 'pikachu_mp_back.jpg'), '2024-06-01', FALSE, 'Moderately played version'),
-(2, 'HeavilyPlayed', 'D', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_hp_front.jpg', 'pikachu_hp_back.jpg'), '2024-06-01', FALSE, 'Heavily played version'),
-(2, 'Damaged', 'D', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_damaged_front.jpg', 'pikachu_damaged_back.jpg'), '2024-06-01', FALSE, 'Damaged version'),
-(3, 'NearMint', 'A', TRUE, 'BGS', 9.0, 1200000, NULL, JSON_ARRAY('mewtwo_ex_front.jpg', 'mewtwo_ex_back.jpg'), '2024-06-02', FALSE, 'Graded by BGS'),
-(3, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1200000, NULL, JSON_ARRAY('mewtwo_ex_lp_front.jpg', 'mewtwo_ex_lp_back.jpg'), '2024-06-02', FALSE, 'Lightly played version'),
-(3, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 1200000, NULL, JSON_ARRAY('mewtwo_ex_mp_front.jpg', 'mewtwo_ex_mp_back.jpg'), '2024-06-02', FALSE, 'Moderately played version'),
-(4, 'NearMint', 'A', TRUE, 'PSA', 9.8, 1000000, 1500000, JSON_ARRAY('incineroar_gx_front.jpg', 'incineroar_gx_back.jpg'), '2024-06-03', TRUE, 'Sold two cards'),
-(4, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1000000, NULL, JSON_ARRAY('incineroar_gx_lp_front.jpg', 'incineroar_gx_lp_back.jpg'), '2024-06-03', FALSE, 'Lightly played version'),
-(4, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 1000000, NULL, JSON_ARRAY('incineroar_gx_mp_front.jpg', 'incineroar_gx_mp_back.jpg'), '2024-06-03', FALSE, 'Moderately played version');
+-- INSERT INTO detail_inventory (inventory_id, physical_condition_us, physical_condition_jp, is_graded, grade_company, grade_score, purchase_price, selling_price, card_photos, date_added, is_sold, notes) VALUES
+-- (1, 'NearMint', 'A', TRUE, 'PSA', 9.5, 1500000, NULL, JSON_ARRAY('charizard_front.jpg', 'charizard_back.jpg'), '2024-06-01', FALSE, 'Graded by PSA'),
+-- (1, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1500000, NULL, JSON_ARRAY('charizard_lp_front.jpg', 'charizard_lp_back.jpg'), '2024-06-01', FALSE, 'Lightly played version'),
+-- (2, 'NearMint', 'A', FALSE, NULL, NULL, 200000, 300000, JSON_ARRAY('pikachu_front.jpg', 'pikachu_back.jpg'), '2024-06-01', TRUE, 'Sold one card'),
+-- (2, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_lp_front.jpg', 'pikachu_lp_back.jpg'), '2024-06-01', FALSE, 'Lightly played version'),
+-- (2, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_mp_front.jpg', 'pikachu_mp_back.jpg'), '2024-06-01', FALSE, 'Moderately played version'),
+-- (2, 'HeavilyPlayed', 'D', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_hp_front.jpg', 'pikachu_hp_back.jpg'), '2024-06-01', FALSE, 'Heavily played version'),
+-- (2, 'Damaged', 'D', FALSE, NULL, NULL, 200000, NULL, JSON_ARRAY('pikachu_damaged_front.jpg', 'pikachu_damaged_back.jpg'), '2024-06-01', FALSE, 'Damaged version'),
+-- (3, 'NearMint', 'A', TRUE, 'BGS', 9.0, 1200000, NULL, JSON_ARRAY('mewtwo_ex_front.jpg', 'mewtwo_ex_back.jpg'), '2024-06-02', FALSE, 'Graded by BGS'),
+-- (3, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1200000, NULL, JSON_ARRAY('mewtwo_ex_lp_front.jpg', 'mewtwo_ex_lp_back.jpg'), '2024-06-02', FALSE, 'Lightly played version'),
+-- (3, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 1200000, NULL, JSON_ARRAY('mewtwo_ex_mp_front.jpg', 'mewtwo_ex_mp_back.jpg'), '2024-06-02', FALSE, 'Moderately played version'),
+-- (4, 'NearMint', 'A', TRUE, 'PSA', 9.8, 1000000, 1500000, JSON_ARRAY('incineroar_gx_front.jpg', 'incineroar_gx_back.jpg'), '2024-06-03', TRUE, 'Sold two cards'),
+-- (4, 'LightlyPlayed', 'B', FALSE, NULL, NULL, 1000000, NULL, JSON_ARRAY('incineroar_gx_lp_front.jpg', 'incineroar_gx_lp_back.jpg'), '2024-06-03', FALSE, 'Lightly played version'),
+-- (4, 'ModeratelyPlayed', 'C', FALSE, NULL, NULL, 1000000, NULL, JSON_ARRAY('incineroar_gx_mp_front.jpg', 'incineroar_gx_mp_back.jpg'), '2024-06-03', FALSE, 'Moderately played version');
 
-INSERT INTO market_prices (master_card_id, tcgplayer_nm_price, tcgplayer_lp_price, ebay_avg_price, pricecharting_price, cardrush_a_price, cardrush_b_price, snkrdunk_price, yahoo_auction_avg, usd_to_vnd_rate, jpy_to_vnd_rate, price_date, data_source) VALUES
-('base1-004', 120.00, 100.00, 130.00, 125.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
-('base1-025', 15.00, 12.00, 16.00, 15.50, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
-('xy1-143', 60.00, 50.00, 65.00, 62.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
-('sm1-001', 90.00, 80.00, 95.00, 92.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
-('sv1-100', 85.00, 75.00, 88.00, 86.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual');
-INSERT INTO price_alerts (inventory_id, alert_type, purchase_price, current_market_price, price_difference, percentage_change, alert_message, alert_date, is_acknowledged) VALUES
-(1, 'PROFIT_OPPORTUNITY', 1500000, 2880000, 1380000, 92.00, 'High profit potential on Charizard. Consider listing for sale.', '2024-06-02', FALSE),
-(2, 'PRICE_DROP', 200000, 360000, 160000, 80.00, 'Pikachu market price has increased significantly. Review selling price.', '2024-06-02', FALSE);
-INSERT INTO orders (order_date, customer_name, customer_contact, order_status, total_amount, shipping_address, payment_method, platform) VALUES
-('2024-06-10', 'Nguyễn Văn A', '0912345678', 'COMPLETED', 3000000, 'Hà Nội', 'Credit Card', 'Website'),
-('2024-06-11', 'Trần Thị B', '0987654321', 'PENDING', 500000, 'Hồ Chí Minh', 'Cash on Delivery', 'Facebook'),
-('2024-06-12', 'Lê Văn C', '0901234567', 'SHIPPED', 1500000, 'Đà Nẵng', 'Bank Transfer', 'Shopee'),
-('2024-06-13', 'Phạm Thị D', '0932123456', 'CANCELLED', 0, 'Cần Thơ', 'N/A', 'Instagram');
-INSERT INTO order_details (order_id, inventory_id, quantity_ordered, unit_price, subtotal) VALUES
-(1, 1, 1, 3000000, 3000000),
-(2, 2, 1, 500000, 500000),
-(3, 3, 1, 1500000, 1500000);    
--- ================================================
--- INDEXES FOR PERFORMANCE OPTIMIZATION
--- ================================================
+-- INSERT INTO market_prices (master_card_id, tcgplayer_nm_price, tcgplayer_lp_price, ebay_avg_price, pricecharting_price, cardrush_a_price, cardrush_b_price, snkrdunk_price, yahoo_auction_avg, usd_to_vnd_rate, jpy_to_vnd_rate, price_date, data_source) VALUES
+-- ('base1-004', 120.00, 100.00, 130.00, 125.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+-- ('base1-025', 15.00, 12.00, 16.00, 15.50, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+-- ('xy1-143', 60.00, 50.00, 65.00, 62.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+-- ('sm1-001', 90.00, 80.00, 95.00, 92.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual'),
+-- ('sv1-100', 85.00, 75.00, 88.00, 86.00, NULL, NULL, NULL, NULL, 24000, NULL, '2024-06-01', 'Manual');
+-- INSERT INTO price_alerts (inventory_id, alert_type, purchase_price, current_market_price, price_difference, percentage_change, alert_message, alert_date, is_acknowledged) VALUES
+-- (1, 'PROFIT_OPPORTUNITY', 1500000, 2880000, 1380000, 92.00, 'High profit potential on Charizard. Consider listing for sale.', '2024-06-02', FALSE),
+-- (2, 'PRICE_DROP', 200000, 360000, 160000, 80.00, 'Pikachu market price has increased significantly. Review selling price.', '2024-06-02', FALSE);
+-- INSERT INTO orders (order_date, customer_name, customer_contact, order_status, total_amount, shipping_address, payment_method, platform) VALUES
+-- ('2024-06-10', 'Nguyễn Văn A', '0912345678', 'COMPLETED', 3000000, 'Hà Nội', 'Credit Card', 'Website'),
+-- ('2024-06-11', 'Trần Thị B', '0987654321', 'PENDING', 500000, 'Hồ Chí Minh', 'Cash on Delivery', 'Facebook'),
+-- ('2024-06-12', 'Lê Văn C', '0901234567', 'SHIPPED', 1500000, 'Đà Nẵng', 'Bank Transfer', 'Shopee'),
+-- ('2024-06-13', 'Phạm Thị D', '0932123456', 'CANCELLED', 0, 'Cần Thơ', 'N/A', 'Instagram');
+-- INSERT INTO order_details (order_id, inventory_id, quantity_ordered, unit_price, subtotal) VALUES
+-- (1, 1, 1, 3000000, 3000000),
+-- (2, 2, 1, 500000, 500000),
+-- (3, 3, 1, 1500000, 1500000);    
+-- -- ================================================
+-- -- INDEXES FOR PERFORMANCE OPTIMIZATION
+-- -- ================================================

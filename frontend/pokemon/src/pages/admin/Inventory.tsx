@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "react-toastify";
 import "../../assets/css/Inventory.css";
 import "../../assets/css/theme.css";
@@ -207,9 +207,20 @@ function useInventoryData({
     setLoading(false);
   }, [filters, searchTerm, page, pageSize, sortField, sortOrder]);
 
+  // Deduplicate calls (React 18 StrictMode runs effects twice in dev)
+  const paramsKey = useMemo(
+    () =>
+      JSON.stringify({ filters, searchTerm, page, pageSize, sortField, sortOrder }),
+    [filters, searchTerm, page, pageSize, sortField, sortOrder]
+  );
+  const lastKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
+    if (lastKeyRef.current === paramsKey) return; // skip duplicate for same params
+    lastKeyRef.current = paramsKey;
     fetchData();
-  }, [fetchData]);
+  }, [paramsKey, fetchData]);
+
   return { data, total, loading, fetchData };
 }
 
@@ -254,10 +265,22 @@ const getColumns = (
   { key: "master_card_id", label: "Mã thẻ", sticky: true },
   { key: "total_quantity", label: "Số lượng", sticky: true },
   { key: "quantity_sold", label: "Đã bán", sticky: true },
-  { key: "avg_purchase_price", label: "Giá mua TB", sticky: true },
-  { key: "avg_selling_price", label: "Giá bán TB", sticky: true },
-  { key: "storage_location", label: "Vị trí lưu trữ", sticky: true },
-  { key: "language", label: "Ngôn ngữ", sticky: true },
+  { key: "avg_purchase_price", label: "Giá mua TB",
+    render: (row: any) =>
+        row.avg_purchase_price ? row.avg_purchase_price.toLocaleString("vi-VN") : "-",
+     sticky: true },
+  { key: "avg_selling_price", label: "Giá bán TB",
+    render: (row: any) =>
+        row.avg_selling_price ? row.avg_selling_price.toLocaleString("vi-VN") : "-",
+     sticky: true },
+  { key: "storage_location", label: "Vị trí lưu trữ",
+    render: (row: any) =>
+        row.storage_location ? row.storage_location : "-",
+    sticky: true },
+  { key: "language", label: "Ngôn ngữ",
+    render: (row: any) =>
+        row.language ? row.language : "-",
+    sticky: true },
   {
     key: "is_active",
     label: "Hoạt động",
@@ -379,14 +402,15 @@ const InventoryPage: React.FC = () => {
   // --- Effect: gọi API khi openedInventoryId thay đổi ---
   useEffect(() => {
     if (openedInventoryId !== null) {
-      // Tìm inventory row đang mở
       const row = data.find((r) => r.inventory_id === openedInventoryId);
-      if (row) fetchPriceData(row);
+      if (row) {
+        fetchPriceData(row);
+        fetchDetailInventory(row.inventory_id);
+      }
     } else {
       setPriceData(null);
     }
-    // eslint-disable-next-line
-  }, [openedInventoryId]);
+  }, [openedInventoryId]); // eslint OK
 
   // --- Handlers ---
   const handleAdd = () => {
@@ -938,7 +962,7 @@ const InventoryPage: React.FC = () => {
             row.card_photos.map((img: string, idx: number) => (
               <img
                 key={idx}
-                src={`/detail_inventory_images/${img}`}
+                src={img} // use Cloudinary URL directly
                 alt={`photo-${idx}`}
                 style={{
                   width: 36,
@@ -948,7 +972,7 @@ const InventoryPage: React.FC = () => {
                   border: "1px solid #eee",
                   cursor: "pointer",
                 }}
-                onClick={() => setPreviewImg(`/detail_inventory_images/${img}`)}
+                onClick={() => setPreviewImg(img)} // preview Cloudinary URL
               />
             ))
           ) : (
@@ -1001,7 +1025,12 @@ const InventoryPage: React.FC = () => {
     {
       key: "is_sold",
       label: "Đã bán",
-      render: (row: any) => (row.is_sold ? "Đã bán" : "Chưa bán"),
+      render: (row: any) =>
+        row.is_sold ? (
+          <span className="badge bg-success">Đã bán</span>
+        ) : (
+          <span className="badge bg-danger">Chưa bán</span>
+        ),
       sticky: true
     },
     { key: "notes", label: "Ghi chú", sticky: true },
@@ -1308,7 +1337,7 @@ const InventoryPage: React.FC = () => {
     };
 
     return (
-      <div className="price-box" style={{ padding: 12, maxWidth: 1400, margin: "100px 0", overflowX: "auto" }}>
+      <div className="price-box" style={{ padding: 0, maxWidth: 1400, overflowX: "auto" }}>
         <div className="text-secondary" style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 12 }}>
           <span>
             <b>Ngày cập nhật giá:</b> {priceDate ? new Date(priceDate).toLocaleString() : "-"}
@@ -1453,10 +1482,21 @@ const InventoryPage: React.FC = () => {
         sortField={sortField}
         sortOrder={sortOrder}
         renderCollapse={renderCollapse}
-        onCollapseOpen={(row) => setOpenedInventoryId(row.inventory_id)}
+        onCollapseOpen={(row) => {
+          // chỉ set id, KHÔNG gọi API ở đây
+          if (openedInventoryId !== row.inventory_id) {
+            setOpenedInventoryId(row.inventory_id);
+          }
+        }}
         onCollapseClose={() => {
           setOpenedInventoryId(null);
           setPriceData(null);
+        }}
+        onRowClick={(row) => {
+          // tránh double call với onCollapseOpen
+          if (openedInventoryId !== row.inventory_id) {
+            setOpenedInventoryId(row.inventory_id);
+          }
         }}
       />
       {/* Modal nhập thông tin */}
@@ -1877,6 +1917,23 @@ const InventoryPage: React.FC = () => {
                 style={{ width: 100, marginLeft: 8 }}
               />
             </div>
+
+            {/* NEW: Toggle trạng thái đã bán (chỉ hiển thị ở chế độ Sửa) */}
+            {detailModalMode === "edit" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <label className="mac-input-label" style={{ minWidth: 110 }}>
+                  Đã bán
+                </label>
+                <Toggle
+                  checked={detailForm.is_sold}
+                  onChange={(checked) => {
+                    setDetailForm((prev) => ({ ...prev, is_sold: checked }));
+                    setDetailFormTouched(true);
+                  }}
+                />
+              </div>
+            )}
+
             <Input
               label="Ghi chú"
               name="notes"
