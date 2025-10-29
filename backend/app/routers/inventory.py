@@ -11,7 +11,7 @@ from app.schemas.filter import FilterRequest
 from app.models import Inventory, PokemonCardMaster
 from app.database import get_db
 import os
-from PIL import Image
+# from PIL import Image
 
 # import io
 # import torch
@@ -90,7 +90,7 @@ def delete_inventory(inventory_id: int, db: Session = Depends(get_db)):
     db.delete(db_item)
     db.commit()
     return
-
+from sqlalchemy import or_
 # Lấy danh sách phân trang
 @router.get("/", response_model=PaginatedInventory)
 def get_inventory(
@@ -103,11 +103,21 @@ def get_inventory(
 ):
     query = db.query(Inventory).join(PokemonCardMaster, Inventory.master_card_id == PokemonCardMaster.master_card_id).options(joinedload(Inventory.card))
     if search:
-        query = query.filter(
-            Inventory.storage_location.ilike(f"%{search}%")
-            | Inventory.notes.ilike(f"%{search}%")
-            | Inventory.language.ilike(f"%{search}%")
+       query = (
+        db.query(Inventory)
+        .join(PokemonCardMaster, Inventory.master_card_id == PokemonCardMaster.master_card_id)
+        .filter(
+            or_(
+                Inventory.master_card_id.ilike(f"%{search}%"),
+                Inventory.storage_location.ilike(f"%{search}%"),
+                Inventory.notes.ilike(f"%{search}%"),
+                Inventory.language.ilike(f"%{search}%"),
+                PokemonCardMaster.name_en.ilike(f"%{search}%"),
+                PokemonCardMaster.card_number.ilike(f"%{search}%"),
+            )
         )
+        .order_by(Inventory.last_updated.desc())
+    )
     valid_sort_fields = {
         "inventory_id": Inventory.inventory_id,
         "master_card_id": Inventory.master_card_id,
@@ -149,8 +159,11 @@ def filter_inventory(
     valid_sort_fields = {
         "inventory_id": Inventory.inventory_id,
         "master_card_id": Inventory.master_card_id,
-        "quantity_in_stock": Inventory.quantity_in_stock,
-        "purchase_price": Inventory.purchase_price,
+        "quantity_stock": Inventory.quantity_sold,
+        "avg_purchase_price": Inventory.avg_purchase_price,
+        "avg_selling_price": Inventory.avg_selling_price,
+        "storage_location": Inventory.storage_location,
+        "language": Inventory.language,
         "date_added": Inventory.date_added,
         "last_updated": Inventory.last_updated,
     }

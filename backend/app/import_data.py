@@ -121,7 +121,47 @@ def import_cards_from_folder(folder_path):
     session.commit()
     print(f"Tổng số cards đã import: {total_cards}")
 
+def import_cards_from_file(file_path):
+    total_cards = 0
+    with open(file_path, encoding='utf-8') as f:
+        cards = json.load(f)
+    for c in cards:
+        updated_at = c.get("updated_at")
+        if updated_at and " " in updated_at and "/" in updated_at:
+            time_part, date_part = updated_at.split(" ")
+            day, month, year = date_part.split("/")
+            updated_at = f"{year}-{month.zfill(2)}-{day.zfill(2)} {time_part}:00"
+        session.execute(text("""
+            INSERT IGNORE INTO pokemon_cards_master (
+            master_card_id, set_id, card_number, name_en, name_original,
+            version_en, version_original, supertype, subtypes, rarity,
+            illustrator, reference_image_url, flavorText, updated_at
+            ) VALUES (
+            :master_card_id, :set_id, :card_number, :name_en, :name_original,
+            :version_en, :version_original, :supertype, :subtypes, :rarity,
+            :illustrator, :reference_image_url, :flavorText, :updated_at
+            )
+        """), {
+            "master_card_id": c.get("master_card_id"),
+            "set_id": c.get("set_id"),
+            "card_number": c.get("card_number"),
+            "name_en": c.get("name_en"),
+            "name_original": c.get("name_original"),
+            "version_en": c.get("version_en"),
+            "version_original": c.get("version_original"),
+            "supertype": c.get("supertype"),
+            "subtypes": c.get("subtypes"),
+            "rarity": c.get("rarity"),
+            "illustrator": c.get("illustrator"),
+            "reference_image_url": c.get("reference_image_url"),
+            "flavorText": c.get("flavorText"),
+            "updated_at": updated_at
+        })
+    total_cards = len(cards)
+    session.commit()
+    print(f"Đã import {total_cards} cards từ {file_path}.")
+
 if __name__ == "__main__":
     import_sets("backend/script_db/pokemon_sets_db.json")
-    import_cards_from_folder("backend/script_db")
+    import_cards_from_file("backend/script_db/pokemon_cards_full.json")
     session.close()

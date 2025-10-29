@@ -151,7 +151,7 @@ class MarketPrice(Base):
     jpy_to_vnd_rate = Column(DECIMAL(6, 2))
     price_date = Column(DateTime, nullable=False)
     data_source = Column(String(50), default="Manual")
-    urls = Column(JSON)
+    url = Column(JSON)
 
     card = relationship("PokemonCardMaster", back_populates="market_prices")
 
