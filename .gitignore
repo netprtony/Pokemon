@@ -30,4 +30,4 @@ dist-ssr
 *.sw?
 backend/script_db/temp_card
 backend/card_recognizer/pokemon_dataset
-backend/card_recognizer/yolo_dataset_2
+backend/card_recognizer/datasets
