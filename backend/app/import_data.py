@@ -162,6 +162,6 @@ def import_cards_from_file(file_path):
     print(f"Đã import {total_cards} cards từ {file_path}.")
 
 if __name__ == "__main__":
-    import_sets("backend/script_db/pokemon_sets_db.json")
-    import_cards_from_file("backend/script_db/pokemon_cards_full.json")
+    import_sets("backend\script_db\japan_pokemon_set.json")
+    import_cards_from_file("backend\script_db\japan_pokemon_card.json")
     session.close()

@@ -1,11 +1,16 @@
 from datetime import date, datetime
 from typing import List, Optional
 from pydantic import BaseModel
+
 class CardImageOnly(BaseModel):
     reference_image_url: Optional[str]
+    name_en: Optional[str]
+    card_number: Optional[str]
+    
     class Config:
         orm_mode = True
         from_attributes = True
+
 class InventoryBase(BaseModel):
     inventory_id: int
     master_card_id: str
@@ -19,7 +24,7 @@ class InventoryBase(BaseModel):
     date_added: date
     last_updated: Optional[datetime]
     notes: Optional[str]
-    card: Optional[CardImageOnly]  # Chỉ trả về reference_image_url
+    card: Optional[CardImageOnly]  # Trả về reference_image_url, name_en, card_number
 
 class InventoryCreate(BaseModel):
     master_card_id: str

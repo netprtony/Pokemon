@@ -701,7 +701,7 @@ const InventoryPage: React.FC = () => {
               <i className="bi bi-search"></i>
             </button>
             {/* Dropdown kết quả */}
-            {cardDropdown && cardOptions.length > 0 && (
+            {cardDropdown && cardOptions.length > 0 && detailForm.inventory_id === 0 && (
               <div
                 style={{
                   position: "absolute",
@@ -729,14 +729,9 @@ const InventoryPage: React.FC = () => {
                       borderBottom: "1px solid #f2f2f2",
                     }}
                     onClick={() => {
-                      setForm((prev) => ({
-                        ...prev,
-                        master_card_id: opt.value,
-                        reference_image_url: opt.image ?? "",
-                      }));
                       setCardSearch(opt.value);
                       setCardDropdown(false);
-                      setFormTouched(true);
+                      setDetailFormTouched(true);
                     }}
                   >
                     {opt.image && (
@@ -1027,9 +1022,9 @@ const InventoryPage: React.FC = () => {
       label: "Đã bán",
       render: (row: any) =>
         row.is_sold ? (
-          <span className="badge bg-success">Đã bán</span>
+          <span className="badge bg-success">Đã chấm</span>
         ) : (
-          <span className="badge bg-danger">Chưa bán</span>
+          <span className="badge bg-danger">Chưa chấm</span>
         ),
       sticky: true
     },
@@ -1090,7 +1085,18 @@ const InventoryPage: React.FC = () => {
     setDetailModalMode("add");
     setDetailModalOpen(true);
     setDetailFormTouched(false);
+    setCardSearch(row.master_card_id); // Set mã thẻ từ row
   }
+
+  // Thêm handler cho nút "Thêm chi tiết kho" (không có row)
+  const handleAddDetailDirect = () => {
+    setDetailForm({ ...defaultDetailForm, inventory_id: 0 });
+    setDetailModalMode("add");
+    setDetailModalOpen(true);
+    setDetailFormTouched(false);
+    setCardSearch(""); // Cho phép nhập mã thẻ
+  };
+
   function handleEditDetail(row: any) {
     // Nếu giá trị không hợp lệ, set về giá trị đầu tiên trong US_OPTIONS
     const validUS = US_OPTIONS.map((opt) => opt.value);
@@ -1101,12 +1107,44 @@ const InventoryPage: React.FC = () => {
     setDetailModalMode("edit");
     setDetailModalOpen(true);
     setDetailFormTouched(false);
+    
+    // Tìm master_card_id từ inventory_id của row detail
+    const parentRow = data.find((r) => r.inventory_id === row.inventory_id);
+    if (parentRow) {
+      setCardSearch(parentRow.master_card_id);
+    } else {
+      setCardSearch("");
+    }
   }
   async function handleSaveDetail() {
     try {
       let savedDetail: DetailInventoryForm | null = null;
       const { detail_id, inventory_id, date_added, photo_count, ...payload } =
         detailForm;
+
+      // Nếu inventory_id = 0, tìm hoặc tạo inventory từ cardSearch
+      let finalInventoryId = inventory_id;
+      if (inventory_id === 0 && cardSearch) {
+        // Tìm inventory theo master_card_id
+        const searchResp = await axios.get<{ items: any[] }>(API_URL, {
+          params: { search: cardSearch, page: 1, page_size: 1 },
+        });
+        const items = searchResp.data.items || [];
+        if (items.length > 0) {
+          finalInventoryId = items[0].inventory_id;
+        } else {
+          // Không tìm thấy, tạo mới inventory
+          const newInvResp = await axios.post<{ inventory_id: number }>(API_URL, {
+            master_card_id: cardSearch,
+            total_quantity: 0,
+            quantity_sold: 0,
+            is_active: true,
+            date_added: new Date().toISOString().slice(0, 10),
+          });
+          finalInventoryId = newInvResp.data.inventory_id;
+          toast.success("Đã tạo inventory mới!");
+        }
+      }
 
       // Đảm bảo card_photos luôn là mảng chuỗi
       let card_photos: string[] = [];
@@ -1126,7 +1164,7 @@ const InventoryPage: React.FC = () => {
 
       const card_photos_count = card_photos.length;
 
-      // Xử lý các trường số: nếu rỗng thì set null, nếu có thì ép kiểu số
+      // Xử lý các trường số
       const grade_score =
         payload.grade_score === "" || payload.grade_score === null
           ? null
@@ -1143,7 +1181,7 @@ const InventoryPage: React.FC = () => {
       // Payload gửi lên BE
       const payloadFixed = {
         ...payload,
-        card_photos, // luôn là mảng chuỗi
+        card_photos,
         card_photos_count,
         photo_count: card_photos_count,
         grade_score,
@@ -1158,7 +1196,7 @@ const InventoryPage: React.FC = () => {
         url = "http://localhost:8000/detail-inventory/";
         resp = await axios.post<DetailInventoryForm>(url, {
           ...payloadFixed,
-          inventory_id: detailForm.inventory_id,
+          inventory_id: finalInventoryId,
           date_added: detailForm.date_added,
         });
         toast.success("Thêm chi tiết thành công!");
@@ -1189,14 +1227,15 @@ const InventoryPage: React.FC = () => {
         toast.success("Upload ảnh thành công!");
       }
 
-      fetchDetailInventory(detailForm.inventory_id);
+      fetchDetailInventory(finalInventoryId);
+      fetchData(); // Cập nhật lại danh sách inventory
       setDetailModalOpen(false);
       setDetailImages([]);
       setDetailAngles([]);
+      setCardSearch("");
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.detail) {
         const detail = err.response.data.detail;
-        // Nếu detail là object, stringify để dễ debug
         const msg =
           typeof detail === "string" ? detail : JSON.stringify(detail, null, 2);
         toast.error("Lỗi: " + msg);
@@ -1461,11 +1500,15 @@ const InventoryPage: React.FC = () => {
         onExportCSV={handleExportCSV}
         onExportJSON={handleExportJSON}
       />
-      <div className="d-flex justify-content-center mb-3">
+      <div className="d-flex justify-content-center mb-3 gap-3">
         <button className="btn btn-success" onClick={handleAdd}>
           <i className="bi bi-plus-lg me-2"></i> Thêm thẻ mới
         </button>
+        <button className="btn btn-primary" onClick={handleAddDetailDirect}>
+          <i className="bi bi-plus-lg me-2"></i> Thêm chi tiết kho
+        </button>
       </div>
+
       {/* Hiển thị khung bảng giá ngay dưới nút Thêm thẻ mới */}
       {renderPriceBox()}
       <DataTable
@@ -1602,14 +1645,13 @@ const InventoryPage: React.FC = () => {
             {/* Khu vực hình vuông hiển thị ảnh đã upload + nút "+" */}
             <div
               style={{
-                width: 800,
-                height: 600,
+                width: "100%",
+                maxWidth: 800,
                 background: "#222",
                 borderRadius: 12,
                 border: "1px solid #eee",
                 display: "grid",
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gridTemplateRows: "repeat(2, 1fr)",
+                gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
                 gap: 16,
                 padding: 16,
                 position: "relative",
@@ -1617,147 +1659,153 @@ const InventoryPage: React.FC = () => {
             >
               {/* Hiển thị ảnh đã có trong detailForm.card_photos */}
               {detailForm.card_photos &&
-                detailForm.card_photos.map((img: string, idx: number) => (
-                  <div
-                    key={`existing-${idx}`}
-                    style={{
-                      position: "relative",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  >
-                    {/* Nút xóa cho ảnh đã lưu */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDetailForm((prev) => ({
-                          ...prev,
-                          card_photos: prev.card_photos.filter(
-                            (_, i) => i !== idx
-                          ),
-                        }));
-                        setDetailFormTouched(true);
-                      }}
+                detailForm.card_photos.map((img: string, idx: number) => {
+                  const src =
+                    typeof img === "string" && /^(http|https):\/\//.test(img)
+                      ? img
+                      : `/detail_inventory_images/${img}`;
+                  return (
+                    <div
+                      key={`existing-${idx}`}
                       style={{
-                        position: "absolute",
-                        top: 6,
-                        right: 10,
-                        zIndex: 2,
-                        background: "rgba(255,255,255,0.25)",
-                        border: "1px solid rgba(255,255,255,0.3)",
-                        borderRadius: "50%",
-                        width: 28,
-                        height: 38,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backdropFilter: "blur(6px)",
-                        WebkitBackdropFilter: "blur(6px)",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                      }}
-                      title="Xóa ảnh này"
-                    >
-                      <i
-                        className="bi bi-x-lg"
-                        style={{ fontSize: 18, color: "#fff" }}
-                      ></i>
-                    </button>
-                    <img
-                      src={`/detail_inventory_images/${img}`}
-                      alt={`photo-${idx}`}
-                      style={{
+                        position: "relative",
                         width: "100%",
-                        height: "80%",
-                        objectFit: "cover",
+                        paddingBottom: "100%",
                         borderRadius: 8,
-                        border: "1px solid #ddd",
+                        overflow: "hidden",
+                        background: "#111",
+                        cursor: "pointer",
                       }}
-                      onClick={() =>
-                        setPreviewImg(`/detail_inventory_images/${img}`)
-                      }
-                    />
-                    <span style={{ marginTop: 4, fontSize: 14, color: "#555" }}>
-                      {img}
-                    </span>
-                  </div>
-                ))}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDetailForm((prev) => ({
+                            ...prev,
+                            card_photos: prev.card_photos.filter(
+                              (_: any, i: number) => i !== idx
+                            ),
+                          }));
+                          setDetailFormTouched(true);
+                        }}
+                        style={{
+                          position: "absolute",
+                          top: 6,
+                          right: 8,
+                          zIndex: 3,
+                          background: "rgba(255,255,255,0.25)",
+                          border: "1px solid rgba(255,255,255,0.3)",
+                          borderRadius: "50%",
+                          width: 30,
+                          height: 30,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background =
+                            "rgba(255,255,255,0.4)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background =
+                            "rgba(255,255,255,0.25)";
+                        }}
+                        title="Xóa ảnh này"
+                      >
+                        <i className="bi bi-x-lg" style={{ color: "#fff" }} />
+                      </button>
+                      <img
+                        src={src}
+                        alt={`photo-${idx}`}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                        onClick={() => setPreviewImg(src)}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 6,
+                          bottom: 6,
+                          zIndex: 3,
+                          color: "#fff",
+                          fontSize: 11,
+                          background: "rgba(0,0,0,0.6)",
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          maxWidth: "calc(100% - 12px)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {img}
+                      </div>
+                    </div>
+                  );
+                })}
+
               {/* Hiển thị ảnh vừa upload (chưa lưu) */}
               {detailImages.map((img, idx) => (
                 <div
                   key={`upload-${idx}`}
                   style={{
                     position: "relative",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
                     width: "100%",
-                    height: "100%",
+                    paddingBottom: "100%",
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    background: "#111",
                   }}
                 >
                   <button
                     type="button"
                     onClick={() => {
-                      const ANGLES = [
-                        "front",
-                        "back",
-                        "corner1",
-                        "corner2",
-                        "corner3",
-                        "corner4",
-                        "corner5",
-                        "corner6",
-                        "corner7",
-                        "corner8",
-                      ];
-                      setDetailImages((prev) =>
-                        prev
-                          .filter((_, i) => i !== idx)
-                          .map((item, i) => ({
-                            ...item,
-                            name: ANGLES[i] || `angle${i + 1}`,
-                          }))
-                      );
+                      setDetailImages((prev) => prev.filter((_, i) => i !== idx));
                     }}
                     style={{
                       position: "absolute",
                       top: 6,
-                      right: 10,
-                      zIndex: 2,
+                      right: 8,
+                      zIndex: 3,
                       background: "rgba(255,255,255,0.25)",
                       border: "1px solid rgba(255,255,255,0.3)",
                       borderRadius: "50%",
-                      width: 28,
-                      height: 38,
+                      width: 30,
+                      height: 30,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      backdropFilter: "blur(6px)",
-                      WebkitBackdropFilter: "blur(6px)",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
                       cursor: "pointer",
                       transition: "all 0.2s ease",
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.25)";
+                    }}
                     title="Xóa ảnh này"
                   >
-                    <i
-                      className="bi bi-x-lg"
-                      style={{ fontSize: 18, color: "#fff" }}
-                    ></i>
+                    <i className="bi bi-x-lg" style={{ color: "#fff" }} />
                   </button>
                   <img
                     src={URL.createObjectURL(img.file)}
                     alt={`preview-${idx}`}
                     style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
                       width: "100%",
-                      height: "80%",
+                      height: "100%",
                       objectFit: "cover",
-                      borderRadius: 8,
-                      border: "1px solid #ddd",
                     }}
                   />
                   <input
@@ -1772,51 +1820,59 @@ const InventoryPage: React.FC = () => {
                       );
                     }}
                     style={{
-                      marginTop: 4,
-                      width: "100%",
-                      fontSize: 14,
+                      position: "absolute",
+                      left: 6,
+                      bottom: 6,
+                      zIndex: 3,
+                      width: "calc(100% - 12px)",
+                      fontSize: 11,
                       textAlign: "center",
-                      border: "1px solid #eee",
-                      background: "#fff",
-                      color: "#333",
+                      border: "none",
+                      background: "rgba(255,255,255,0.9)",
+                      padding: "2px 6px",
+                      borderRadius: 4,
                     }}
                   />
                 </div>
               ))}
+
               {/* Nút + để chọn ảnh, chỉ hiện nếu chưa đủ 10 ảnh upload */}
-              {detailImages.length < 10 && (
+              {((detailForm.card_photos?.length ?? 0) + detailImages.length) < 10 && (
                 <label
                   htmlFor="detail-image-upload"
                   style={{
+                    position: "relative",
+                    width: "100%",
+                    paddingBottom: "100%",
                     display: "flex",
-                    flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
                     background: "#495057",
-                    border: "1px dashed #bbb",
+                    border: "2px dashed #bbb",
                     borderRadius: 8,
                     cursor: "pointer",
-                    width: "100%",
-                    height: "100%",
-                    minHeight: 0,
-                    minWidth: 0,
-                    gridColumn:
-                      (((detailForm.card_photos?.length ?? 0) +
-                        detailImages.length) %
-                        5) +
-                      1,
-                    gridRow:
-                      Math.floor(
-                        ((detailForm.card_photos?.length ?? 0) +
-                          detailImages.length) /
-                          5
-                      ) + 1,
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#5a6268";
+                    e.currentTarget.style.borderColor = "#ccc";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#495057";
+                    e.currentTarget.style.borderColor = "#bbb";
                   }}
                   title="Thêm ảnh"
                 >
                   <i
                     className="bi bi-plus-lg"
-                    style={{ fontSize: 48, color: "#bbb" }}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      fontSize: 36,
+                      color: "#bbb",
+                    }}
                   ></i>
                 </label>
               )}
@@ -1865,6 +1921,119 @@ const InventoryPage: React.FC = () => {
               gap: 18,
             }}
           >
+            {/* Thêm trường Mã thẻ với dropdown */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <label className="mac-input-label">Mã thẻ</label>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  position: "relative",
+                }}
+              >
+                <input
+                  className="mac-input"
+                  value={cardSearch}
+                  onChange={(e) => {
+                    setCardSearch(e.target.value);
+                    setCardDropdown(false);
+                    setDetailFormTouched(true);
+                  }}
+                  placeholder="Nhập mã thẻ để tìm..."
+                  disabled={detailForm.inventory_id !== 0}
+                  required
+                  autoComplete="off"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && detailForm.inventory_id === 0) {
+                      e.preventDefault();
+                      fetchCardOptions();
+                    }
+                  }}
+                />
+                {detailForm.inventory_id === 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ padding: "6px 16px", fontSize: 16 }}
+                    onClick={fetchCardOptions}
+                    tabIndex={-1}
+                  >
+                    <i className="bi bi-search"></i>
+                  </button>
+                )}
+                {/* Dropdown kết quả */}
+                {cardDropdown && cardOptions.length > 0 && detailForm.inventory_id === 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 38,
+                      left: 0,
+                      zIndex: 10,
+                      background: "#fff",
+                      border: "1px solid #eee",
+                      borderRadius: 8,
+                      boxShadow: "0 4px 16px #0001",
+                      minWidth: 500,
+                      maxHeight: 650,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {cardOptions.map((opt) => (
+                      <div
+                        key={opt.value}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "10px 14px",
+                          cursor: "pointer",
+                          borderBottom: "1px solid #f2f2f2",
+                        }}
+                        onClick={() => {
+                          setCardSearch(opt.value);
+                          setCardDropdown(false);
+                          setDetailFormTouched(true);
+                        }}
+                      >
+                        {opt.image && (
+                          <img
+                            src={opt.image}
+                            alt=""
+                            style={{
+                              width: 68,
+                              height: 68,
+                              objectFit: "contain",
+                              borderRadius: 6,
+                              background: "#fafbfc",
+                              border: "1px solid #eee",
+                            }}
+                          />
+                        )}
+                        <div
+                          style={{ display: "flex", alignItems: "center", gap: 10 }}
+                        >
+                          <span style={{ fontWeight: 600, fontSize: 17 }}>
+                            {opt.value}
+                          </span>
+                          {opt.name_en && (
+                            <span style={{ color: "#1976d2", fontSize: 15 }}>
+                              {opt.name_en}
+                            </span>
+                          )}
+                          {opt.card_number && (
+                            <span style={{ color: "#888", fontSize: 14 }}>
+                              #{opt.card_number}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <Input
               label="Giá mua"
               name="purchase_price"
@@ -1947,7 +2116,7 @@ const InventoryPage: React.FC = () => {
                 <label className="mac-input-label">Điều kiện US</label>
                 <select
                   name="physical_condition_us"
-                  value={detailForm.physical_condition_us} // SỬA: set trực tiếp giá trị
+                  value={detailForm.physical_condition_us}
                   onChange={handleDetailSelectChange}
                   className="mac-input"
                   required
