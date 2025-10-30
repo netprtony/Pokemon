@@ -69,7 +69,6 @@ Below are sample outputs from the fine-tuned YOLOv10 model:
 ---
 
 ## 🧩 System Architecture
-
 ```mermaid
 graph TD
     A[Input Image] --> B[YOLOv10 Detector]
