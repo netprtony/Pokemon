@@ -66,6 +66,10 @@ Below are sample outputs from the fine-tuned YOLOv10 model:
 |-----------|-----------|
 | <img src="https://github.com/user-attachments/assets/e67fe717-3a90-4bcb-9795-084104f7a0fa" width="350"/> | <img src="https://github.com/user-attachments/assets/c9ead3f8-98ef-43c3-9533-d8208f83766e" width="350"/> |
 
+## 🚀 Demo
+📘 **Colab Training & Fine-tuning Notebook:**  
+👉 [Open in Google Colab](https://colab.research.google.com/drive/1bzJVzZ6L0AuLo5H47eQPNYHziWTyksjI?usp=sharing)
+
 ---
 ## 🧩 System Architecture
 
