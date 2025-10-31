@@ -58,6 +58,8 @@ export type InventoryRow = {
   last_updated?: string;
   notes?: string;
   reference_image_url?: string;
+  card_number?: string;
+  name_en?: string;
 };
 export type DetailInventoryForm = {
   detail_id: number;
@@ -77,6 +79,8 @@ export type DetailInventoryForm = {
 };
 const fieldOptions: FieldOption[] = [
   { value: "inventory_id", label: "ID", type: "number" },
+  { value: "name_en", label: "Tên", type: "text" },
+  { value: "card_number", label: "Số thẻ", type: "text" },
   { value: "master_card_id", label: "Mã thẻ", type: "text" },
   { value: "total_quantity", label: "Tổng số lượng", type: "number" },
   { value: "quantity_sold", label: "Số lượng đã bán", type: "number" },
@@ -263,6 +267,12 @@ const getColumns = (
   },
   { key: "inventory_id", label: "ID", sticky: true },
   { key: "master_card_id", label: "Mã thẻ", sticky: true },
+  { key: "name_en", label: "Tên",
+    render: (row: any) => row.card.name_en,
+    sticky: true },
+  { key: "card_number", label: "Số thẻ",
+    render : (row: any) => row.card.card_number,
+    sticky: true },
   { key: "total_quantity", label: "Số lượng", sticky: true },
   { key: "quantity_sold", label: "Đã bán", sticky: true },
   { key: "avg_purchase_price", label: "Giá mua TB",
@@ -377,7 +387,9 @@ const InventoryPage: React.FC = () => {
     { file: File; name: string }[]
   >([]);
   const [detailAngles, setDetailAngles] = React.useState<string[]>([]);
-
+  const [showDetailModalOpen, setShowDetailModalOpen] = useState(false);
+  const [showDetailData, setShowDetailData] = useState<any>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [cardSearch, setCardSearch] = useState("");
   const [cardOptions, setCardOptions] = useState<
     {
@@ -568,6 +580,17 @@ const InventoryPage: React.FC = () => {
     } catch {
       setCardOptions([]);
       setCardDropdown(true);
+    }
+  };
+  const handleShowDetail = (row: any) => {
+    setShowDetailData(row);
+    setShowDetailModalOpen(true);
+    setCurrentImageIndex(0);
+    
+    // Fetch price data for the detail's inventory
+    const parentRow = data.find((r) => r.inventory_id === row.inventory_id);
+    if (parentRow) {
+      fetchPriceData(parentRow);
     }
   };
 
@@ -1036,6 +1059,13 @@ const InventoryPage: React.FC = () => {
         <div className="d-flex gap-2">
           <button
             className="btn btn-link p-0"
+            title="Xem"
+            onClick={() => handleShowDetail(row)}
+          >
+            <i className="bi bi-eye fs-6 text-primary"></i>
+          </button>
+          <button
+            className="btn btn-link p-0"
             title="Sửa"
             onClick={() => handleEditDetail(row)}
           >
@@ -1143,6 +1173,7 @@ const InventoryPage: React.FC = () => {
           });
           finalInventoryId = newInvResp.data.inventory_id;
           toast.success("Đã tạo inventory mới!");
+          fetchData();
         }
       }
 
@@ -1487,7 +1518,418 @@ const InventoryPage: React.FC = () => {
       </div>
     );
   };
+  const renderShowDetailModal = () => {
+    if (!showDetailData) return null;
 
+    const photos = Array.isArray(showDetailData.card_photos) ? showDetailData.card_photos : [];
+
+    // Lấy dữ liệu giá
+    const grades = [
+      "Ungraded", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5",
+      "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 9.5", "Grade 10",
+      "PSA 10", "TAG 10", "ACE 10", "SGC 10", "CGC 10", "BGS 10",
+      "BGS 10 Black", "CGC 10 Pristine",
+    ];
+    const pricecharting = priceData?.pricecharting_price || {};
+    const urlObj = priceData?.url || {};
+    const urlOptions = [
+      urlObj.eBay_link_table_1 && {
+        label: "eBay",
+        url: urlObj.eBay_link_table_1,
+        price: priceData.ebay_avg_price,
+      },
+      urlObj.TCGPlayer_link_table_1 && {
+        label: "TCGPlayer",
+        url: urlObj.TCGPlayer_link_table_1,
+        price: priceData.tcgplayer_price,
+      },
+      urlObj.url && {
+        label: "PriceCharting",
+        url: urlObj.url,
+        price: "",
+      },
+    ].filter(Boolean);
+
+    const priceDate = priceData?.price_date || "";
+    const usdToVnd = priceData?.usd_to_vnd_rate || 0;
+    const jpyToVnd = priceData?.jpy_to_vnd_rate || 0;
+    const cardush_a_price = priceData?.cardush_a_price ?? "";
+    const cardush_b_price = priceData?.cardush_b_price ?? "";
+    const snkrdunk_price = priceData?.snkrdunk_price ?? "";
+    const yahoo_auction_avg = priceData?.yahoo_auction_avg ?? "";
+
+    const convertPrice = (value: number | string | undefined, type: "USD" | "JPY") => {
+      if (value === undefined || value === null || value === "") return "-";
+      const num = typeof value === "string" ? parseFloat(value) : value;
+      if (currency === "VND") {
+        if (type === "USD") return `${Math.round(num * usdToVnd).toLocaleString()}đ`;
+        if (type === "JPY") return `${Math.round(num * jpyToVnd).toLocaleString()}đ`;
+      }
+      return num.toLocaleString();
+    };
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 1000 }}>
+        {/* Row 1: Slider ảnh bên trái + Thông tin chi tiết bên phải */}
+        <div style={{ display: "grid", gridTemplateColumns: "500px 1fr", gap: 10 }}>
+          {/* Cột trái: Slider ảnh */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {photos.length > 0 ? (
+              <>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: 500,
+                    background: "#000",
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <img
+                    src={photos[currentImageIndex]}
+                    alt={`Slide ${currentImageIndex + 1}`}
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                  {photos.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCurrentImageIndex((prev) =>
+                            prev === 0 ? photos.length - 1 : prev - 1
+                          )
+                        }
+                        style={{
+                          position: "absolute",
+                          left: 16,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "rgba(255,255,255,0.8)",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: 38,
+                          height: 48,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          fontSize: 24,
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.8)";
+                        }}
+                      >
+                        <i className="bi bi-chevron-left"></i>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCurrentImageIndex((prev) =>
+                            prev === photos.length - 1 ? 0 : prev + 1
+                          )
+                        }
+                        style={{
+                          position: "absolute",
+                          right: 16,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "rgba(255,255,255,0.8)",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: 8,
+                          height: 48,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          fontSize: 24,
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.8)";
+                        }}
+                      >
+                        <i className="bi bi-chevron-right"></i>
+                      </button>
+                    </>
+                  )}
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 16,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      background: "rgba(0,0,0,0.6)",
+                      color: "#fff",
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      fontSize: 14,
+                    }}
+                  >
+                    {currentImageIndex + 1} / {photos.length}
+                  </div>
+                </div>
+                {/* Thumbnails */}
+                <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "8px 0" }}>
+                  {photos.map((photo: string, idx: number) => (
+                    <img
+                      key={idx}
+                      src={photo}
+                      alt={`Thumbnail ${idx + 1}`}
+                      style={{
+                        width: 80,
+                        height: 80,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: currentImageIndex === idx ? "3px solid #1976d2" : "1px solid #eee",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      onMouseEnter={(e) => {
+                        if (currentImageIndex !== idx) {
+                          e.currentTarget.style.border = "2px solid #1976d2";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (currentImageIndex !== idx) {
+                          e.currentTarget.style.border = "1px solid #eee";
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: 500,
+                  background: "#f0f0f0",
+                  borderRadius: 12,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#999",
+                  fontSize: 18,
+                  gap: 12,
+                }}
+              >
+                <i className="bi bi-image" style={{ fontSize: 64 }}></i>
+                <span>Không có ảnh</span>
+              </div>
+            )}
+          </div>
+
+          {/* Cột phải: Thông tin chi tiết dạng 2 cột */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px 32px",
+              background: "#f7f7fa",
+              padding: 24,
+              borderRadius: 12,
+              alignContent: "start",
+            }}
+          >
+            <div>
+              <strong>ID:</strong> {showDetailData.detail_id}
+            </div>
+            <div>
+              <strong>Inventory ID:</strong> {showDetailData.inventory_id}
+            </div>
+            <div>
+              <strong>Điều kiện US:</strong>{" "}
+              <span className="badge bg-info">{showDetailData.physical_condition_us}</span>
+            </div>
+            <div>
+              <strong>Điều kiện JP:</strong>{" "}
+              <span className="badge bg-info">{showDetailData.physical_condition_jp}</span>
+            </div>
+            <div>
+              <strong>Đã chấm điểm:</strong>{" "}
+              {showDetailData.is_graded ? (
+                <span className="badge bg-success">Có</span>
+              ) : (
+                <span className="badge bg-secondary">Không</span>
+              )}
+            </div>
+            {showDetailData.is_graded && (
+              <>
+                <div>
+                  <strong>Công ty chấm:</strong> {showDetailData.grade_company || "-"}
+                </div>
+                <div>
+                  <strong>Điểm:</strong>{" "}
+                  <span className="badge bg-warning text-dark">
+                    {showDetailData.grade_score || "-"}
+                  </span>
+                </div>
+              </>
+            )}
+            <div>
+              <strong>Giá mua:</strong>{" "}
+              <span style={{ color: "#d32f2f", fontWeight: 600 }}>
+                {showDetailData.purchase_price
+                  ? showDetailData.purchase_price.toLocaleString("vi-VN") + "đ"
+                  : "-"}
+              </span>
+            </div>
+            <div>
+              <strong>Giá bán:</strong>{" "}
+              <span style={{ color: "#388e3c", fontWeight: 600 }}>
+                {showDetailData.selling_price
+                  ? showDetailData.selling_price.toLocaleString("vi-VN") + "đ"
+                  : "-"}
+              </span>
+            </div>
+            <div>
+              <strong>Ngày thêm:</strong>{" "}
+              {showDetailData.date_added
+                ? new Date(showDetailData.date_added).toLocaleDateString("vi-VN")
+                : "-"}
+            </div>
+            <div>
+              <strong>Cập nhật cuối:</strong>{" "}
+              {showDetailData.last_updated
+                ? new Date(showDetailData.last_updated).toLocaleString("vi-VN")
+                : "-"}
+            </div>
+            <div>
+              <strong>Đã bán:</strong>{" "}
+              {showDetailData.is_sold ? (
+                <span className="badge bg-success">Đã bán</span>
+              ) : (
+                <span className="badge bg-danger">Chưa bán</span>
+              )}
+            </div>
+            <div style={{ gridColumn: "1/3" }}>
+              <strong>Ghi chú:</strong>{" "}
+              <span style={{ fontStyle: "italic", color: "#555" }}>
+                {showDetailData.notes || "Không có ghi chú"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Price Box */}
+        {priceLoading ? (
+          <div className="py-3">
+            Đang tải giá...
+            <span className="loader" style={{ marginLeft: 12 }} />
+          </div>
+        ) : priceData ? (
+          <div className="price-box" style={{ padding: 10, background: "#f7f7fa", borderRadius: 12, maxWidth: "100%", overflowX: "auto" }}>
+            <div className="text-secondary" style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 12, flexWrap: "wrap" }}>
+              <span>
+                <b>Ngày cập nhật giá:</b> {priceDate ? new Date(priceDate).toLocaleString() : "-"}
+              </span>
+              <span>
+                <b>Tỷ giá USD/VND:</b> {usdToVnd ? usdToVnd.toLocaleString() : "-"}
+              </span>
+              <span>
+                <b>Tỷ giá JPY/VND:</b> {jpyToVnd ? jpyToVnd.toLocaleString() : "-"}
+              </span>
+              <span>
+                <b>Xem giá theo:</b>{" "}
+                <select
+                  value={currency}
+                  onChange={e => setCurrency(e.target.value as "USD" | "JPY" | "VND")}
+                  style={{ minWidth: 90, fontWeight: 500, padding: "4px 8px", borderRadius: 6 }}
+                >
+                  <option value="USD">USD</option>
+                  <option value="JPY">JPY</option>
+                  <option value="VND">VND</option>
+                </select>
+              </span>
+            </div>
+            <table
+              className="table table-bordered"
+              style={{ tableLayout: "fixed", minWidth: 1400, fontSize: 14 }}
+            >
+              <thead>
+                <tr>
+                  {grades.map((g) => (
+                    <th key={g} style={{ width: 90 }}>{g}</th>
+                  ))}
+                  <th style={{ width: 120 }}>Cardush A</th>
+                  <th style={{ width: 120 }}>Cardush B</th>
+                  <th style={{ width: 120 }}>Snkrdunk</th>
+                  <th style={{ width: 120 }}>Yahoo Auction</th>
+                  <th style={{ width: 180 }}>Links</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {grades.map((g) => (
+                    <td key={g}>
+                      {pricecharting[g] !== undefined && pricecharting[g] !== null
+                        ? convertPrice(pricecharting[g], "USD")
+                        : "-"}
+                    </td>
+                  ))}
+                  <td>{convertPrice(cardush_a_price, "JPY")}</td>
+                  <td>{convertPrice(cardush_b_price, "JPY")}</td>
+                  <td>{convertPrice(snkrdunk_price, "JPY")}</td>
+                  <td>{convertPrice(yahoo_auction_avg, "JPY")}</td>
+                  <td>
+                    <select
+                      style={{ minWidth: 160 }}
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        if (url) window.open(url, "_blank");
+                      }}
+                    >
+                      <option value="">Chọn nguồn giá...</option>
+                      {urlOptions.map((opt: any) => (
+                        <option key={opt.label} value={opt.url}>
+                          {opt.label}
+                          {opt.price ? ` (${convertPrice(opt.price, "USD")})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {/* Nút đóng */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+          <Button
+            type="button"
+            variant="gray-outline"
+            onClick={() => {
+              setShowDetailModalOpen(false);
+              setShowDetailData(null);
+              setPriceData(null);
+            }}
+          >
+            Đóng
+          </Button>
+        </div>
+      </div>
+    );
+  };
   return (
     <div className="container-fluid py-4">
       <h3 className="text-info">Danh sách kho thẻ</h3>
@@ -1510,7 +1952,7 @@ const InventoryPage: React.FC = () => {
       </div>
 
       {/* Hiển thị khung bảng giá ngay dưới nút Thêm thẻ mới */}
-      {renderPriceBox()}
+      {/* {renderPriceBox()} */}
       <DataTable
         columns={columns}
         data={data}
@@ -2156,7 +2598,7 @@ const InventoryPage: React.FC = () => {
               display: "flex",
               justifyContent: "flex-end",
               gap: 12,
-              marginTop: 24,
+                           marginTop: 24,
             }}
           >
             <Button type="submit" variant="primary">
@@ -2171,6 +2613,20 @@ const InventoryPage: React.FC = () => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal xem chi tiết inventory detail */}
+      <Modal
+        isOpen={showDetailModalOpen}
+        onClose={() => {
+          setShowDetailModalOpen(false);
+          setShowDetailData(null);
+          setPriceData(null);
+        }}
+        title="Chi tiết thẻ"
+        zIndex={9999}
+      >
+        {renderShowDetailModal()}
       </Modal>
     </div>
   );

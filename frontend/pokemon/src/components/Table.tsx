@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Table, Pagination, Form } from "react-bootstrap";
-import ModalIOS from "./Modal"; // Import your modal component here
+import ModalIOS from "./Modal";
 import "../assets/css/theme.css";
 import "../assets/css/Loader.css";
+
 type Column<T> = {
   key: string;
   label: string;
@@ -31,7 +32,7 @@ interface DataTableProps<T> {
   sortOrder?: "asc" | "desc";
   onCollapseOpen?: (row: T) => void;
   onCollapseClose?: () => void;
-  onRowClick?: (row: T) => void; // NEW
+  onRowClick?: (row: T) => void;
 }
 
 export default function DataTable<T>({
@@ -49,19 +50,17 @@ export default function DataTable<T>({
   renderCollapse,
   onCollapseOpen,
   onCollapseClose,
-  onRowClick, // NEW
+  onRowClick,
 }: DataTableProps<T>) {
-  // State nội bộ
   const [internalPage, setInternalPage] = useState(1);
-  const [internalPageSize, setInternalPageSize] = useState(pageSize ?? 10); // mặc định 10 nếu không truyền vào
+  const [internalPageSize, setInternalPageSize] = useState(pageSize ?? 10);
   const [openRow, setOpenRow] = useState<number | null>(null);
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
   const [previewImg, setPreviewImg] = useState<string | null>(null);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   const tableRef = useRef<HTMLTableElement | null>(null);
   const collapseRef = useRef<HTMLDivElement | null>(null);
-  const [maxHeight, setMaxHeight] = useState("0px");
-  const [collapseOpacity, setCollapseOpacity] = useState(0);
 
   const currentPage = page ?? internalPage;
   const currentPageSize = pageSize ?? internalPageSize;
@@ -74,33 +73,43 @@ export default function DataTable<T>({
       ? data
       : data.slice((currentPage - 1) * currentPageSize, currentPage * currentPageSize);
 
-  // Cập nhật maxHeight khi mở row
-  useEffect(() => {
-    if (openRow !== null && collapseRef.current) {
-      setMaxHeight(collapseRef.current.scrollHeight + "px");
-    } else {
-      setMaxHeight("0px");
-    }
-  }, [openRow]);
-
-  // Smooth open animation for collapse
+  // Smooth expand/collapse animation
   useEffect(() => {
     const el = collapseRef.current;
     if (!el) return;
 
     if (openRow !== null) {
-      // prepare from 0 -> scrollHeight
-      setMaxHeight("0px");
-      setCollapseOpacity(0);
+      setIsExpanding(true);
+      // Force reflow
+      el.style.maxHeight = "0px";
+      el.style.opacity = "0";
       requestAnimationFrame(() => {
-        setMaxHeight(el.scrollHeight + "px");
-        setCollapseOpacity(1);
+        requestAnimationFrame(() => {
+          el.style.maxHeight = `${el.scrollHeight}px`;
+          el.style.opacity = "1";
+        });
       });
+      // After animation ends, set to auto for dynamic content
+      const timer = setTimeout(() => {
+        if (openRow !== null) {
+          el.style.maxHeight = "none";
+        }
+        setIsExpanding(false);
+      }, 350);
+      return () => clearTimeout(timer);
     } else {
-      setMaxHeight("0px");
-      setCollapseOpacity(0);
+      if (el.style.maxHeight === "none") {
+        el.style.maxHeight = `${el.scrollHeight}px`;
+        requestAnimationFrame(() => {
+          el.style.maxHeight = "0px";
+          el.style.opacity = "0";
+        });
+      } else {
+        el.style.maxHeight = "0px";
+        el.style.opacity = "0";
+      }
     }
-  }, [openRow, paginatedData]);
+  }, [openRow]);
 
   const handleSort = (field: string) => {
     if (onSort) {
@@ -109,6 +118,7 @@ export default function DataTable<T>({
       onSort(field, order);
     }
   };
+
   const startResize = (e: React.MouseEvent, key: string) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -134,7 +144,6 @@ export default function DataTable<T>({
     document.addEventListener("mouseup", stopDrag);
   };
 
-  // Sửa lại event mở/đóng collapse
   const handleRowClick = (row: T, globalIdx: number) => {
     if (!renderCollapse) return;
     if (openRow === globalIdx) {
@@ -221,8 +230,8 @@ export default function DataTable<T>({
                     position: "sticky",
                     top: 0,
                     zIndex: col.sticky ? 4 : 3,
-                    left: col.sticky ? 0 : undefined, // Thêm dòng này
-                    boxShadow: col.sticky ? "2px 0 8px -2px rgba(0,0,0,0.04)" : undefined, // Tùy chọn
+                    left: col.sticky ? 0 : undefined,
+                    boxShadow: col.sticky ? "2px 0 8px -2px rgba(0,0,0,0.04)" : undefined,
                     fontWeight: 700,
                     color: "var(--table-header-text)",
                     background: "var(--table-header-bg)",
@@ -265,21 +274,11 @@ export default function DataTable<T>({
                   color: "var(--table-header-text)"
                 }}>
                   <div className="d-flex flex-column align-items-center gap-2">
-                    <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
-                    </div>
-                    <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
-                    </div>
-                    <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
-                    </div>
-                    <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
-                    </div>
-                    <div className="placeholder-glow w-100 mb-3">
-                      <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
-                    </div>
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="placeholder-glow w-100 mb-3">
+                        <span className="placeholder col-12" style={{ height: 69, borderRadius: 8 }}></span>
+                      </div>
+                    ))}
                   </div>
                 </td>
               </tr>
@@ -360,22 +359,16 @@ export default function DataTable<T>({
                     </tr>
                     {renderCollapse && openRow === globalIdx && (
                       <tr style={{ background: "var(--filter-bg)", color: "var(--filter-text)" }}>
-                        <td colSpan={columns.length}>
+                        <td colSpan={columns.length} style={{ padding: 0, border: "none" }}>
                           <div
                             ref={collapseRef}
                             className="overflow-hidden border-start border-primary ps-3"
                             style={{
-                              maxHeight,
-                              opacity: collapseOpacity,
-                              transition: "max-height 0.28s ease, opacity 0.18s ease",
+                              maxHeight: "0px",
+                              opacity: 0,
+                              transition: "max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease",
                               background: "var(--filter-bg)",
                               color: "var(--filter-text)",
-                            }}
-                            onTransitionEnd={(e) => {
-                              // after expand, let height be auto for dynamic content
-                              if (openRow !== null && e.propertyName === "max-height") {
-                                setMaxHeight("none");
-                              }
                             }}
                           >
                             {/* Loader khi loading table con */}
@@ -397,6 +390,7 @@ export default function DataTable<T>({
           </tbody>
         </Table>
       </div>
+
       {/* Modal xem hình lớn */}
       <ModalIOS
         isOpen={!!previewImg}

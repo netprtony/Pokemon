@@ -56,7 +56,6 @@ CREATE TABLE pokemon_cards_master (
     FOREIGN KEY (set_id) REFERENCES pokemon_sets(set_id),
     INDEX idx_name_en (name_en),
     INDEX idx_set_number (set_id, card_number),
-    INDEX idx_rarity (rarity)
 );
 
 -- ================================================
