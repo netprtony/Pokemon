@@ -57,7 +57,6 @@ export default function DataTable<T>({
   const [openRow, setOpenRow] = useState<number | null>(null);
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
   const [previewImg, setPreviewImg] = useState<string | null>(null);
-  const [isExpanding, setIsExpanding] = useState(false);
 
   const tableRef = useRef<HTMLTableElement | null>(null);
   const collapseRef = useRef<HTMLDivElement | null>(null);
@@ -74,12 +73,12 @@ export default function DataTable<T>({
       : data.slice((currentPage - 1) * currentPageSize, currentPage * currentPageSize);
 
   // Smooth expand/collapse animation
+  // Smooth expand/collapse animation
   useEffect(() => {
     const el = collapseRef.current;
     if (!el) return;
 
     if (openRow !== null) {
-      setIsExpanding(true);
       // Force reflow
       el.style.maxHeight = "0px";
       el.style.opacity = "0";
@@ -94,7 +93,6 @@ export default function DataTable<T>({
         if (openRow !== null) {
           el.style.maxHeight = "none";
         }
-        setIsExpanding(false);
       }, 350);
       return () => clearTimeout(timer);
     } else {
@@ -110,7 +108,6 @@ export default function DataTable<T>({
       }
     }
   }, [openRow]);
-
   const handleSort = (field: string) => {
     if (onSort) {
       let order: "asc" | "desc" = "asc";
@@ -145,6 +142,9 @@ export default function DataTable<T>({
   };
 
   const handleRowClick = (row: T, globalIdx: number) => {
+    // Invoke row click handler if provided
+    onRowClick && onRowClick(row);
+
     if (!renderCollapse) return;
     if (openRow === globalIdx) {
       setOpenRow(null);

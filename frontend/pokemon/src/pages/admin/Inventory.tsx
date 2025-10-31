@@ -386,7 +386,6 @@ const InventoryPage: React.FC = () => {
   const [detailImages, setDetailImages] = React.useState<
     { file: File; name: string }[]
   >([]);
-  const [detailAngles, setDetailAngles] = React.useState<string[]>([]);
   const [showDetailModalOpen, setShowDetailModalOpen] = useState(false);
   const [showDetailData, setShowDetailData] = useState<any>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -1262,7 +1261,6 @@ const InventoryPage: React.FC = () => {
       fetchData(); // Cập nhật lại danh sách inventory
       setDetailModalOpen(false);
       setDetailImages([]);
-      setDetailAngles([]);
       setCardSearch("");
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.detail) {
@@ -1952,7 +1950,7 @@ const InventoryPage: React.FC = () => {
       </div>
 
       {/* Hiển thị khung bảng giá ngay dưới nút Thêm thẻ mới */}
-      {/* {renderPriceBox()} */}
+      {renderPriceBox()}
       <DataTable
         columns={columns}
         data={data}
