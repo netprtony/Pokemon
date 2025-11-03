@@ -225,11 +225,23 @@ def get_details_by_inventory_id(
     inventory_id: int,
     db: Session = Depends(get_db)
 ):
-    details = db.query(DetailInventory).filter(DetailInventory.inventory_id == inventory_id).order_by(DetailInventory.date_added.desc()).all()
+    from app.models import Inventory  # Import để join với bảng inventory
+    
+    # Join với bảng Inventory để lấy master_card_id
+    details = (
+        db.query(DetailInventory, Inventory.master_card_id)
+        .join(Inventory, DetailInventory.inventory_id == Inventory.inventory_id)
+        .filter(DetailInventory.inventory_id == inventory_id)
+        .order_by(DetailInventory.date_added.desc())
+        .all()
+    )
+    
     results = []
-    for item in details:
+    for item, master_card_id in details:
         row = item.__dict__.copy()
         row = parse_card_photos(row)
+        # Thêm master_card_id vào kết quả
+        row["master_card_id"] = master_card_id
         results.append(row)
     return results
 

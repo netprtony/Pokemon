@@ -103,21 +103,18 @@ def get_inventory(
 ):
     query = db.query(Inventory).join(PokemonCardMaster, Inventory.master_card_id == PokemonCardMaster.master_card_id).options(joinedload(Inventory.card))
     if search:
-       query = (
-        db.query(Inventory)
-        .join(PokemonCardMaster, Inventory.master_card_id == PokemonCardMaster.master_card_id)
-        .filter(
+        query = query.filter(
             or_(
-                Inventory.master_card_id.ilike(f"%{search}%"),
-                Inventory.storage_location.ilike(f"%{search}%"),
-                Inventory.notes.ilike(f"%{search}%"),
-                Inventory.language.ilike(f"%{search}%"),
-                PokemonCardMaster.name_en.ilike(f"%{search}%"),
-                PokemonCardMaster.card_number.ilike(f"%{search}%"),
+            Inventory.master_card_id.ilike(f"%{search}%"),
+            Inventory.storage_location.ilike(f"%{search}%"),
+            Inventory.notes.ilike(f"%{search}%"),
+            Inventory.language.ilike(f"%{search}%"),
+            PokemonCardMaster.name_en.ilike(f"%{search}%"),
+            PokemonCardMaster.card_number.ilike(f"%{search}%"),
+            # Tìm kiếm card_number với format chuẩn hóa (ví dụ: 083/092 -> 83/92)
+            PokemonCardMaster.card_number.ilike(f"%{search.lstrip('0').replace('/0', '/')}%"),
             )
         )
-        .order_by(Inventory.last_updated.desc())
-    )
     valid_sort_fields = {
         "inventory_id": Inventory.inventory_id,
         "master_card_id": Inventory.master_card_id,

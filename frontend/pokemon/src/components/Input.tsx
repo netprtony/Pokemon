@@ -1,7 +1,7 @@
 import React from "react";
 import "../assets/css/Input.css";
 
-type InputType = "text" | "money" | "number" | "datetime" | "file" | "date" | "stepper";
+type InputType = "text" | "money" | "number" | "datetime" | "file" | "date" | "stepper" | "textarea";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -106,6 +106,31 @@ const Input: React.FC<InputProps> = ({
             <span style={{ fontSize: 32, fontWeight: 500 }}>+</span>
           </button>
         </div>
+      ) : type === "textarea" ? (
+        <textarea
+          className="mac-input"
+          value={value}
+          onChange={(e) => {
+            // Cast textarea event thành input event
+            const event = {
+              ...e,
+              target: {
+                ...e.target,
+                name: e.target.name,
+                value: e.target.value,
+              }
+            } as unknown as React.ChangeEvent<HTMLInputElement>;
+            onChange(event);
+          }}
+          placeholder={props.placeholder || "Nhập ghi chú..."}
+          rows={4}
+          style={{
+            resize: "vertical",
+            minHeight: 80,
+            fontFamily: "inherit",
+          }}
+          {...(props as any)}
+        />
       ) : type === "number" ? (
         <input
           type="number"

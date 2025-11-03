@@ -73,7 +73,6 @@ export default function DataTable<T>({
       : data.slice((currentPage - 1) * currentPageSize, currentPage * currentPageSize);
 
   // Smooth expand/collapse animation
-  // Smooth expand/collapse animation
   useEffect(() => {
     const el = collapseRef.current;
     if (!el) return;
@@ -108,6 +107,7 @@ export default function DataTable<T>({
       }
     }
   }, [openRow]);
+
   const handleSort = (field: string) => {
     if (onSort) {
       let order: "asc" | "desc" = "asc";
@@ -153,6 +153,14 @@ export default function DataTable<T>({
       setOpenRow(globalIdx);
       onCollapseOpen && onCollapseOpen(row);
     }
+  };
+
+  // Helper function để lấy giá trị text từ cell
+  const getCellValue = (row: T, col: Column<T>): string => {
+    const rawValue = (row as any)[col.key];
+    if (rawValue === null || rawValue === undefined) return "";
+    if (typeof rawValue === "object") return JSON.stringify(rawValue);
+    return String(rawValue);
   };
 
   return (
@@ -239,6 +247,7 @@ export default function DataTable<T>({
                     fontSize: "1rem",
                   }}
                   onClick={() => col.onSort && handleSort(col.key)}
+                  title={col.label}
                 >
                   {col.label}
                   {col.onSort && (
@@ -309,53 +318,62 @@ export default function DataTable<T>({
                         color: "var(--sidebar-text)",
                         transition: "background 0.2s, color 0.2s",
                       }}
-                      onClick={() => handleRowClick(row, globalIdx)} // sửa lại event click
+                      onClick={() => handleRowClick(row, globalIdx)}
                     >
-                      {columns.map((col) => (
-                        <td
-                          key={col.key}
-                          style={{
-                            textAlign: col.align || "left",
-                            verticalAlign: "middle",
-                            border: "none",
-                            fontWeight: col.key === "status" ? 600 : 400,
-                            fontSize: "1rem",
-                            color: "inherit",
-                            position: col.sticky ? "sticky" : undefined, // Thêm dòng này
-                            left: col.sticky ? 0 : undefined, // Thêm dòng này
-                            zIndex: col.sticky ? 1 : undefined, // Thêm dòng này
-                            background: col.sticky ? "var(--table-header-bg)" : "inherit", // Tùy chọn
-                          }}
-                        >
-                          {/* Nếu là hình ảnh, cho phép click để xem lớn */}
-                          {col.key.toLowerCase().includes("img") ||
-                          col.key.toLowerCase().includes("image") ||
-                          col.key.toLowerCase().includes("symbol") ? (
-                            (row as Record<string, any>)[col.key] ? (
-                              <img
-                                src={(row as Record<string, any>)[col.key]}
-                                alt="preview"
-                                style={{ width: 100, height: 100, objectFit: "contain", cursor: "pointer", borderRadius: 6 }}
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  setPreviewImg((row as Record<string, any>)[col.key]);
-                                }}
-                              />
+                      {columns.map((col) => {
+                        const cellValue = getCellValue(row, col);
+                        const isImageColumn = col.key.toLowerCase().includes("img") ||
+                                            col.key.toLowerCase().includes("image") ||
+                                            col.key.toLowerCase().includes("symbol");
+                        
+                        return (
+                          <td
+                            key={col.key}
+                            style={{
+                              textAlign: col.align || "left",
+                              verticalAlign: "middle",
+                              border: "none",
+                              fontWeight: col.key === "status" ? 600 : 400,
+                              fontSize: "1rem",
+                              color: "inherit",
+                              position: col.sticky ? "sticky" : undefined,
+                              left: col.sticky ? 0 : undefined,
+                              zIndex: col.sticky ? 1 : undefined,
+                              background: col.sticky ? "var(--table-header-bg)" : "inherit",
+                            }}
+                            title={isImageColumn ? "" : cellValue}
+                          >
+                            {/* Nếu là hình ảnh, cho phép click để xem lớn */}
+                            {isImageColumn ? (
+                              (row as Record<string, any>)[col.key] ? (
+                                <img
+                                  src={(row as Record<string, any>)[col.key]}
+                                  alt="preview"
+                                  style={{ width: 100, height: 100, objectFit: "contain", cursor: "pointer", borderRadius: 6 }}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    setPreviewImg((row as Record<string, any>)[col.key]);
+                                  }}
+                                  title={cellValue}
+                                />
+                              ) : (
+                                <img
+                                  src="/images/NoResult.jpg"
+                                  alt="No image"
+                                  style={{ width: 100, height: 100, objectFit: "contain", opacity: 0.4, borderRadius: 6 }}
+                                  title="No image"
+                                />
+                              )
+                            ) : col.render ? (
+                              col.render(row, globalIdx)
                             ) : (
-                              <img
-                                src="/images/NoResult.jpg" // Đường dẫn ảnh mặc định (bạn có thể thay bằng ảnh khác trong thư mục images)
-                                alt="No image"
-                                style={{ width: 100, height: 100, objectFit: "contain", opacity: 0.4, borderRadius: 6 }}
-                                title="No image"
-                              />
-                            )
-                          ) : col.render ? col.render(row, globalIdx) : (
-                            typeof (row as any)[col.key] === "string" && (row as any)[col.key].length > 20
-                              ? ((row as any)[col.key].slice(0, 20) + "...")
-                              : (row as any)[col.key]
-                          )}
-                        </td>
-                      ))}
+                              typeof (row as any)[col.key] === "string" && (row as any)[col.key].length > 20
+                                ? ((row as any)[col.key].slice(0, 20) + "...")
+                                : (row as any)[col.key]
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                     {renderCollapse && openRow === globalIdx && (
                       <tr style={{ background: "var(--filter-bg)", color: "var(--filter-text)" }}>

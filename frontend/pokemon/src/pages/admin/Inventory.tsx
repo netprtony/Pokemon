@@ -112,6 +112,7 @@ const defaultForm: InventoryRow = {
 
 const defaultDetailForm = {
   detail_id: 0,
+  master_card_id: "",
   inventory_id: 0,
   physical_condition_us: "",
   physical_condition_jp: "",
@@ -125,6 +126,7 @@ const defaultDetailForm = {
   last_updated: "",
   photo_count: 0,
   is_sold: false,
+  reference_image_url: "",
   notes: "",
 };
 
@@ -572,7 +574,6 @@ const InventoryPage: React.FC = () => {
           name_en: item.name_en,
           name_original: item.name_original,
           card_number: item.card_number,
-          // Thêm các trường khác nếu cần
         }))
       );
       setCardDropdown(true);
@@ -703,6 +704,8 @@ const InventoryPage: React.FC = () => {
               onChange={(e) => {
                 setCardSearch(e.target.value);
                 setCardDropdown(false);
+                // Xóa ảnh khi người dùng thay đổi mã thẻ
+                setForm((prev) => ({ ...prev, reference_image_url: "" }));
               }}
               placeholder="Nhập mã thẻ để tìm..."
               autoComplete="off"
@@ -723,7 +726,7 @@ const InventoryPage: React.FC = () => {
               <i className="bi bi-search"></i>
             </button>
             {/* Dropdown kết quả */}
-            {cardDropdown && cardOptions.length > 0 && detailForm.inventory_id === 0 && (
+            {cardDropdown && cardOptions.length > 0 && (
               <div
                 style={{
                   position: "absolute",
@@ -753,7 +756,13 @@ const InventoryPage: React.FC = () => {
                     onClick={() => {
                       setCardSearch(opt.value);
                       setCardDropdown(false);
-                      setDetailFormTouched(true);
+                      setFormTouched(true);
+                      // Cập nhật ảnh đại diện và master_card_id
+                      setForm((prev) => ({
+                        ...prev,
+                        master_card_id: opt.value,
+                        reference_image_url: opt.image || "",
+                      }));
                     }}
                   >
                     {opt.image && (
@@ -796,8 +805,8 @@ const InventoryPage: React.FC = () => {
         <Input
           label="Tổng số lượng"
           value={form.total_quantity}
-          onChange={handleFormChange}
           name="total_quantity"
+          onChange={handleFormChange}
           type="number"
           min={0}
           required
@@ -815,7 +824,7 @@ const InventoryPage: React.FC = () => {
           value={form.notes ?? ""}
           onChange={handleFormChange}
           name="notes"
-          type="text"
+          type="textarea"
         />
         <div style={{ display: "flex", flexDirection: "column" }}>
           <label
@@ -976,11 +985,10 @@ const InventoryPage: React.FC = () => {
       render: (row: any) => (
         <div className="d-flex gap-2 flex-wrap">
           {Array.isArray(row.card_photos) && row.card_photos.length > 0 ? (
-            row.card_photos.map((img: string, idx: number) => (
+            <div style={{ position: "relative" }}>
               <img
-                key={idx}
-                src={img} // use Cloudinary URL directly
-                alt={`photo-${idx}`}
+                src={row.card_photos[0]}
+                alt="First photo"
                 style={{
                   width: 36,
                   height: 36,
@@ -989,9 +997,25 @@ const InventoryPage: React.FC = () => {
                   border: "1px solid #eee",
                   cursor: "pointer",
                 }}
-                onClick={() => setPreviewImg(img)} // preview Cloudinary URL
+                onClick={() => setPreviewImgs(row.card_photos)}
               />
-            ))
+              {row.card_photos.length > 1 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: 2,
+                    right: 2,
+                    background: "rgba(0,0,0,0.7)",
+                    color: "#fff",
+                    fontSize: 10,
+                    padding: "1px 4px",
+                    borderRadius: 3,
+                  }}
+                >
+                  +{row.card_photos.length - 1}
+                </span>
+              )}
+            </div>
           ) : (
             <span className="text-muted" style={{ fontSize: 13 }}>
               Không có ảnh
@@ -1044,9 +1068,9 @@ const InventoryPage: React.FC = () => {
       label: "Đã bán",
       render: (row: any) =>
         row.is_sold ? (
-          <span className="badge bg-success">Đã chấm</span>
+          <span className="badge bg-success">Đã bán</span>
         ) : (
-          <span className="badge bg-danger">Chưa chấm</span>
+          <span className="badge bg-danger">Chưa bán</span>
         ),
       sticky: true
     },
@@ -1096,6 +1120,9 @@ const InventoryPage: React.FC = () => {
           pageSizeOptions={[5, 10]}
           totalRows={details.length}
           loading={false}
+          onSort={handleSort}
+          sortField={sortField}
+          sortOrder={sortOrder}
         />
       </div>
     );
@@ -1330,192 +1357,35 @@ const InventoryPage: React.FC = () => {
     setPriceLoading(false);
   };
   const handleFetchPriceByUrl = async () => {
-    if (!priceUrl) return;
+    // ✅ Kiểm tra master_card_id trước khi gọi API
+    if (!priceUrl) {
+      toast.warning("Vui lòng nhập link để lấy giá!");
+      return;
+    }
+
+    if (!detailForm.master_card_id || detailForm.master_card_id.trim() === '') {
+      toast.error("Vui lòng chọn mã thẻ trước khi lấy giá!");
+      return;
+    }
+
     setPriceLoading(true);
     try {
       const resp = await axios.post(
         "http://localhost:8000/market-price/",
         {},
-        { params: { url: priceUrl, master_card_id: form.master_card_id } }
+        { params: { url: priceUrl, master_card_id: detailForm.master_card_id } }
       );
       setPriceData(resp.data);
       toast.success("Đã lấy giá từ link thành công!");
-    } catch {
+    } catch (err: any) {
+      console.error(err);
       toast.error("Không lấy được giá từ link!");
       setPriceData(null);
+    } finally {
+      setPriceLoading(false);
     }
-    setPriceLoading(false);
   };
-  const renderPriceBox = () => {
-    if (priceLoading)
-      return (
-        <div className="py-3">
-          Đang tải giá...
-          <span className="loader" style={{ marginLeft: 12 }} />
-        </div>
-      );
-    if (!priceData) return null;
-
-    const grades = [
-      "Ungraded", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5",
-      "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 9.5", "Grade 10",
-      "PSA 10", "TAG 10", "ACE 10", "SGC 10", "CGC 10", "BGS 10",
-      "BGS 10 Black", "CGC 10 Pristine",
-    ];
-    const pricecharting = priceData.pricecharting_price || {};
-    const urlObj = priceData.url || {};
-    const urlOptions = [
-      urlObj.eBay_link_table_1 && {
-        label: "eBay",
-        url: urlObj.eBay_link_table_1,
-        price: priceData.ebay_avg_price,
-      },
-      urlObj.TCGPlayer_link_table_1 && {
-        label: "TCGPlayer",
-        url: urlObj.TCGPlayer_link_table_1,
-        price: priceData.tcgplayer_price,
-      },
-      urlObj.url && {
-        label: "PriceCharting",
-        url: urlObj.url,
-        price: "",
-      },
-    ].filter(Boolean);
-
-    // Thông tin ngày giá và tỷ giá
-    const priceDate = priceData.price_date || "";
-    const usdToVnd = priceData.usd_to_vnd_rate || 0;
-    const jpyToVnd = priceData.jpy_to_vnd_rate || 0;
-
-    // Các trường giá JPY
-    const cardush_a_price = priceData.cardush_a_price ?? "";
-    const cardush_b_price = priceData.cardush_b_price ?? "";
-    const snkrdunk_price = priceData.snkrdunk_price ?? "";
-    const yahoo_auction_avg = priceData.yahoo_auction_avg ?? "";
-
-    // Hàm quy đổi giá
-    const convertPrice = (value: number | string | undefined, type: "USD" | "JPY") => {
-      if (value === undefined || value === null || value === "") return "-";
-      const num = typeof value === "string" ? parseFloat(value) : value;
-      if (currency === "VND") {
-        if (type === "USD") return `${Math.round(num * usdToVnd).toLocaleString()}đ`;
-        if (type === "JPY") return `${Math.round(num * jpyToVnd).toLocaleString()}đ`;
-      }
-      return num.toLocaleString();
-    };
-
-    return (
-      <div className="price-box" style={{ padding: 0, maxWidth: 1400, overflowX: "auto" }}>
-        <div className="text-secondary" style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 12 }}>
-          <span>
-            <b>Ngày cập nhật giá:</b> {priceDate ? new Date(priceDate).toLocaleString() : "-"}
-          </span>
-          <span>
-            <b>Tỷ giá USD/VND:</b> {usdToVnd ? usdToVnd.toLocaleString() : "-"}
-          </span>
-          <span>
-            <b>Tỷ giá JPY/VND:</b> {jpyToVnd ? jpyToVnd.toLocaleString() : "-"}
-          </span>
-          <span>
-            <b>Xem giá theo:</b>{" "}
-            <select
-              value={currency}
-              onChange={e => setCurrency(e.target.value as "USD" | "JPY" | "VND")}
-              style={{ minWidth: 90, fontWeight: 600 }}
-            >
-              <option value="USD">USD</option>
-              <option value="JPY">JPY</option>
-              <option value="VND">VND</option>
-            </select>
-
-          </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input
-            type="text"
-            placeholder="Nhập link để lấy giá..."
-            value={priceUrl}
-            onChange={e => setPriceUrl(e.target.value)}
-            style={{
-              minWidth: 180,
-              padding: "4px 8px",
-              fontSize: 15,
-              border: "1px solid #ccc",
-              borderRadius: 6,
-              marginRight: 8,
-            }}
-          />
-          <Button
-            type="button"
-            variant="primary-outline-soft"
-            size="lg"
-            style={{ padding: "4px 16px", fontSize: 15 }}
-            loading={priceLoading}
-            onClick={handleFetchPriceByUrl}
-          >
-            Lấy giá
-          </Button>
-        </span>
-        </div>
-        <table
-          className="table table-bordered"
-          style={{ tableLayout: "fixed", minWidth: 1400, fontSize: 14 }}
-        >
-          <thead>
-            <tr>
-              {grades.map((g) => (
-                <th key={g} style={{ width: 90 }}>{g}</th>
-              ))}
-              <th style={{ width: 120 }}>Cardush A</th>
-              <th style={{ width: 120 }}>Cardush B</th>
-              <th style={{ width: 120 }}>Snkrdunk</th>
-              <th style={{ width: 120 }}>Yahoo Auction</th>
-              <th style={{ width: 180 }}>Links</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {grades.map((g) => (
-                <td key={g}>
-                  {pricecharting[g] !== undefined && pricecharting[g] !== null
-                    ? convertPrice(pricecharting[g], "USD")
-                    : "-"}
-                </td>
-              ))}
-              <td>
-                {convertPrice(cardush_a_price, "JPY")}
-              </td>
-              <td>
-                {convertPrice(cardush_b_price, "JPY")}
-              </td>
-              <td>
-                {convertPrice(snkrdunk_price, "JPY")}
-              </td>
-              <td>
-                {convertPrice(yahoo_auction_avg, "JPY")}
-              </td>
-              <td>
-                <select
-                  style={{ minWidth: 160 }}
-                  onChange={(e) => {
-                    const url = e.target.value;
-                    if (url) window.open(url, "_blank");
-                  }}
-                >
-                  <option value="">Chọn nguồn giá...</option>
-                  {urlOptions.map((opt) => (
-                    <option key={opt.label} value={opt.url}>
-                      {opt.label}
-                      {opt.price ? ` (${convertPrice(opt.price, "USD")})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  };
+ 
   const renderShowDetailModal = () => {
     if (!showDetailData) return null;
 
@@ -1858,6 +1728,32 @@ const InventoryPage: React.FC = () => {
                   <option value="VND">VND</option>
                 </select>
               </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Nhập link để lấy giá..."
+                value={priceUrl}
+                onChange={e => setPriceUrl(e.target.value)}
+                style={{
+                  minWidth: 180,
+                  padding: "4px 8px",
+                  fontSize: 15,
+                  border: "1px solid #ccc",
+                  borderRadius: 6,
+                  marginRight: 8,
+                }}
+              />
+              <Button
+                type="button"
+                variant="primary-outline-soft"
+                size="lg"
+                style={{ padding: "4px 16px", fontSize: 15 }}
+                loading={priceLoading}
+                onClick={handleFetchPriceByUrl}
+              >
+                Lấy giá
+              </Button>
+            </span>
             </div>
             <table
               className="table table-bordered"
@@ -1950,7 +1846,7 @@ const InventoryPage: React.FC = () => {
       </div>
 
       {/* Hiển thị khung bảng giá ngay dưới nút Thêm thẻ mới */}
-      {renderPriceBox()}
+      {/* {renderPriceBox()} */}
       <DataTable
         columns={columns}
         data={data}
@@ -2067,10 +1963,10 @@ const InventoryPage: React.FC = () => {
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
             gap: 24,
-            minWidth: 600,
+            minWidth: 900,
           }}
         >
-          {/* --- Cột 1: Upload ảnh và xem trước --- */}
+          {/* --- Cột 1: Upload ảnh --- */}
           <div
             style={{
               gridColumn: "1/2",
@@ -2086,14 +1982,13 @@ const InventoryPage: React.FC = () => {
             <div
               style={{
                 width: "100%",
-                maxWidth: 800,
                 background: "#222",
                 borderRadius: 12,
                 border: "1px solid #eee",
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-                gap: 16,
-                padding: 16,
+                gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+                gap: 12,
+                padding: 12,
                 position: "relative",
               }}
             >
@@ -2130,14 +2025,14 @@ const InventoryPage: React.FC = () => {
                         }}
                         style={{
                           position: "absolute",
-                          top: 6,
-                          right: 8,
+                          top: 4,
+                          right: 4,
                           zIndex: 3,
                           background: "rgba(255,255,255,0.25)",
                           border: "1px solid rgba(255,255,255,0.3)",
                           borderRadius: "50%",
-                          width: 30,
-                          height: 30,
+                          width: 24,
+                          height: 24,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -2154,7 +2049,7 @@ const InventoryPage: React.FC = () => {
                         }}
                         title="Xóa ảnh này"
                       >
-                        <i className="bi bi-x-lg" style={{ color: "#fff" }} />
+                        <i className="bi bi-x-lg" style={{ color: "#fff", fontSize: 12 }} />
                       </button>
                       <img
                         src={src}
@@ -2172,15 +2067,15 @@ const InventoryPage: React.FC = () => {
                       <div
                         style={{
                           position: "absolute",
-                          left: 6,
-                          bottom: 6,
+                          left: 4,
+                          bottom: 4,
                           zIndex: 3,
                           color: "#fff",
-                          fontSize: 11,
+                          fontSize: 9,
                           background: "rgba(0,0,0,0.6)",
-                          padding: "2px 6px",
-                          borderRadius: 4,
-                          maxWidth: "calc(100% - 12px)",
+                          padding: "1px 4px",
+                          borderRadius: 3,
+                          maxWidth: "calc(100% - 8px)",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -2212,14 +2107,14 @@ const InventoryPage: React.FC = () => {
                     }}
                     style={{
                       position: "absolute",
-                      top: 6,
-                      right: 8,
+                      top: 4,
+                      right: 4,
                       zIndex: 3,
                       background: "rgba(255,255,255,0.25)",
                       border: "1px solid rgba(255,255,255,0.3)",
                       borderRadius: "50%",
-                      width: 30,
-                      height: 30,
+                      width: 24,
+                      height: 24,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -2234,7 +2129,7 @@ const InventoryPage: React.FC = () => {
                     }}
                     title="Xóa ảnh này"
                   >
-                    <i className="bi bi-x-lg" style={{ color: "#fff" }} />
+                    <i className="bi bi-x-lg" style={{ color: "#fff", fontSize: 12 }} />
                   </button>
                   <img
                     src={URL.createObjectURL(img.file)}
@@ -2261,16 +2156,16 @@ const InventoryPage: React.FC = () => {
                     }}
                     style={{
                       position: "absolute",
-                      left: 6,
-                      bottom: 6,
+                      left: 4,
+                      bottom: 4,
                       zIndex: 3,
-                      width: "calc(100% - 12px)",
-                      fontSize: 11,
+                      width: "calc(100% - 8px)",
+                      fontSize: 9,
                       textAlign: "center",
                       border: "none",
                       background: "rgba(255,255,255,0.9)",
-                      padding: "2px 6px",
-                      borderRadius: 4,
+                      padding: "1px 4px",
+                      borderRadius: 3,
                     }}
                   />
                 </div>
@@ -2310,7 +2205,7 @@ const InventoryPage: React.FC = () => {
                       top: "50%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
-                      fontSize: 36,
+                      fontSize: 28,
                       color: "#bbb",
                     }}
                   ></i>
@@ -2352,125 +2247,178 @@ const InventoryPage: React.FC = () => {
             </div>
           </div>
 
-          {/* --- Cột 2: Các trường thông tin khác --- */}
+          {/* --- Cột 2: Thông tin chi tiết --- */}
           <div
             style={{
               gridColumn: "2/3",
               display: "flex",
               flexDirection: "column",
-              gap: 18,
+              gap: 16,
             }}
           >
-            {/* Thêm trường Mã thẻ với dropdown */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label className="mac-input-label">Mã thẻ</label>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  position: "relative",
-                }}
-              >
-                <input
-                  className="mac-input"
-                  value={cardSearch}
-                  onChange={(e) => {
-                    setCardSearch(e.target.value);
-                    setCardDropdown(false);
-                    setDetailFormTouched(true);
-                  }}
-                  placeholder="Nhập mã thẻ để tìm..."
-                  disabled={detailForm.inventory_id !== 0}
-                  required
-                  autoComplete="off"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && detailForm.inventory_id === 0) {
-                      e.preventDefault();
-                      fetchCardOptions();
+            {/* Row: Ảnh đại diện + Mã thẻ */}
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+              {/* Ảnh đại diện thẻ */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                <label className="mac-input-label" style={{ fontSize: 12 }}>
+                  Ảnh đại diện thẻ
+                </label>
+                {detailForm.reference_image_url ? (
+                  <img
+                    src={detailForm.reference_image_url}
+                    alt="Reference"
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: "contain",
+                      borderRadius: 8,
+                      border: "1px solid #eee",
+                      cursor: "zoom-in",
+                      background: "#fafbfc",
+                    }}
+                    onClick={() =>
+                      detailForm.reference_image_url &&
+                      setPreviewImg(detailForm.reference_image_url)
                     }
-                  }}
-                />
-                {detailForm.inventory_id === 0 && (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    style={{ padding: "6px 16px", fontSize: 16 }}
-                    onClick={fetchCardOptions}
-                    tabIndex={-1}
-                  >
-                    <i className="bi bi-search"></i>
-                  </button>
-                )}
-                {/* Dropdown kết quả */}
-                {cardDropdown && cardOptions.length > 0 && detailForm.inventory_id === 0 && (
+                  />
+                ) : (
                   <div
                     style={{
-                      position: "absolute",
-                      top: 38,
-                      left: 0,
-                      zIndex: 10,
-                      background: "#fff",
-                      border: "1px solid #eee",
+                      width: 120,
+                      height: 120,
+                      background: "#f7f7fa",
                       borderRadius: 8,
-                      boxShadow: "0 4px 16px #0001",
-                      minWidth: 500,
-                      maxHeight: 650,
-                      overflowY: "auto",
+                      border: "1px solid #eee",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#bbb",
+                      fontSize: 36,
                     }}
                   >
-                    {cardOptions.map((opt) => (
-                      <div
-                        key={opt.value}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          padding: "10px 14px",
-                          cursor: "pointer",
-                          borderBottom: "1px solid #f2f2f2",
-                        }}
-                        onClick={() => {
-                          setCardSearch(opt.value);
-                          setCardDropdown(false);
-                          setDetailFormTouched(true);
-                        }}
-                      >
-                        {opt.image && (
-                          <img
-                            src={opt.image}
-                            alt=""
-                            style={{
-                              width: 68,
-                              height: 68,
-                              objectFit: "contain",
-                              borderRadius: 6,
-                              background: "#fafbfc",
-                              border: "1px solid #eee",
-                            }}
-                          />
-                        )}
-                        <div
-                          style={{ display: "flex", alignItems: "center", gap: 10 }}
-                        >
-                          <span style={{ fontWeight: 600, fontSize: 17 }}>
-                            {opt.value}
-                          </span>
-                          {opt.name_en && (
-                            <span style={{ color: "#1976d2", fontSize: 15 }}>
-                              {opt.name_en}
-                            </span>
-                          )}
-                          {opt.card_number && (
-                            <span style={{ color: "#888", fontSize: 14 }}>
-                              #{opt.card_number}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                    <i className="bi bi-image"></i>
                   </div>
                 )}
+              </div>
+
+              {/* Mã thẻ */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <label className="mac-input-label">Mã thẻ</label>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    position: "relative",
+                  }}
+                >
+                  <input
+                    className="mac-input"
+                    value={cardSearch}
+                    onChange={(e) => {
+                      setCardSearch(e.target.value);
+                      setCardDropdown(false);
+                      setDetailFormTouched(true);
+                      // Xóa ảnh khi người dùng thay đổi mã thẻ
+                      setDetailForm((prev) => ({ ...prev, reference_image_url: "" }));
+                    }}
+                    placeholder="Nhập mã thẻ để tìm..."
+                    disabled={detailForm.inventory_id !== 0}
+                    required
+                    autoComplete="off"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && detailForm.inventory_id === 0) {
+                        e.preventDefault();
+                        fetchCardOptions();
+                      }
+                    }}
+                  />
+                  {detailForm.inventory_id === 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ padding: "6px 16px", fontSize: 16 }}
+                      onClick={fetchCardOptions}
+                      tabIndex={-1}
+                    >
+                      <i className="bi bi-search"></i>
+                    </button>
+                  )}
+                  {/* Dropdown kết quả */}
+                  {cardDropdown && cardOptions.length > 0 && detailForm.inventory_id === 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 38,
+                        left: 0,
+                        zIndex: 10,
+                        background: "#fff",
+                        border: "1px solid #eee",
+                        borderRadius: 8,
+                        boxShadow: "0 4px 16px #0001",
+                        minWidth: 450,
+                        maxHeight: 400,
+                        overflowY: "auto",
+                      }}
+                    >
+                      {cardOptions.map((opt) => (
+                        <div
+                          key={opt.value}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            borderBottom: "1px solid #f2f2f2",
+                          }}
+                          onClick={() => {
+                            setCardSearch(opt.value);
+                            setCardDropdown(false);
+                            setDetailFormTouched(true);
+                            // Cập nhật ảnh đại diện
+                            setDetailForm((prev) => ({
+                              ...prev,
+                              reference_image_url: opt.image || "",
+                            }));
+                          }}
+                        >
+                          {opt.image && (
+                            <img
+                              src={opt.image}
+                              alt=""
+                              style={{
+                                width: 50,
+                                height: 50,
+                                objectFit: "contain",
+                                borderRadius: 6,
+                                background: "#fafbfc",
+                                border: "1px solid #eee",
+                              }}
+                            />
+                          )}
+                          <div
+                            style={{ display: "flex", alignItems: "center", gap: 8 }}
+                          >
+                            <span style={{ fontWeight: 600, fontSize: 15 }}>
+                              {opt.value}
+                            </span>
+                            {opt.name_en && (
+                              <span style={{ color: "#1976d2", fontSize: 13 }}>
+                                {opt.name_en}
+                              </span>
+                            )}
+                            {opt.card_number && (
+                              <span style={{ color: "#888", fontSize: 12 }}>
+                                #{opt.card_number}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -2495,8 +2443,8 @@ const InventoryPage: React.FC = () => {
               value={detailForm.date_added}
               onChange={handleDetailFormChange}
             />
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <label className="mac-input-label" style={{ minWidth: 110 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <label className="mac-input-label" style={{ minWidth: 90 }}>
                 Đã chấm điểm
               </label>
               <Toggle
@@ -2505,16 +2453,25 @@ const InventoryPage: React.FC = () => {
                   setDetailForm((prev) => ({ ...prev, is_graded: checked }))
                 }
               />
-              <label className="mac-input-label">Công ty chấm</label>
-              <Input
+              <label className="mac-input-label">Công ty</label>
+              <select
                 name="grade_company"
-                type="text"
                 value={detailForm.grade_company}
-                onChange={handleDetailFormChange}
+                onChange={handleDetailSelectChange}
+                className="mac-input"
                 disabled={!detailForm.is_graded}
-                style={{ width: 140, marginLeft: 16 }}
-              />
-              <label className="mac-input-label">Số điểm</label>
+                style={{ width: 100, padding: "4px 8px" }}
+              >
+                <option value="">Chọn...</option>
+                <option value="TCG">TCG</option>
+                <option value="BGS">BGS</option>
+                <option value="CGC">CGC</option>
+                <option value="PSA">PSA</option>
+                <option value="TAG">TAG</option>
+                <option value="ACE">ACE</option>
+                <option value="SGC">SGC</option>
+              </select>
+              <label className="mac-input-label">Điểm</label>
               <Input
                 name="grade_score"
                 type="number"
@@ -2523,14 +2480,14 @@ const InventoryPage: React.FC = () => {
                 min={0}
                 max={10}
                 disabled={!detailForm.is_graded}
-                style={{ width: 100, marginLeft: 8 }}
+                style={{ width: 80 }}
               />
             </div>
 
             {/* NEW: Toggle trạng thái đã bán (chỉ hiển thị ở chế độ Sửa) */}
             {detailModalMode === "edit" && (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <label className="mac-input-label" style={{ minWidth: 110 }}>
+                <label className="mac-input-label" style={{ minWidth: 90 }}>
                   Đã bán
                 </label>
                 <Toggle
@@ -2546,12 +2503,12 @@ const InventoryPage: React.FC = () => {
             <Input
               label="Ghi chú"
               name="notes"
-              type="text"
+              type="textarea"
               value={detailForm.notes}
               onChange={handleDetailFormChange}
             />
             {/* Hai combobox nằm cùng hàng */}
-            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ flex: 1 }}>
                 <label className="mac-input-label">Điều kiện US</label>
                 <select
@@ -2596,7 +2553,7 @@ const InventoryPage: React.FC = () => {
               display: "flex",
               justifyContent: "flex-end",
               gap: 12,
-                           marginTop: 24,
+              marginTop: 16,
             }}
           >
             <Button type="submit" variant="primary">

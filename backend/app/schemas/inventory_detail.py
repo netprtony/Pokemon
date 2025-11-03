@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class DetailInventoryBase(BaseModel):
     detail_id: int
     inventory_id: int
+    master_card_id: str
     physical_condition_us: str
     physical_condition_jp: str
     is_graded: bool = False
