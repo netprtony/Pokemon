@@ -1,13 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "frontend/pokemon/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    }
-  ],
-  "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "frontend/pokemon/dist"
 }
