@@ -237,7 +237,9 @@ const getColumns = (
   handlePreviewImage: (url: string) => void,
   handleAddDetail: (row: InventoryRow) => void,
   handleEdit: (row: InventoryRow) => void,
-  handleDelete: (row: InventoryRow) => void
+  handleDelete: (row: InventoryRow) => void,
+  sortField: string,
+  sortOrder: "asc" | "desc"
 ) => [
   {
     key: "reference_image_url",
@@ -263,38 +265,99 @@ const getColumns = (
           alt="No image"
           style={{ width: 36, height: 36, objectFit: "contain", opacity: 0.5 }}
         />
-      
       ),
     width: 50,
     align: "center" as const,
     sticky: true,
   },
-  { key: "inventory_id", label: "ID", sticky: true },
-  { key: "master_card_id", label: "Mã thẻ", sticky: true },
-  { key: "name_en", label: "Tên",
-    render: (row: any) => row.card.name_en,
-    sticky: true },
-  { key: "card_number", label: "Số thẻ",
-    render : (row: any) => row.card.card_number,
-    sticky: true },
-  { key: "total_quantity", label: "Số lượng", sticky: true },
-  { key: "quantity_sold", label: "Đã bán", sticky: true },
-  { key: "avg_purchase_price", label: "Giá mua TB",
+  { 
+    key: "inventory_id", 
+    label: "ID", 
+    sticky: true, 
+    onSort: () => {},
+    sortActive: sortField === "inventory_id",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "master_card_id", 
+    label: "Mã thẻ", 
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "master_card_id",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "name_en", 
+    label: "Tên",
+    render: (row: any) => row.card?.name_en || "-",
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "name_en",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "card_number", 
+    label: "Số thẻ",
+    render: (row: any) => row.card?.card_number || "-",
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "card_number",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "total_quantity", 
+    label: "Số lượng", 
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "total_quantity",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "quantity_sold", 
+    label: "Đã bán", 
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "quantity_sold",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "avg_purchase_price", 
+    label: "Giá mua TB",
     render: (row: any) =>
-        row.avg_purchase_price ? row.avg_purchase_price.toLocaleString("vi-VN") : "-",
-     sticky: true },
-  { key: "avg_selling_price", label: "Giá bán TB",
+      row.avg_purchase_price ? row.avg_purchase_price.toLocaleString("vi-VN") : "-",
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "avg_purchase_price",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "avg_selling_price", 
+    label: "Giá bán TB",
     render: (row: any) =>
-        row.avg_selling_price ? row.avg_selling_price.toLocaleString("vi-VN") : "-",
-     sticky: true },
-  { key: "storage_location", label: "Vị trí lưu trữ",
-    render: (row: any) =>
-        row.storage_location ? row.storage_location : "-",
-    sticky: true },
-  { key: "language", label: "Ngôn ngữ",
-    render: (row: any) =>
-        row.language ? row.language : "-",
-    sticky: true },
+      row.avg_selling_price ? row.avg_selling_price.toLocaleString("vi-VN") : "-",
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "avg_selling_price",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "storage_location", 
+    label: "Vị trí lưu trữ",
+    render: (row: any) => row.storage_location || "-",
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "storage_location",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "language", 
+    label: "Ngôn ngữ",
+    render: (row: any) => row.language || "-",
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "language",
+    sortDirection: sortOrder
+  },
   {
     key: "is_active",
     label: "Hoạt động",
@@ -307,10 +370,34 @@ const getColumns = (
     align: "center" as const,
     width: 90,
     sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "is_active",
+    sortDirection: sortOrder
   },
-  { key: "date_added", label: "Ngày thêm", sticky: true },
-  { key: "last_updated", label: "Cập nhật cuối", sticky: true },
-  { key: "notes", label: "Ghi chú", sticky: true },
+  { 
+    key: "date_added", 
+    label: "Ngày thêm", 
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "date_added",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "last_updated", 
+    label: "Cập nhật cuối", 
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "last_updated",
+    sortDirection: sortOrder
+  },
+  { 
+    key: "notes", 
+    label: "Ghi chú", 
+    sticky: true,
+    onSort: () => {},
+    sortActive: sortField === "notes",
+    sortDirection: sortOrder
+  },
   {
     key: "action",
     label: "Thao tác",
@@ -534,12 +621,14 @@ const InventoryPage: React.FC = () => {
   };
   const handlePreviewImage = (url: string) => setPreviewImg(url);
 
-  // Table columns
+  // Table columns - truyền thêm sortField và sortOrder
   const columns = getColumns(
     handlePreviewImage,
     handleAddDetail,
     handleEdit,
-    handleDelete
+    handleDelete,
+    sortField,
+    sortOrder
   );
 
   // AdvancedFilters handlers
@@ -983,8 +1072,22 @@ const InventoryPage: React.FC = () => {
   };
 
   const detailColumns = [
-    { key: "detail_id", label: "ID", sticky: true },
-    { key: "card_photos_count", label: "Số ảnh" , sticky: true},
+    { 
+      key: "detail_id", 
+      label: "ID", 
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "detail_id",
+      sortDirection: sortOrder
+    },
+    { 
+      key: "card_photos_count", 
+      label: "Số ảnh", 
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "card_photos_count",
+      sortDirection: sortOrder
+    },
     {
       key: "card_photos",
       label: "Ảnh",
@@ -1031,43 +1134,86 @@ const InventoryPage: React.FC = () => {
       ),
       sticky: true,
     },
-    { key: "physical_condition_us", label: "Điều kiện US", sticky: true },
-    { key: "physical_condition_jp", label: "Điều kiện JP", sticky: true },
+    { 
+      key: "physical_condition_us", 
+      label: "Điều kiện US", 
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "physical_condition_us",
+      sortDirection: sortOrder
+    },
+    { 
+      key: "physical_condition_jp", 
+      label: "Điều kiện JP", 
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "physical_condition_jp",
+      sortDirection: sortOrder
+    },
     {
       key: "is_graded",
       label: "Đã chấm điểm",
       render: (row: any) => (row.is_graded ? "Đã chấm" : "Chưa chấm"),
       sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "is_graded",
+      sortDirection: sortOrder
     },
-    { key: "grade_company", label: "Hãng chấm", sticky: true },
-    { key: "grade_score", label: "Điểm", sticky: true },
+    { 
+      key: "grade_company", 
+      label: "Hãng chấm", 
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "grade_company",
+      sortDirection: sortOrder
+    },
+    { 
+      key: "grade_score", 
+      label: "Điểm", 
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "grade_score",
+      sortDirection: sortOrder
+    },
     {
       key: "purchase_price",
       label: "Giá mua",
       render: (row: any) =>
         row.purchase_price ? row.purchase_price.toLocaleString("vi-VN") : "-",
-      sticky: true
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "purchase_price",
+      sortDirection: sortOrder
     },
     {
       key: "selling_price",
       label: "Giá bán",
       render: (row: any) =>
         row.selling_price ? row.selling_price.toLocaleString("vi-VN") : "-",
-      sticky: true
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "selling_price",
+      sortDirection: sortOrder
     },
     {
       key: "date_added",
       label: "Ngày thêm",
       render: (row: any) =>
         row.date_added ? row.date_added.substring(0, 10) : "-",
-      sticky: true
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "date_added",
+      sortDirection: sortOrder
     },
     {
       key: "last_updated",
       label: "Cập nhật cuối",
       render: (row: any) =>
         row.last_updated ? row.last_updated.substring(0, 10) : "-",
-      sticky: true
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "last_updated",
+      sortDirection: sortOrder
     },
     {
       key: "is_sold",
@@ -1078,9 +1224,19 @@ const InventoryPage: React.FC = () => {
         ) : (
           <span className="badge bg-danger">Chưa bán</span>
         ),
-      sticky: true
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "is_sold",
+      sortDirection: sortOrder
     },
-    { key: "notes", label: "Ghi chú", sticky: true },
+    { 
+      key: "notes", 
+      label: "Ghi chú", 
+      sticky: true,
+      onSort: () => {},
+      sortActive: sortField === "notes",
+      sortDirection: sortOrder
+    },
     {
       key: "action",
       label: "Thao tác",
@@ -1846,8 +2002,6 @@ const InventoryPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Hiển thị khung bảng giá ngay dưới nút Thêm thẻ mới */}
-      {/* {renderPriceBox()} */}
       <DataTable
         columns={columns}
         data={data}
@@ -1863,7 +2017,6 @@ const InventoryPage: React.FC = () => {
         sortOrder={sortOrder}
         renderCollapse={renderCollapse}
         onCollapseOpen={(row) => {
-          // chỉ set id, KHÔNG gọi API ở đây
           if (openedInventoryId !== row.inventory_id) {
             setOpenedInventoryId(row.inventory_id);
           }
@@ -1873,7 +2026,6 @@ const InventoryPage: React.FC = () => {
           setPriceData(null);
         }}
         onRowClick={(row) => {
-          // tránh double call với onCollapseOpen
           if (openedInventoryId !== row.inventory_id) {
             setOpenedInventoryId(row.inventory_id);
           }
