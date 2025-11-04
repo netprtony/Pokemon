@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import axios from "axios";
 import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "react-toastify";
@@ -48,9 +50,9 @@ export type InventoryRow = {
   inventory_id: number;
   master_card_id: string;
   total_quantity: number;
-  quantity_sold?: number;
-  avg_purchase_price?: number;
-  avg_selling_price?: number;
+  quantity_sold: number;
+  avg_purchase_price: number;
+  avg_selling_price: number;
   storage_location?: string;
   language?: string;
   is_active: boolean;
@@ -134,7 +136,7 @@ const defaultDetailForm = {
 const formatDate = (date: string) => {
   if (!date) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
-  const parts = date.split(/[-\/]/);
+  const parts = date.split(/[-/]/); // Bỏ backslash escape
   if (parts.length === 3 && parts[2].length === 4)
     return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(
       2,
@@ -423,7 +425,7 @@ const InventoryPage: React.FC = () => {
     } else {
       setPriceData(null);
     }
-  }, [openedInventoryId]); // eslint OK
+  }, [openedInventoryId, data]); // Thêm data vào đây
 
   // --- Handlers ---
   const handleAdd = () => {
@@ -473,7 +475,8 @@ const InventoryPage: React.FC = () => {
   const handleSave = async () => {
     try {
       setAddLoading(true);
-      const { reference_image_url, inventory_id, ...payload } = form;
+      // Bỏ reference_image_url và inventory_id không dùng
+      const { ...payload } = form;
       if (!payload.date_added) {
         payload.date_added = new Date().toISOString().slice(0, 10);
       }
@@ -482,13 +485,16 @@ const InventoryPage: React.FC = () => {
         payload.date_added = `${year}-${month}-${day}`;
       }
       if (modalMode === "add") {
-        // Thêm inventory
-        await axios.post(API_URL, payload);
+        // Bỏ reference_image_url và inventory_id trước khi gửi
+        const { reference_image_url, inventory_id, ...sendPayload } = payload;
+        await axios.post(API_URL, sendPayload);
         toast.success("Thêm mới thành công!");
         setModalOpen(false);
         fetchData();
       } else if (modalMode === "edit") {
-        await axios.put(`${API_URL}${form.inventory_id}`, payload);
+        // Bỏ reference_image_url trước khi gửi
+        const { reference_image_url: _, ...sendPayload } = payload;
+        await axios.put(`${API_URL}${form.inventory_id}`, sendPayload);
         toast.success("Cập nhật thành công!");
         setModalOpen(false);
         fetchData();
@@ -1175,12 +1181,12 @@ const InventoryPage: React.FC = () => {
   async function handleSaveDetail() {
     try {
       let savedDetail: DetailInventoryForm | null = null;
-      const { detail_id, inventory_id, date_added, photo_count, ...payload } =
-        detailForm;
+      // Bỏ detail_id, date_added, photo_count không dùng
+      const { ...payload } = detailForm;
 
       // Nếu inventory_id = 0, tìm hoặc tạo inventory từ cardSearch
-      let finalInventoryId = inventory_id;
-      if (inventory_id === 0 && cardSearch) {
+      let finalInventoryId = payload.inventory_id;
+      if (payload.inventory_id === 0 && cardSearch) {
         // Tìm inventory theo master_card_id
         const searchResp = await axios.get<{ items: any[] }>(API_URL, {
           params: { search: cardSearch, page: 1, page_size: 1 },
@@ -1235,9 +1241,12 @@ const InventoryPage: React.FC = () => {
           ? null
           : Number(payload.selling_price);
 
+      // Bỏ detail_id, date_added, photo_count trước khi gửi
+      const { detail_id: _, date_added: __, photo_count: ___, ...payloadToSend } = payload;
+
       // Payload gửi lên BE
       const payloadFixed = {
-        ...payload,
+        ...payloadToSend,
         card_photos,
         card_photos_count,
         photo_count: card_photos_count,
@@ -1289,15 +1298,8 @@ const InventoryPage: React.FC = () => {
       setDetailModalOpen(false);
       setDetailImages([]);
       setCardSearch("");
-    } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.detail) {
-        const detail = err.response.data.detail;
-        const msg =
-          typeof detail === "string" ? detail : JSON.stringify(detail, null, 2);
-        toast.error("Lỗi: " + msg);
-      } else {
-        toast.error("Lỗi khi lưu chi tiết hoặc upload ảnh!");
-      }
+    } catch {
+      toast.error("Lỗi khi lưu chi tiết!");
     }
   }
 
@@ -1332,7 +1334,7 @@ const InventoryPage: React.FC = () => {
   function handleDetailSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const { name, value } = e.target;
     setDetailForm((prev) => {
-      let next = { ...prev, [name]: value };
+      const next = { ...prev, [name]: value };
       if (name === "physical_condition_us") {
         next.physical_condition_jp = US_TO_JP[value] || "";
       } else if (name === "physical_condition_jp") {
@@ -1377,8 +1379,7 @@ const InventoryPage: React.FC = () => {
       );
       setPriceData(resp.data);
       toast.success("Đã lấy giá từ link thành công!");
-    } catch (err: any) {
-      console.error(err);
+    } catch {
       toast.error("Không lấy được giá từ link!");
       setPriceData(null);
     } finally {
@@ -2114,7 +2115,7 @@ const InventoryPage: React.FC = () => {
                       border: "1px solid rgba(255,255,255,0.3)",
                       borderRadius: "50%",
                       width: 24,
-                      height: 24,
+                      height:  24,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",

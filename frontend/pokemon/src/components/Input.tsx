@@ -1,3 +1,6 @@
+ 
+ 
+/* eslint-disable react-refresh/only-export-components */
 import React from "react";
 import "../assets/css/Input.css";
 
@@ -6,14 +9,14 @@ type InputType = "text" | "money" | "number" | "datetime" | "file" | "date" | "s
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   type?: InputType;
-  value: any;
+  value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   step?: number;
   min?: number;
   max?: number;
 }
 
-export const formatMoney = (value: string | number) => {
+export const formatMoney = (value: string | number): string => {
   if (!value) return "";
   return Number(value).toLocaleString("vi-VN");
 };
@@ -49,13 +52,11 @@ const Input: React.FC<InputProps> = ({
       {type === "money" ? (
         <input
           type="text"
-          data-type="money" // ✅ để handleFormChange biết đây là money
+          data-type="money"
           className="mac-input"
           value={value === "" ? "" : formatMoney(value)}
           onChange={(e) => {
             const raw = e.target.value.replace(/[^\d]/g, "");
-
-            // 🔧 Tạo event mới, giữ name, value và truyền dataset.type
             const customEvent = {
               ...e,
               target: {
@@ -65,7 +66,6 @@ const Input: React.FC<InputProps> = ({
                 dataset: { type: "money" }
               }
             } as React.ChangeEvent<HTMLInputElement>;
-
             onChange(customEvent);
           }}
           onBlur={(e) => {
@@ -74,7 +74,7 @@ const Input: React.FC<InputProps> = ({
           }}
           placeholder={props.placeholder || "Nhập số tiền..."}
           {...props}
-          step={undefined} // Không truyền step cho type money
+          step={undefined}
         />
       ) : type === "stepper" ? (
         <div className="mac-stepper">
@@ -111,7 +111,6 @@ const Input: React.FC<InputProps> = ({
           className="mac-input"
           value={value}
           onChange={(e) => {
-            // Cast textarea event thành input event
             const event = {
               ...e,
               target: {
@@ -129,7 +128,7 @@ const Input: React.FC<InputProps> = ({
             minHeight: 80,
             fontFamily: "inherit",
           }}
-          {...(props as any)}
+          {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
         />
       ) : type === "number" ? (
         <input

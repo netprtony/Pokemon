@@ -12,11 +12,11 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  constructor(props: any) {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
-  static getDerivedStateFromError(_: any) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
   render() {
@@ -32,8 +32,8 @@ const App: React.FC = () => {
     <ErrorBoundary>
       {/* ToastContainer nên đặt ở đây để dùng cho toàn bộ app */}
       <ToastContainer position="top-right" autoClose={3000} />
-        <Routes>
-          <Route path="/admin" element={<AdminLayout />}>
+      <Routes>
+        <Route path="/admin" element={<AdminLayout />}>
           <Route path="pokemon-set" element={<PokemonSetPage />} />
           <Route path="*" element={<Navigate to="pokemon-set" replace />} />
           <Route path="pokemon-card" element={<PokemonCardPage />} />

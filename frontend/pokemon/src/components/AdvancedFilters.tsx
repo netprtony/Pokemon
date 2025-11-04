@@ -1,3 +1,5 @@
+ 
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import React, { useState, useEffect, type ChangeEvent } from "react";
 import { toast } from "react-toastify";
 import Button from "./Button";

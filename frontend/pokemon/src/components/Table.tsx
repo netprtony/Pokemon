@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import React, { useState, useRef, useEffect } from "react";
 import { Table, Pagination, Form } from "react-bootstrap";
 import ModalIOS from "./Modal";

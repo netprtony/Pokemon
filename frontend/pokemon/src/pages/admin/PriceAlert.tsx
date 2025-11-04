@@ -101,7 +101,7 @@ const PriceAlertPage: React.FC = () => {
         setData(resp.data.items);
         setTotal(resp.data.total);
       }
-    } catch (err) {
+    } catch {
       toast.error("Lỗi khi tải dữ liệu!");
       setData([]);
       setTotal(0);
@@ -209,7 +209,7 @@ const PriceAlertPage: React.FC = () => {
       label: "Thao tác",
       align: "center" as const,
       width: 110,
-      render: (row: PriceAlertRow, _idx: number) => (
+      render: (row: PriceAlertRow) => (
         <div className="d-flex justify-content-center gap-3">
           <button
             className="btn btn-link p-0"
