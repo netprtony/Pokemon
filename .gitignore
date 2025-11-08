@@ -31,3 +31,4 @@ dist-ssr
 backend/script_db/temp_card
 backend/card_recognizer/pokemon_dataset
 backend/card_recognizer/datasets
+backend/card_recognizer/vlm_model

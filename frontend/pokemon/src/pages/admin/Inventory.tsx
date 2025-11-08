@@ -501,6 +501,462 @@ const InventoryPage: React.FC = () => {
 
   const [priceUrl, setPriceUrl] = useState("");
 
+  // Thêm state cho fast filter
+  const [fastFilter, setFastFilter] = useState({
+    inventory_id: "",
+    master_card_id: "",
+    name_en: "",
+    card_number: "",
+    total_quantity: "",
+    quantity_sold: "",
+    avg_purchase_price: "",
+    avg_selling_price: "",
+    storage_location: "",
+    language: "",
+    is_active: "",
+    date_added: "",
+    last_updated: "",
+    notes: "",
+  });
+
+  // Handler cho fast filter
+  const handleFastFilterChange = (name: string, value: string | number) => {
+    setFastFilter((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Apply fast filter khi blur hoặc enter
+  const applyFastFilter = useCallback(() => {
+    const newFilters: Filter[] = [];
+    
+    if (fastFilter.inventory_id) {
+      newFilters.push({
+        field: "inventory_id",
+        operator: "equals",
+        value: fastFilter.inventory_id,
+      });
+    }
+    
+    if (fastFilter.master_card_id) {
+      newFilters.push({
+        field: "master_card_id",
+        operator: "contains",
+        value: fastFilter.master_card_id,
+      });
+    }
+    
+    if (fastFilter.name_en) {
+      newFilters.push({
+        field: "name_en",
+        operator: "contains",
+        value: fastFilter.name_en,
+      });
+    }
+    
+    if (fastFilter.card_number) {
+      newFilters.push({
+        field: "card_number",
+        operator: "contains",
+        value: fastFilter.card_number,
+      });
+    }
+    
+    if (fastFilter.total_quantity) {
+      newFilters.push({
+        field: "total_quantity",
+        operator: "equals",
+        value: fastFilter.total_quantity,
+      });
+    }
+    
+    if (fastFilter.quantity_sold) {
+      newFilters.push({
+        field: "quantity_sold",
+        operator: "equals",
+        value: fastFilter.quantity_sold,
+      });
+    }
+    
+    if (fastFilter.avg_purchase_price) {
+      newFilters.push({
+        field: "avg_purchase_price",
+        operator: "gte",
+        value: fastFilter.avg_purchase_price,
+      });
+    }
+    
+    if (fastFilter.avg_selling_price) {
+      newFilters.push({
+        field: "avg_selling_price",
+        operator: "gte",
+        value: fastFilter.avg_selling_price,
+      });
+    }
+    
+    if (fastFilter.storage_location) {
+      newFilters.push({
+        field: "storage_location",
+        operator: "contains",
+        value: fastFilter.storage_location,
+      });
+    }
+    
+    if (fastFilter.language) {
+      newFilters.push({
+        field: "language",
+        operator: "equals",
+        value: fastFilter.language,
+      });
+    }
+    
+    if (fastFilter.is_active) {
+      newFilters.push({
+        field: "is_active",
+        operator: "equals",
+        value: fastFilter.is_active === "active" ? "true" : "false",
+      });
+    }
+    
+    if (fastFilter.date_added) {
+      newFilters.push({
+        field: "date_added",
+        operator: "equals",
+        value: fastFilter.date_added,
+      });
+    }
+    
+    if (fastFilter.last_updated) {
+      newFilters.push({
+        field: "last_updated",
+        operator: "gte",
+        value: fastFilter.last_updated,
+      });
+    }
+    
+    if (fastFilter.notes) {
+      newFilters.push({
+        field: "notes",
+        operator: "contains",
+        value: fastFilter.notes,
+      });
+    }
+    
+    setFilters(newFilters);
+    setPage(1);
+  }, [fastFilter]);
+
+  // Reset fast filter
+  const resetFastFilter = () => {
+    setFastFilter({
+      inventory_id: "",
+      master_card_id: "",
+      name_en: "",
+      card_number: "",
+      total_quantity: "",
+      quantity_sold: "",
+      avg_purchase_price: "",
+      avg_selling_price: "",
+      storage_location: "",
+      language: "",
+      is_active: "",
+      date_added: "",
+      last_updated: "",
+      notes: "",
+    });
+    setFilters([]);
+    setPage(1);
+  };
+
+  // Render Fast Filter Box
+  const renderBoxFilterFast = () => (
+    <div
+      style={{
+        background: "var(--filter-bg)",
+        borderRadius: 12,
+        padding: "20px 24px",
+        marginBottom: 20,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gap: "16px 12px",
+        alignItems: "end",
+      }}
+    >
+      {/* Row 1 */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>ID</label>
+        <input
+          type="number"
+          className="mac-input"
+          placeholder="Nhập ID..."
+          value={fastFilter.inventory_id}
+          onChange={(e) => handleFastFilterChange("inventory_id", e.target.value)}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Mã thẻ</label>
+        <input
+          type="text"
+          className="mac-input"
+          placeholder="Nhập mã thẻ..."
+          value={fastFilter.master_card_id}
+          onChange={(e) => handleFastFilterChange("master_card_id", e.target.value)}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Tên</label>
+        <input
+          type="text"
+          className="mac-input"
+          placeholder="Nhập tên thẻ..."
+          value={fastFilter.name_en}
+          onChange={(e) => handleFastFilterChange("name_en", e.target.value)}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Số thẻ</label>
+        <input
+          type="text"
+          className="mac-input"
+          placeholder="Nhập số thẻ..."
+          value={fastFilter.card_number}
+          onChange={(e) => handleFastFilterChange("card_number", e.target.value)}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Số lượng</label>
+        <div className="mac-stepper" style={{ height: 32 }}>
+          <button
+            type="button"
+            className="mac-stepper-btn"
+            onClick={() => {
+              const val = Math.max(0, Number(fastFilter.total_quantity || 0) - 1);
+              handleFastFilterChange("total_quantity", val);
+              setTimeout(applyFastFilter, 100);
+            }}
+            style={{ fontSize: 20, padding: "0 8px" }}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            className="mac-stepper-input"
+            value={fastFilter.total_quantity}
+            onChange={(e) => handleFastFilterChange("total_quantity", e.target.value)}
+            onBlur={applyFastFilter}
+            min={0}
+            style={{ fontSize: 14, width: 60, textAlign: "center", background: "transparent", border: "none" }}
+          />
+          <button
+            type="button"
+            className="mac-stepper-btn"
+            onClick={() => {
+              const val = Number(fastFilter.total_quantity || 0) + 1;
+              handleFastFilterChange("total_quantity", val);
+              setTimeout(applyFastFilter, 100);
+            }}
+            style={{ fontSize: 20, padding: "0 8px" }}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Đã bán</label>
+        <div className="mac-stepper" style={{ height: 32 }}>
+          <button
+            type="button"
+            className="mac-stepper-btn"
+            onClick={() => {
+              const val = Math.max(0, Number(fastFilter.quantity_sold || 0) - 1);
+              handleFastFilterChange("quantity_sold", val);
+              setTimeout(applyFastFilter, 100);
+            }}
+            style={{ fontSize: 20, padding: "0 8px" }}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            className="mac-stepper-input"
+            value={fastFilter.quantity_sold}
+            onChange={(e) => handleFastFilterChange("quantity_sold", e.target.value)}
+            onBlur={applyFastFilter}
+            min={0}
+            style={{ fontSize: 14, width: 60, textAlign: "center", background: "transparent", border: "none" }}
+          />
+          <button
+            type="button"
+            className="mac-stepper-btn"
+            onClick={() => {
+              const val = Number(fastFilter.quantity_sold || 0) + 1;
+              handleFastFilterChange("quantity_sold", val);
+              setTimeout(applyFastFilter, 100);
+            }}
+            style={{ fontSize: 20, padding: "0 8px" }}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Giá mua TB (≥)</label>
+        <input
+          type="text"
+          className="mac-input"
+          placeholder="0"
+          value={fastFilter.avg_purchase_price ? Number(fastFilter.avg_purchase_price).toLocaleString("vi-VN") : ""}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^\d]/g, "");
+            handleFastFilterChange("avg_purchase_price", raw);
+          }}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      {/* Row 2 */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Giá bán TB (≥)</label>
+        <input
+          type="text"
+          className="mac-input"
+          placeholder="0"
+          value={fastFilter.avg_selling_price ? Number(fastFilter.avg_selling_price).toLocaleString("vi-VN") : ""}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^\d]/g, "");
+            handleFastFilterChange("avg_selling_price", raw);
+          }}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Vị trí lưu trữ</label>
+        <input
+          type="text"
+          className="mac-input"
+          placeholder="Nhập vị trí..."
+          value={fastFilter.storage_location}
+          onChange={(e) => handleFastFilterChange("storage_location", e.target.value)}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Ngôn ngữ</label>
+        <select
+          className="mac-input"
+          value={fastFilter.language}
+          onChange={(e) => {
+            handleFastFilterChange("language", e.target.value);
+            setTimeout(applyFastFilter, 100);
+          }}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        >
+          <option value="">Tất cả</option>
+          <option value="EN">EN</option>
+          <option value="JP">JP</option>
+        </select>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Hoạt động</label>
+        <select
+          className="mac-input"
+          value={fastFilter.is_active}
+          onChange={(e) => {
+            handleFastFilterChange("is_active", e.target.value);
+            setTimeout(applyFastFilter, 100);
+          }}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        >
+          <option value="">Tất cả</option>
+          <option value="active">Còn hàng</option>
+          <option value="inactive">Hết hàng</option>
+        </select>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Ngày thêm</label>
+        <input
+          type="date"
+          className="mac-input"
+          value={fastFilter.date_added}
+          onChange={(e) => {
+            handleFastFilterChange("date_added", e.target.value);
+            setTimeout(applyFastFilter, 100);
+          }}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Cập nhật cuối (≥)</label>
+        <input
+          type="datetime-local"
+          className="mac-input"
+          value={fastFilter.last_updated}
+          onChange={(e) => {
+            handleFastFilterChange("last_updated", e.target.value);
+            setTimeout(applyFastFilter, 100);
+          }}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label className="mac-input-label" style={{ fontSize: 13 }}>Ghi chú</label>
+        <input
+          type="text"
+          className="mac-input"
+          placeholder="Nhập ghi chú..."
+          value={fastFilter.notes}
+          onChange={(e) => handleFastFilterChange("notes", e.target.value)}
+          onBlur={applyFastFilter}
+          onKeyDown={(e) => e.key === "Enter" && applyFastFilter()}
+          style={{ fontSize: 14, padding: "6px 10px" }}
+        />
+      </div>
+
+      {/* Nút reset */}
+      <div style={{ display: "flex", alignItems: "flex-end" }}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={resetFastFilter}
+          style={{ width: "100%", fontSize: 14, padding: "6px 12px" }}
+          title="Xóa tất cả bộ lọc"
+        >
+          <i className="bi bi-x-circle me-1"></i>
+          Reset
+        </button>
+      </div>
+    </div>
+  );
+
   // --- Effect: gọi API khi openedInventoryId thay đổi ---
   useEffect(() => {
     if (openedInventoryId !== null) {
@@ -996,9 +1452,9 @@ const InventoryPage: React.FC = () => {
             required
           />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <label className="mac-input-label" style={{ minWidth: 110 }}>
-            Đang hoạt động
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <label className="mac-input-label" style={{ alignSelf: "flex-start" }}>
+            Đã hoạt động
           </label>
           <Toggle
             checked={form.is_active}
@@ -1984,6 +2440,8 @@ const InventoryPage: React.FC = () => {
   return (
     <div className="container-fluid py-4">
       <h3 className="text-info">Danh sách kho thẻ</h3>
+      
+      {/* Advanced Filters - có thể collapse/expand */}
       <AdvancedFilters
         fieldOptions={fieldOptions}
         filters={filters}
@@ -1993,6 +2451,10 @@ const InventoryPage: React.FC = () => {
         onExportCSV={handleExportCSV}
         onExportJSON={handleExportJSON}
       />
+      
+      {/* Fast Filter Box - luôn hiển thị */}
+      {renderBoxFilterFast()}
+      
       <div className="d-flex justify-content-center mb-3 gap-3">
         <button className="btn btn-success" onClick={handleAdd}>
           <i className="bi bi-plus-lg me-2"></i> Thêm thẻ mới
@@ -2031,6 +2493,7 @@ const InventoryPage: React.FC = () => {
           }
         }}
       />
+      
       {/* Modal nhập thông tin */}
       <Modal
         isOpen={modalOpen}
