@@ -13,7 +13,7 @@ script_dir = os.path.dirname(__file__)
 config_file = os.path.join(script_dir, 'config.json')
 fallback_config = os.path.join(script_dir, 'config,json')
 
-api_key = "AIzaSyD5Y2GlsSHC9HM8iwURVTp4X9Ne2ZKiih4"
+api_key = "..."
 model_name = "gemini-2.5-flash"
 base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
