@@ -81,3 +81,12 @@ flowchart TD
     D --> E[🗂️ VectorDB (FAISS)]
     E --> F[🎯 Top-k Similar Cards]
     F --> G[🪄 Display Recognition Result]
+<img width="1513" height="910" alt="image" src="https://github.com/user-attachments/assets/0344d303-f2d5-4aaa-89c9-b839c053fd30" />
+<img width="1519" height="901" alt="image" src="https://github.com/user-attachments/assets/8d227e15-0697-4d5b-beaf-dd97627adcbe" />
+<img width="1421" height="797" alt="image" src="https://github.com/user-attachments/assets/0c82880f-59ae-43e3-a047-911b4bdbc12a" />
+<img width="1872" height="848" alt="image" src="https://github.com/user-attachments/assets/3c174ff8-18f8-4997-84c9-f1537f7e97a4" />
+<img width="1887" height="652" alt="image" src="https://github.com/user-attachments/assets/f384a101-3a3d-48b8-93c6-63c6c677496d" />
+<img width="1611" height="894" alt="image" src="https://github.com/user-attachments/assets/0507f994-5695-4160-abcd-2f73485e68cb" />
+<img width="1832" height="821" alt="image" src="https://github.com/user-attachments/assets/0b8f4569-6f6b-4158-ac6e-5a8301a44d3e" />
+
+
